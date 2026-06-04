@@ -1688,11 +1688,11 @@
       const banner = document.createElement("div");
       banner.style.cssText = "position: fixed; inset: 80px 24px auto 24px; z-index: 1000; background: rgba(7,6,10,0.95); color: var(--paper); border: 1px solid var(--gold-2); padding: 28px 32px; font-family: var(--display); font-style: italic; font-size: 17px; line-height: 1.55; max-width: 640px; margin: 0 auto; box-shadow: 0 0 0 4px rgba(0,0,0,0.5), 0 0 0 5px var(--gold-2), 0 30px 60px rgba(0,0,0,0.6);";
       const isFile = location.protocol === "file:";
-      const head = '<div style="font-family: var(--mono); font-size: 10px; letter-spacing: 0.24em; color: var(--gold); margin-bottom: 14px;">— ॐ — UNABLE TO LOAD qna.csv —</div>';
+      const head = '<div style="font-family: var(--mono); font-size: 10px; letter-spacing: 0.24em; color: var(--gold); margin-bottom: 14px;">— ॐ — UNABLE TO LOAD qna-preview.csv —</div>';
       const msg = '<p style="margin: 0 0 12px;"><strong style="color: var(--gold);">' + (err.message || err) + '</strong></p>';
       const body = isFile
         ? '<p style="margin: 0 0 8px;">You are opening this file directly (<code style="font-family: var(--mono); color: var(--gold);">file://</code>), and browsers block CSV loading from <code>file://</code> for security.</p><p style="margin: 0 0 8px;">Double-click <code style="font-family: var(--mono); color: var(--gold);">start-site.bat</code> (Windows) or <code>start-site.sh</code> (Mac/Linux) in this folder, or from a terminal:</p><pre style="margin: 8px 0; padding: 12px; background: rgba(0,0,0,0.4); color: var(--gold); font-family: var(--mono); font-size: 12px;">python3 -m http.server 8000</pre><p style="margin: 0;">Then open <code style="color: var(--gold);">http://localhost:8000</code>.</p>'
-        : '<p>Make sure <code style="font-family: var(--mono); color: var(--gold);">qna.csv</code> is in the same folder as <code>index.html</code> on the server.</p>';
+        : '<p>Make sure <code style="font-family: var(--mono); color: var(--gold);">qna-preview.csv</code> is in the same folder as <code>index.html</code> on the server.</p>';
       banner.innerHTML = head + msg + body;
       document.body.appendChild(banner);
     }
@@ -1702,8 +1702,8 @@
 
     async function loadData() {
       try {
-        const resp = await fetch("qna.csv", { cache: "no-cache" });
-        if (!resp.ok) throw new Error("Failed to load qna.csv (HTTP " + resp.status + ")");
+        const resp = await fetch("qna-preview.csv", { cache: "no-cache" });
+        if (!resp.ok) throw new Error("Failed to load qna-preview.csv (HTTP " + resp.status + ")");
         const text = await resp.text();
         DATA = buildData(text);
         DATA.entries.forEach(e => { BY_NUM[String(e.num)] = e; });
