@@ -451,7 +451,7 @@
       text-shadow: 0 1px 0 var(--gold-3), 0 2px 0 rgba(180,130,40,0.5);
     }
     .row .q {
-      font-family: var(--display); font-style: italic; font-size: 24px; line-height: 1.3;
+      font-family: var(--display); font-style: italic; font-size: 20px; line-height: 1.35;
       color: var(--paper);
     }
     .row .meta { display: flex; flex-direction: column; gap: 4px; }
@@ -1054,7 +1054,7 @@
       .row .skt { display: none; }
       .row .meta { display: none; }
       .row .num { font-size: 22px; }
-      .row .q { font-size: 17px; line-height: 1.35; }
+      .row .q { font-size: 16px; line-height: 1.4; }
       .row .arr { font-size: 18px; }
 
       /* --- About --- */
@@ -1140,7 +1140,7 @@
       .about-text h2 { font-size: 28px; }
       .folio-header h1 { font-size: 26px; }
       .folio-header .skt-mega { font-size: 30px; }
-      .row .q { font-size: 16px; }
+      .row .q { font-size: 16px; line-height: 1.4; }
       .foot-grid { padding: 32px 16px; }
       .foot-mantra { padding: 28px 16px 0; }
       .foot-mantra .skt-line { font-size: 24px; }
@@ -1189,7 +1189,7 @@
         </div>
         <div class="rom">Oṁ Bhairavāya Namaḥ &nbsp;·&nbsp; salutations to Bhairava</div>
         <h1>Bhairava<br/><span class="g">Anugraha</span>.</h1>
-        <p class="tag">A standing archive of questions answered, set in obsidian and gold — on mantra, ritual, sādhanā, and the experiences that arise within them.</p>
+        <p class="tag">A standing archive of questions asked and answered, set in obsidian and gold — on mantra, ritual, sādhanā, and the experiences that arise within them.</p>
         <div class="actions">
           <button class="btn-primary" data-scroll=".categories">Enter the Codex <span class="arrow">→</span></button>
           <button class="btn-ghost" data-scroll=".categories">All seven categories</button>
@@ -1231,7 +1231,7 @@
         <h2>The seven<br/><em>folios</em>.</h2>
       </div>
       <div class="rhs">
-        Every entry is filed under one of seven traditional headings. Begin where the question lives — Mantra &amp; Japa, Pūjā &amp; Ritual, Maṇḍala &amp; Anuṣṭhāna, or move through them in order, as one would read a manuscript.
+        Every entry is filed under one of six traditional folios. Begin where the question lives — Mantra &amp; Japa, Pūjā &amp; Āratī, Maṇḍala &amp; Anuṣṭhāna — or move through them in order, as one would read a manuscript.
       </div>
     </div>
     <div class="cat-grid">
@@ -1260,7 +1260,7 @@
         <div class="num"><span>FOLIO IV</span><span class="count">33 entries</span></div>
         <div class="skt-mark">अनुभव</div>
         <h3>Experiences in Sādhanā</h3>
-        <div class="desc">Peace and sleep, the night sweats, yog-nidrā, the unprovoked tears, the signs of progress — and whether to make anything of them at all.</div>
+        <div class="desc">Peace and sleep, the night sweats, yoga-nidrā, the unprovoked tears, the signs of progress — and whether to make anything of them at all.</div>
         <div class="foot"><span>READ FOLIO</span><span class="arrow">→</span></div>
       </a>
       <a class="cat" data-folio="V" data-cat-key="advanced">
@@ -1318,7 +1318,7 @@
         <h2>What was<br/>asked, <em>lately</em>.</h2>
       </div>
       <div class="rhs">
-        Eight most recent additions, newest first. Click any line to open the full entry — the original Telegram exchange sits beside Guruji's polished reply.
+        The eight most recent additions, newest first. Click any row to open the full entry — the original Telegram exchange sits beside Guruji's polished reply.
       </div>
     </div>
     <div class="recent-list" id="recent-list"></div>
@@ -1350,10 +1350,10 @@
         <div class="lab mono">॥ शिवोऽहम् ॥</div>
         <h2>Compiled, in <em>seva</em>, over six years.</h2>
         <p>
-          The questions in this archive were addressed to Guruji over the course of six years, in private correspondence and on the small Telegram <em>sangha</em> he kept. They were not written for publication; what is gathered here are the answers worth keeping — the ones his students returned to, more than once, when their own practice grew thin.
+          The questions in this archive were addressed to Guruji over the course of six years, in private correspondence and in the small Telegram <em>sangha</em> he kept. They were not written for publication; what is gathered here are the answers worth keeping — the ones his students returned to more than once when their own practice grew thin.
         </p>
         <p>
-          The Sanskrit is set in <span class="skt-inline">देवनागरी</span> alongside transliteration, so a reader unfamiliar with the script may still hear the syllables as they are meant to sound. Where Guruji used a phrase whose ordinary translation would dilute it, the original has been left and a note placed beside.
+          The Sanskrit is set in <span class="skt-inline">देवनागरी</span> alongside transliteration, so a reader unfamiliar with the script may still hear the syllables as they are meant to sound. Where Guruji used a phrase whose ordinary translation would dilute it, the original has been kept and a note placed beside it.
         </p>
         <div class="pull">
           "The questions are not mine. The answers are not mine. What is mine is the silence between them — and even that, I borrowed."
@@ -1431,7 +1431,7 @@
           <span class="om">ॐ</span>
           <span class="b">Bhairava <em>Anugraha</em></span>
         </div>
-        <p class="blurb">A standing archive of questions answered, set in obsidian and gold. Compiled in seva, kept open to all.</p>
+        <p class="blurb">A standing archive of questions asked and answered, set in obsidian and gold. Compiled in seva, kept open to all.</p>
       </div>
       <div>
         <h4>The Codex</h4>
@@ -1962,9 +1962,9 @@
     // ---------- folio page renderer ----------
     const FOLIO_DESCRIPTIONS = {
       "mantra-japa": "On the form of mantra, the count, the breath; on the inward mechanics of repetition and the moment a sound becomes a doorway.",
-      "puja-aarti":  "Achamana, offerings, the lamp, the prasādam. What may be substituted, what must not, and why the small details matter most.",
+      "puja-aarti":  "Ācamana, offerings, the lamp, the prasādam. What may be substituted, what must not, and why the small details matter most.",
       "mandala":     "The forty-eight-day cycle of transformation — vows undertaken, vows broken, what to do when the count slips, and how to begin again without despair.",
-      "experiences": "Peace and sleep, the night sweats, yog-nidrā, the unprovoked tears, the signs of progress — and whether to make anything of them at all.",
+      "experiences": "Peace and sleep, the night sweats, yoga-nidrā, the unprovoked tears, the signs of progress — and whether to make anything of them at all.",
       "advanced":    "Yantra, nyāsa, homa, the worship of one'\''s kuladevatā — the practices that wait until the foundation is steady.",
       "women":       "On the body'\''s seasons and the practice that must accommodate them — menstruation, menopause, the ground of women'\''s devotion.",
     };
