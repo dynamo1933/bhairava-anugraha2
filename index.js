@@ -364,7 +364,12 @@ function closeOverlay(opts) {
 }
 
 // expose
-window.__lacquer = { openEntry: openOverlay, closeEntry: closeOverlay, hasEntry: id => !!BY_NUM[String(id)] };
+window.__lacquer = {
+  openEntry: openOverlay,
+  closeEntry: closeOverlay,
+  hasEntry: id => !!BY_NUM[String(id)],
+  openSearch: null
+};
 
 // overlay events: close button + backdrop
 overlay.addEventListener("click", e => {
@@ -563,6 +568,16 @@ function buildSearchIndex() {
   renderFeatured();
   applyHash();
   window.addEventListener("hashchange", applyHash);
+
+  if (location.search.includes("search=true")) {
+    setTimeout(() => {
+      if (window.__lacquer.openSearch) {
+        window.__lacquer.openSearch();
+        const cleanUrl = location.pathname + location.hash;
+        history.replaceState(null, "", cleanUrl);
+      }
+    }, 150);
+  }
 })();
 
 // ---------- nav, hero CTAs, folio cards ----------
@@ -741,4 +756,5 @@ document.getElementById("folio-back-link").addEventListener("click", e => {
     else if (k === "ArrowUp")   { e.preventDefault(); setActive(active - 1); }
     else if (k === "Enter")     { e.preventDefault(); if (filtered[active]) activate(filtered[active]); }
   });
+  window.__lacquer.openSearch = openPalette;
 })();
