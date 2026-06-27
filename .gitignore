@@ -23,3 +23,8 @@ ChatExport*/
 # Review artifacts (not part of the site)
 New-QnA-Entries-for-Review.docx
 Revised-Questions.docx
+
+# Environment and backups
+.env
+*.bak
+__pycache__/

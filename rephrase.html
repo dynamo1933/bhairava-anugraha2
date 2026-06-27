@@ -1,0 +1,1025 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bhairava Anugraha · Rephrase Codex</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Tiro+Devanagari+Sanskrit:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="index.css" />
+  <style>
+    /* Custom styles for the Rephrase admin dashboard */
+    body {
+      background: var(--void);
+      position: relative;
+    }
+    
+    .dashboard-container {
+      max-width: 1400px;
+      margin: 40px auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .dashboard-header {
+      margin-bottom: 32px;
+      border-bottom: 1px solid var(--gold-deep);
+      padding-bottom: 24px;
+    }
+    
+    .dashboard-header h1 {
+      font-family: var(--display);
+      font-size: 42px;
+      color: var(--paper);
+      margin: 0 0 8px 0;
+      letter-spacing: 0.02em;
+    }
+    
+    .dashboard-header h1 em {
+      font-family: var(--display);
+      font-style: italic;
+      color: var(--gold);
+    }
+    
+    .dashboard-header p {
+      color: var(--ink-mute);
+      margin: 0;
+      font-size: 16px;
+    }
+
+    /* Stats bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    
+    .stat-card {
+      background: var(--warm);
+      border: 1px solid rgba(212,166,74,0.15);
+      border-radius: 4px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s ease;
+    }
+    
+    .stat-card:hover {
+      border-color: var(--gold);
+    }
+    
+    .stat-card .label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    
+    .stat-card .value {
+      font-family: var(--display);
+      font-size: 32px;
+      color: var(--paper);
+      font-weight: 600;
+    }
+    
+    .stat-card .decorator {
+      position: absolute;
+      right: 16px;
+      bottom: 8px;
+      font-family: var(--skt);
+      font-size: 36px;
+      color: rgba(212, 166, 74, 0.05);
+      user-select: none;
+      pointer-events: none;
+    }
+
+    /* Controls & Filters */
+    .filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      background: var(--warm-2);
+      padding: 20px;
+      border-radius: 4px;
+      border: 1px solid rgba(212,166,74,0.1);
+      margin-bottom: 24px;
+      align-items: center;
+    }
+    
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-grow: 1;
+    }
+    
+    .filter-group.search-group {
+      flex-grow: 3;
+    }
+    
+    .filter-group label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: var(--gold-3);
+    }
+    
+    .filter-input, .filter-select {
+      background: var(--void);
+      border: 1px solid rgba(212,166,74,0.3);
+      color: var(--paper);
+      padding: 10px 14px;
+      font-family: var(--serif);
+      font-size: 15px;
+      border-radius: 3px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    
+    .filter-input:focus, .filter-select:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 8px rgba(212, 166, 74, 0.25);
+    }
+
+    /* Table styling */
+    .table-container {
+      background: var(--warm);
+      border: 1px solid rgba(212,166,74,0.2);
+      border-radius: 4px;
+      overflow-x: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    
+    .qna-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-family: var(--serif);
+      font-size: 15.5px;
+    }
+    
+    .qna-table th {
+      background: rgba(212,166,74,0.06);
+      border-bottom: 1px solid rgba(212,166,74,0.3);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+      padding: 16px 20px;
+      text-transform: uppercase;
+    }
+    
+    .qna-table td {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(212,166,74,0.08);
+      vertical-align: top;
+      line-height: 1.5;
+    }
+    
+    .qna-table tr {
+      transition: background-color 0.2s ease;
+    }
+    
+    .qna-table tr:hover {
+      background-color: rgba(212,166,74,0.02);
+    }
+    
+    .qna-table tr.has-rephrased {
+      border-left: 2px solid var(--gold-2);
+    }
+    
+    .qna-table tr.pending-rephrase {
+      border-left: 2px solid var(--crimson);
+    }
+    
+    .col-num {
+      width: 60px;
+      font-family: var(--mono);
+      color: var(--gold-3);
+    }
+    
+    .col-cat {
+      width: 150px;
+      font-family: var(--display);
+      font-style: italic;
+      color: var(--paper-2);
+    }
+    
+    .col-asker {
+      width: 120px;
+      font-weight: 500;
+      color: var(--gold-3);
+    }
+    
+    .col-question {
+      max-width: 350px;
+    }
+    
+    .col-rephrased {
+      max-width: 350px;
+      font-style: italic;
+      color: var(--paper-2);
+    }
+    
+    .col-actions {
+      width: 120px;
+      text-align: right;
+    }
+    
+    .badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 9px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .badge.badge-pending {
+      background: rgba(106, 16, 16, 0.2);
+      border: 1px solid var(--crimson);
+      color: #ff9999;
+    }
+    
+    .badge.badge-done {
+      background: rgba(212, 166, 74, 0.1);
+      border: 1px solid var(--gold);
+      color: var(--gold-3);
+    }
+    
+    .btn-action {
+      background: linear-gradient(180deg, var(--gold) 0%, var(--gold-2) 100%);
+      color: var(--void);
+      border: none;
+      padding: 6px 14px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: bold;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    
+    .btn-action:hover {
+      background: linear-gradient(180deg, var(--gold-3) 0%, var(--gold) 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(212, 166, 74, 0.4);
+    }
+    
+    .btn-action.btn-secondary {
+      background: rgba(233, 223, 200, 0.08);
+      border: 1px solid var(--ink-dim);
+      color: var(--paper);
+    }
+    
+    .btn-action.btn-secondary:hover {
+      background: rgba(233, 223, 200, 0.15);
+      border-color: var(--paper);
+      box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+    }
+    
+    .btn-action:disabled {
+      background: var(--leather) !important;
+      color: var(--ink-dim) !important;
+      cursor: not-allowed;
+      box-shadow: none !important;
+      transform: none !important;
+      border: 1px solid var(--ink-vague);
+    }
+
+    /* Pagination */
+    .pagination-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background: rgba(7,6,10,0.4);
+      border-top: 1px solid rgba(212,166,74,0.15);
+    }
+    
+    .pagination-info {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--ink-mute);
+      letter-spacing: 0.05em;
+    }
+    
+    .pagination-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Modal / Popup Overlay */
+    .rephrase-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 6, 10, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      padding: 20px;
+    }
+    
+    .rephrase-modal.is-open {
+      display: flex;
+      opacity: 1;
+    }
+    
+    .modal-card {
+      background: var(--ink);
+      border: 1px solid var(--gold);
+      border-radius: 4px;
+      width: 100%;
+      max-width: 900px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 4px rgba(212, 166, 74, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      position: relative;
+    }
+    
+    .rephrase-modal.is-open .modal-card {
+      transform: translateY(0);
+    }
+    
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(212,166,74,0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(212,166,74,0.03);
+    }
+    
+    .modal-header h3 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 24px;
+      color: var(--gold-3);
+    }
+    
+    .modal-close {
+      color: var(--ink-dim);
+      font-size: 28px;
+      cursor: pointer;
+      line-height: 1;
+      transition: color 0.2s ease;
+    }
+    
+    .modal-close:hover {
+      color: var(--gold);
+    }
+    
+    .modal-body {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    
+    @media (max-width: 768px) {
+      .modal-body {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .panel-original, .panel-rephrased {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .panel-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+      border-bottom: 1px solid rgba(212,166,74,0.15);
+      padding-bottom: 6px;
+    }
+    
+    .panel-content {
+      background: rgba(7,6,10,0.4);
+      border: 1px solid rgba(233,223,200,0.08);
+      border-radius: 4px;
+      padding: 16px;
+      min-height: 200px;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    
+    .panel-content blockquote {
+      margin: 0;
+      font-style: italic;
+      color: var(--paper-2);
+    }
+    
+    .panel-rephrased textarea {
+      width: 100%;
+      min-height: 200px;
+      background: var(--void);
+      border: 1px solid rgba(212,166,74,0.3);
+      color: var(--paper);
+      padding: 16px;
+      font-family: var(--serif);
+      font-size: 16px;
+      line-height: 1.6;
+      border-radius: 4px;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    
+    .panel-rephrased textarea:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 8px rgba(212, 166, 74, 0.2);
+    }
+    
+    .modal-footer {
+      padding: 20px 24px;
+      border-top: 1px solid rgba(212,166,74,0.2);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background: rgba(212,166,74,0.03);
+    }
+
+    /* Loading Overlay inside Modal */
+    .modal-loader {
+      position: absolute;
+      inset: 0;
+      background: rgba(7, 6, 10, 0.95);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    
+    .modal-loader.is-active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    
+    /* Elegant Gold Spinner */
+    .spinner-ring {
+      width: 50px;
+      height: 50px;
+      border: 2px solid rgba(212, 166, 74, 0.1);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    }
+    
+    .loader-text {
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 20px;
+      color: var(--gold-3);
+    }
+    
+    .loader-subtext {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      color: var(--ink-dim);
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Toasts/Alerts */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--ink);
+      border: 1px solid var(--gold);
+      border-radius: 4px;
+      padding: 16px 24px;
+      color: var(--paper);
+      font-family: var(--serif);
+      font-size: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 2000;
+    }
+    
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    
+    .toast.success {
+      border-left: 4px solid var(--gold);
+    }
+    
+    .toast.error {
+      border-left: 4px solid var(--crimson);
+      border-color: var(--crimson);
+    }
+    
+    .toast .icon {
+      font-family: var(--skt);
+      color: var(--gold);
+      font-size: 20px;
+    }
+    
+    .toast.error .icon {
+      color: #ff9999;
+      font-family: var(--serif);
+      font-weight: bold;
+    }
+    
+    .empty-state {
+      padding: 40px;
+      text-align: center;
+      color: var(--ink-mute);
+      font-style: italic;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== CHROME HEADER ==================== -->
+  <header class="chrome">
+    <div class="chrome-inner">
+      <div class="left">
+        <span class="om">ॐ</span>
+        <span class="b">Bhairava <em>Anugraha</em></span>
+      </div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="codex.html">Codex</a>
+        <a class="is-active" href="#">Rephrase Tool</a>
+      </nav>
+      <div class="right">
+        <span class="mono" style="color: var(--gold); font-size: 10px; letter-spacing: 0.15em;">ADMIN PANEL</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== DASHBOARD CONTAINER ==================== -->
+  <div class="dashboard-container">
+    
+    <div class="leaf-field"></div>
+    <div class="grain"></div>
+
+    <div class="dashboard-header">
+      <h1>Q&A <em>Rephraser</em></h1>
+      <p>Translate and rephrase seeker questions into clean English and traditional Guru-Shishya dialogue style.</p>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="label">Total Questions</div>
+        <div class="value" id="stats-total">—</div>
+        <div class="decorator">ॐ</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Rephrased (Done)</div>
+        <div class="value" id="stats-rephrased" style="color: var(--gold);">—</div>
+        <div class="decorator">तत्व</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Pending Rephrase</div>
+        <div class="value" id="stats-pending" style="color: #ff9999;">—</div>
+        <div class="decorator">प्रश्न</div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters-row">
+      <div class="filter-group search-group">
+        <label for="search-input">Search Q&As</label>
+        <input type="text" id="search-input" class="filter-input" placeholder="Search by question text, asker, number..." />
+      </div>
+      
+      <div class="filter-group">
+        <label for="category-filter">Folio / Category</label>
+        <select id="category-filter" class="filter-select">
+          <option value="all">All Folios</option>
+          <option value="Mantra & Japa">Folio I · Mantra & Japa</option>
+          <option value="Pūjā, Āratī & Rituals">Folio II · Pūjā & Rituals</option>
+          <option value="Maṇḍala & Anuṣṭhāna">Folio III · Maṇḍala & Anuṣṭhāna</option>
+          <option value="Experiences in Sādhanā">Folio IV · Experiences</option>
+          <option value="Advanced Topics">Folio V · Advanced Topics</option>
+          <option value="Women & Sādhanā">Folio VI · Women & Sādhanā</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="status-filter">Rephrasal Status</label>
+        <select id="status-filter" class="filter-select">
+          <option value="all">All Questions</option>
+          <option value="pending">Pending Rephrase</option>
+          <option value="completed">Rephrased</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- DATA TABLE -->
+    <div class="table-container">
+      <table class="qna-table">
+        <thead>
+          <tr>
+            <th class="col-num">№</th>
+            <th class="col-cat">Folio</th>
+            <th class="col-asker">Seeker</th>
+            <th class="col-question">Original Question</th>
+            <th class="col-rephrased">Rephrased Question</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr>
+            <td colspan="6" class="empty-state">Loading Q&As from database...</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- PAGINATION -->
+      <div class="pagination-row">
+        <div class="pagination-info" id="pagination-info">Showing 0-0 of 0 entries</div>
+        <div class="pagination-buttons">
+          <button class="btn-action btn-secondary" id="btn-prev" disabled>Previous</button>
+          <button class="btn-action btn-secondary" id="btn-next" disabled>Next</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== REPHRASE MODAL ==================== -->
+  <div class="rephrase-modal" id="rephrase-modal">
+    <div class="modal-card">
+      
+      <!-- Loading overlay -->
+      <div class="modal-loader" id="modal-loader">
+        <div class="spinner-ring"></div>
+        <div class="loader-text">Consulting the Rephrase Agent...</div>
+        <div class="loader-subtext">TRANSLATING & ADAPTING DIALOGUE</div>
+      </div>
+      
+      <div class="modal-header">
+        <h3 id="modal-title">Rephrase Question № —</h3>
+        <span class="modal-close" id="modal-close-btn">&times;</span>
+      </div>
+      
+      <div class="modal-body">
+        <div class="panel-original">
+          <div class="panel-label">Original Seeker Question</div>
+          <div class="panel-content">
+            <blockquote id="modal-original-text">Original question text will appear here.</blockquote>
+          </div>
+        </div>
+        
+        <div class="panel-rephrased">
+          <div class="panel-label">Agent Output (Editable)</div>
+          <textarea id="modal-rephrased-textarea" placeholder="Agent rephrased output will appear here. You can edit this directly before saving."></textarea>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn-action btn-secondary" id="modal-cancel-btn">Discard</button>
+        <button class="btn-action" id="modal-save-btn">Keep &amp; Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATION ==================== -->
+  <div class="toast" id="toast-notification">
+    <span class="icon">ॐ</span>
+    <span class="message" id="toast-message">Action completed successfully.</span>
+  </div>
+
+  <!-- ==================== DASHBOARD LOGIC ==================== -->
+  <script>
+    let qnaData = [];
+    let filteredData = [];
+    let currentPage = 1;
+    const pageSize = 12;
+    let selectedEntry = null;
+
+    // Cache DOM Elements
+    const tableBody = document.getElementById('table-body');
+    const statsTotal = document.getElementById('stats-total');
+    const statsRephrased = document.getElementById('stats-rephrased');
+    const statsPending = document.getElementById('stats-pending');
+    const searchInput = document.getElementById('search-input');
+    const categoryFilter = document.getElementById('category-filter');
+    const statusFilter = document.getElementById('status-filter');
+    const paginationInfo = document.getElementById('pagination-info');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+    
+    // Modal Elements
+    const rephraseModal = document.getElementById('rephrase-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalOriginalText = document.getElementById('modal-original-text');
+    const modalRephrasedTextarea = document.getElementById('modal-rephrased-textarea');
+    const modalLoader = document.getElementById('modal-loader');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+    const modalSaveBtn = document.getElementById('modal-save-btn');
+    
+    // Toast Element
+    const toast = document.getElementById('toast-notification');
+    const toastMessage = document.getElementById('toast-message');
+
+    // Fetch initial data
+    async function loadData() {
+      try {
+        const response = await fetch('/api/qna');
+        if (!response.ok) throw new Error('Failed to load Q&A data');
+        qnaData = await response.json();
+        
+        // Sort entries by number descending
+        qnaData.sort((a, b) => parseInt(b.num) - parseInt(a.num));
+        
+        updateStats();
+        applyFilters();
+      } catch (err) {
+        console.error(err);
+        tableBody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color: #ff9999;">Error: Could not retrieve data from server. Ensure server.py is running.</td></tr>`;
+        showToast('Could not load Q&As. Please check server status.', 'error');
+      }
+    }
+
+    // Stats computation
+    function updateStats() {
+      const total = qnaData.length;
+      const rephrased = qnaData.filter(d => d.rephrased && d.rephrased.trim() !== '').length;
+      const pending = total - rephrased;
+      
+      statsTotal.textContent = total;
+      statsRephrased.textContent = rephrased;
+      statsPending.textContent = pending;
+    }
+
+    // Filter and Search
+    function applyFilters() {
+      const searchVal = searchInput.value.toLowerCase().trim();
+      const catVal = categoryFilter.value;
+      const statusVal = statusFilter.value;
+
+      filteredData = qnaData.filter(d => {
+        // Search filter
+        const matchesSearch = !searchVal || 
+          d.num.toString().includes(searchVal) ||
+          d.question.toLowerCase().includes(searchVal) ||
+          (d.rephrased && d.rephrased.toLowerCase().includes(searchVal)) ||
+          d.asker.toLowerCase().includes(searchVal) ||
+          d.category.toLowerCase().includes(searchVal);
+
+        // Category filter
+        const matchesCat = catVal === 'all' || d.category === catVal;
+
+        // Status filter
+        const hasRephrased = d.rephrased && d.rephrased.trim() !== '';
+        const matchesStatus = statusVal === 'all' ||
+          (statusVal === 'pending' && !hasRephrased) ||
+          (statusVal === 'completed' && hasRephrased);
+
+        return matchesSearch && matchesCat && matchesStatus;
+      });
+
+      currentPage = 1;
+      renderTable();
+    }
+
+    // Render Table Page
+    function renderTable() {
+      if (filteredData.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" class="empty-state">No matching Q&A entries found.</td></tr>`;
+        paginationInfo.textContent = `Showing 0-0 of 0 entries`;
+        btnPrev.disabled = true;
+        btnNext.disabled = true;
+        return;
+      }
+
+      const startIndex = (currentPage - 1) * pageSize;
+      const endIndex = Math.min(startIndex + pageSize, filteredData.length);
+      const pageData = filteredData.slice(startIndex, endIndex);
+
+      tableBody.innerHTML = pageData.map(d => {
+        const hasRephrased = d.rephrased && d.rephrased.trim() !== '';
+        const rephrasedCell = hasRephrased 
+          ? escapeHTML(d.rephrased) 
+          : `<span class="badge badge-pending">Pending Rephrase</span>`;
+        const actionLabel = hasRephrased ? 'Rephrase Again' : 'Rephrase';
+        const rowClass = hasRephrased ? 'has-rephrased' : 'pending-rephrase';
+
+        return `
+          <tr class="${rowClass}">
+            <td class="col-num">№ ${d.num}</td>
+            <td class="col-cat">${escapeHTML(d.category)}</td>
+            <td class="col-asker">${escapeHTML(d.asker)}</td>
+            <td class="col-question">${escapeHTML(d.question)}</td>
+            <td class="col-rephrased">${rephrasedCell}</td>
+            <td class="col-actions">
+              <button class="btn-action" onclick="triggerRephrase('${d.num}')">${actionLabel}</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Update pagination controls
+      paginationInfo.textContent = `Showing ${startIndex + 1}-${endIndex} of ${filteredData.length} entries`;
+      btnPrev.disabled = currentPage === 1;
+      btnNext.disabled = endIndex >= filteredData.length;
+    }
+
+    // Trigger agent rephrasing (modal popup)
+    async function triggerRephrase(num) {
+      selectedEntry = qnaData.find(d => d.num.toString() === num.toString());
+      if (!selectedEntry) return;
+
+      // Populate static parts of modal
+      modalTitle.textContent = `Rephrase Question № ${selectedEntry.num}`;
+      modalOriginalText.textContent = selectedEntry.question;
+      modalRephrasedTextarea.value = selectedEntry.rephrased || '';
+      
+      // Open modal & activate loader
+      rephraseModal.classList.add('is-open');
+      modalLoader.classList.add('is-active');
+      
+      try {
+        const response = await fetch('/api/rephrase', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ question: selectedEntry.question })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Server error during rephrasing');
+        }
+        
+        // Populate and disable loader
+        modalRephrasedTextarea.value = data.rephrased;
+        modalLoader.classList.remove('is-active');
+      } catch (err) {
+        console.error(err);
+        modalLoader.classList.remove('is-active');
+        showToast(`Agent Error: ${err.message}`, 'error');
+        // Let the user edit manually if the agent fails or API keys are missing
+        if (!modalRephrasedTextarea.value) {
+          modalRephrasedTextarea.value = selectedEntry.question;
+        }
+      }
+    }
+
+    // Save rephrased question to CSV disk database
+    async function saveRephrase() {
+      if (!selectedEntry) return;
+      
+      const newText = modalRephrasedTextarea.value.trim();
+      if (!newText) {
+        showToast('Rephrased question cannot be empty', 'error');
+        return;
+      }
+
+      modalLoader.querySelector('.loader-text').textContent = 'Saving to database files...';
+      modalLoader.classList.add('is-active');
+
+      try {
+        const response = await fetch('/api/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            num: selectedEntry.num,
+            rephrased: newText
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to save rephrased question');
+        }
+        
+        // Update local object & refresh UI
+        selectedEntry.rephrased = newText;
+        updateStats();
+        renderTable();
+        
+        // Close modal
+        const savedNum = selectedEntry.num;
+        closeModal();
+        showToast(`Saved Question № ${savedNum} successfully!`, 'success');
+      } catch (err) {
+        console.error(err);
+        modalLoader.classList.remove('is-active');
+        showToast(`Save Error: ${err.message}`, 'error');
+      } finally {
+        // Reset loader text for next run
+        modalLoader.querySelector('.loader-text').textContent = 'Consulting the Rephrase Agent...';
+      }
+    }
+
+    // Close Modal helper
+    function closeModal() {
+      rephraseModal.classList.remove('is-open');
+      modalLoader.classList.remove('is-active');
+      selectedEntry = null;
+    }
+
+    // HTML Escaper
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          "'": '&#39;',
+          '"': '&quot;'
+        }[tag] || tag)
+      );
+    }
+
+    // Toast Manager
+    function showToast(message, type = 'success') {
+      toastMessage.textContent = message;
+      toast.className = `toast show ${type}`;
+      toast.querySelector('.icon').textContent = type === 'success' ? 'ॐ' : '⚠';
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 4000);
+    }
+
+    // Event Listeners
+    searchInput.addEventListener('input', applyFilters);
+    categoryFilter.addEventListener('change', applyFilters);
+    statusFilter.addEventListener('change', applyFilters);
+    
+    btnPrev.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderTable();
+      }
+    });
+    
+    btnNext.addEventListener('click', () => {
+      const maxPages = Math.ceil(filteredData.length / pageSize);
+      if (currentPage < maxPages) {
+        currentPage++;
+        renderTable();
+      }
+    });
+
+    modalCloseBtn.addEventListener('click', closeModal);
+    modalCancelBtn.addEventListener('click', closeModal);
+    modalSaveBtn.addEventListener('click', saveRephrase);
+    
+    rephraseModal.addEventListener('click', e => {
+      if (e.target === rephraseModal) closeModal();
+    });
+
+    // Handle ESC key for modal
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && rephraseModal.classList.contains('is-open')) {
+        closeModal();
+      }
+    });
+
+    // Bootstrap
+    loadData();
+  </script>
+</body>
+</html>
