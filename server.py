@@ -7,7 +7,7 @@ import urllib.parse
 from rephrase_agent import rephrase_question
 
 PORT = 8080
-DIRECTORY = r"c:\Users\dynam\Desktop\Bhairva"
+DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
 class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
