@@ -19,7 +19,8 @@ class handler(BaseHTTPRequestHandler):
         try:
             data = json.loads(post_data.decode('utf-8'))
             num = str(data.get('num', '')).strip()
-            rephrased_text = data.get('rephrased', '').strip()
+            rephrased_text = data.get('rephrased')
+            approved_val = data.get('approved')
         except Exception:
             self.send_response(400)
             self.send_header('Content-Type', 'application/json')
@@ -34,6 +35,14 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(json.dumps({"error": "num is required"}).encode('utf-8'))
+            return
+
+        if rephrased_text is None and approved_val is None:
+            self.send_response(400)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": "Either rephrased or approved parameter is required"}).encode('utf-8'))
             return
 
         # If we are explicitly in Vercel environment, don't attempt to write to disk
@@ -51,8 +60,8 @@ class handler(BaseHTTPRequestHandler):
             return
 
         # Otherwise, attempt to update local files
-        success_qna = self.update_csv("qna.csv", num, rephrased_text)
-        success_preview = self.update_csv("qna-preview.csv", num, rephrased_text)
+        success_qna = self.update_csv("qna.csv", num, rephrased_text, approved_val)
+        success_preview = self.update_csv("qna-preview.csv", num, rephrased_text, approved_val)
 
         if success_qna and success_preview:
             self.send_response(200)
@@ -69,7 +78,7 @@ class handler(BaseHTTPRequestHandler):
                 "error": f"Failed to update files. qna.csv success: {success_qna}, qna-preview.csv success: {success_preview}"
             }).encode('utf-8'))
 
-    def update_csv(self, filename, num, rephrased_text):
+    def update_csv(self, filename, num, rephrased_text=None, approved_val=None):
         root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         file_path = os.path.join(root_dir, filename)
         if not os.path.exists(file_path):
@@ -94,16 +103,25 @@ class handler(BaseHTTPRequestHandler):
         header = [h.strip().lower() for h in rows[0]]
         try:
             num_idx = header.index("num")
-            rephrased_idx = header.index("rephrased")
         except ValueError:
             return False
+
+        rephrased_idx = header.index("rephrased") if "rephrased" in header else -1
+        approved_idx = header.index("approved") if "approved" in header else -1
 
         updated = False
         for row in rows[1:]:
             if len(row) > num_idx and row[num_idx].strip() == num:
-                while len(row) <= rephrased_idx:
-                    row.append("")
-                row[rephrased_idx] = rephrased_text
+                if rephrased_text is not None and rephrased_idx != -1:
+                    while len(row) <= rephrased_idx:
+                        row.append("")
+                    row[rephrased_idx] = rephrased_text.strip()
+                
+                if approved_val is not None and approved_idx != -1:
+                    while len(row) <= approved_idx:
+                        row.append("")
+                    row[approved_idx] = str(approved_val).strip().lower()
+                
                 updated = True
                 break
 

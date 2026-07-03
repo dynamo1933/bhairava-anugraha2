@@ -96,7 +96,8 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
         try:
             data = json.loads(post_data.decode('utf-8'))
             num = str(data.get('num', '')).strip()
-            rephrased_text = data.get('rephrased', '').strip()
+            rephrased_text = data.get('rephrased')
+            approved_val = data.get('approved')
         except Exception:
             self.send_json_error(400, "Invalid JSON body")
             return
@@ -105,15 +106,19 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_error(400, "num is required")
             return
 
-        success_qna = self.update_csv("qna.csv", num, rephrased_text)
-        success_preview = self.update_csv("qna-preview.csv", num, rephrased_text)
+        if rephrased_text is None and approved_val is None:
+            self.send_json_error(400, "Either rephrased or approved parameter is required")
+            return
+
+        success_qna = self.update_csv("qna.csv", num, rephrased_text, approved_val)
+        success_preview = self.update_csv("qna-preview.csv", num, rephrased_text, approved_val)
 
         if success_qna and success_preview:
             self.send_json_response({"success": True, "message": "Updated successfully on disk"})
         else:
             self.send_json_error(500, f"Failed to update files. qna.csv success: {success_qna}, qna-preview.csv success: {success_preview}")
 
-    def update_csv(self, filename, num, rephrased_text):
+    def update_csv(self, filename, num, rephrased_text=None, approved_val=None):
         file_path = os.path.join(DIRECTORY, filename)
         if not os.path.exists(file_path):
             return False
@@ -137,16 +142,25 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
         header = [h.strip().lower() for h in rows[0]]
         try:
             num_idx = header.index("num")
-            rephrased_idx = header.index("rephrased")
         except ValueError:
             return False
+
+        rephrased_idx = header.index("rephrased") if "rephrased" in header else -1
+        approved_idx = header.index("approved") if "approved" in header else -1
 
         updated = False
         for row in rows[1:]:
             if len(row) > num_idx and row[num_idx].strip() == num:
-                while len(row) <= rephrased_idx:
-                    row.append("")
-                row[rephrased_idx] = rephrased_text
+                if rephrased_text is not None and rephrased_idx != -1:
+                    while len(row) <= rephrased_idx:
+                        row.append("")
+                    row[rephrased_idx] = rephrased_text.strip()
+                
+                if approved_val is not None and approved_idx != -1:
+                    while len(row) <= approved_idx:
+                        row.append("")
+                    row[approved_idx] = str(approved_val).strip().lower()
+                
                 updated = True
                 break
 
@@ -180,8 +194,49 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
 
+def migrate_csvs():
+    """
+    Ensure 'approved' column exists in both qna.csv and qna-preview.csv.
+    """
+    for name in ("qna.csv", "qna-preview.csv"):
+        path = os.path.join(DIRECTORY, name)
+        if not os.path.exists(path):
+            continue
+        
+        rows = []
+        for enc in ('utf-8-sig', 'utf-8', 'cp1252', 'latin-1'):
+            try:
+                with open(path, 'r', newline='', encoding=enc) as f:
+                    reader = csv.reader(f)
+                    rows = list(reader)
+                if rows:
+                    break
+            except Exception:
+                continue
+        
+        if not rows:
+            continue
+            
+        header = rows[0]
+        header_lower = [h.strip().lower() for h in header]
+        if "approved" not in header_lower:
+            header.append("approved")
+            for r in rows[1:]:
+                while len(r) < len(header) - 1:
+                    r.append("")
+                r.append("true")
+            
+            try:
+                with open(path, 'w', newline='', encoding='utf-8') as f:
+                    writer = csv.writer(f, quoting=csv.QUOTE_ALL)
+                    writer.writerows(rows)
+                print(f"[+] Migrated {name} to include 'approved' column.")
+            except Exception as e:
+                print(f"[-] Failed to migrate {name}: {e}")
+
 if __name__ == '__main__':
     os.chdir(DIRECTORY)
+    migrate_csvs()
     
     env_path = os.path.join(DIRECTORY, ".env")
     if os.path.exists(env_path):

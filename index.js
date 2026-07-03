@@ -7,14 +7,14 @@
 // ---------- CSV → DATA pipeline ----------
 // Categories the site knows about, with their Sanskrit marks and roman numerals.
 const CATEGORY_META = {
-  "Mantra & Japa":          { key: "mantra-japa",  skt: "मन्त्र · जप",      roman: "I"   },
-  "Pūjā, Āratī & Rituals":  { key: "puja-aarti",   skt: "पूजा · आरती",      roman: "II"  },
-  "Maṇḍala & Anuṣṭhāna":    { key: "mandala",      skt: "मण्डल · अनुष्ठान", roman: "III" },
-  "Experiences in Sādhanā": { key: "experiences",  skt: "अनुभव",             roman: "IV"  },
-  "Advanced Topics":        { key: "advanced",     skt: "गूढ विद्या",        roman: "V"   },
-  "Women & Sādhanā":        { key: "women",        skt: "स्त्री · साधना",    roman: "VI"  },
+  "Mantra & Japa": { key: "mantra-japa", skt: "मन्त्र · जप", roman: "I" },
+  "Pūjā, Āratī & Rituals": { key: "puja-aarti", skt: "पूजा · आरती", roman: "II" },
+  "Maṇḍala & Anuṣṭhāna": { key: "mandala", skt: "मण्डल · अनुष्ठान", roman: "III" },
+  "Experiences in Sādhanā": { key: "experiences", skt: "अनुभव", roman: "IV" },
+  "Advanced Topics": { key: "advanced", skt: "गूढ विद्या", roman: "V" },
+  "Women & Sādhanā": { key: "women", skt: "स्त्री · साधना", roman: "VI" },
 };
-const CAT_ORDER = ["mantra-japa","puja-aarti","mandala","experiences","advanced","women"];
+const CAT_ORDER = ["mantra-japa", "puja-aarti", "mandala", "experiences", "advanced", "women"];
 
 // Minimal RFC-4180 CSV parser: quoted fields, embedded newlines, "" escapes.
 function parseCSV(text) {
@@ -25,7 +25,7 @@ function parseCSV(text) {
     const c = text[i];
     if (inQ) {
       if (c === '"') {
-        if (text[i+1] === '"') { field += '"'; i += 2; continue; }
+        if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
         inQ = false; i++;
       } else { field += c; i++; }
     } else {
@@ -33,7 +33,7 @@ function parseCSV(text) {
       else if (c === ",") { row.push(field); field = ""; i++; }
       else if (c === CR || c === LF) {
         row.push(field); field = "";
-        if (c === CR && text[i+1] === LF) i++;
+        if (c === CR && text[i + 1] === LF) i++;
         i++;
         if (row.length > 1 || row[0] !== "") rows.push(row);
         row = [];
@@ -48,15 +48,15 @@ function formatDate(d) {
   if (!d) return "";
   const m = d.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
   if (!m) return d;
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  return parseInt(m[1],10) + " " + months[parseInt(m[2],10)-1] + " " + m[3];
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  return parseInt(m[1], 10) + " " + months[parseInt(m[2], 10) - 1] + " " + m[3];
 }
 function toIso(d, t) {
   const m = (d || "").match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
   if (!m) return "";
   const time = t && /^\d{1,2}:\d{2}$/.test(t) ? t : "00:00";
-  const hhmm = time.split(":").map(s => s.padStart(2,"0")).join(":");
-  return m[3] + "-" + m[2].padStart(2,"0") + "-" + m[1].padStart(2,"0") + "T" + hhmm + ":00";
+  const hhmm = time.split(":").map(s => s.padStart(2, "0")).join(":");
+  return m[3] + "-" + m[2].padStart(2, "0") + "-" + m[1].padStart(2, "0") + "T" + hhmm + ":00";
 }
 function stripGreeting(s) {
   return s.replace(/^\s*(namaskaram|namaskara|namaste|pranam(s)?|pranaam)\s*[,!\.]?\s*/i, "").trim();
@@ -67,13 +67,13 @@ function firstSentence(s, maxLen) {
   const m = t.match(/^(.+?[\.\?\!])(\s|$)/);
   let out = m ? m[1].trim() : t.trim();
   if (out.length > maxLen) {
-    out = out.slice(0,maxLen).replace(/\s+\S*$/,"").replace(/[,;:\- ]+$/,"") + "…";
+    out = out.slice(0, maxLen).replace(/\s+\S*$/, "").replace(/[,;:\- ]+$/, "") + "…";
   }
   return out;
 }
 function paragraphsToHtml(s) {
   if (!s) return "";
-  const escape = t => t.replace(/&(?!#?\w+;)/g, "&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const escape = t => t.replace(/&(?!#?\w+;)/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const inline = t => t
     .replace(/\*\*\*([^*\n]+?)\*\*\*/g, "<strong><em>$1</em></strong>")
     .replace(/\*\*([^*\n]+?)\*\*/g, "<strong>$1</strong>")
@@ -101,21 +101,27 @@ function buildData(csvText) {
     const meta = CATEGORY_META[cat];
     if (!meta) continue;
     const question = (r[col("question")] || "").trim();
-    const answer   = (r[col("answer")]   || "").trim();
+    const answer = (r[col("answer")] || "").trim();
     if (!question || !answer) continue;
+
+    // Filter out unapproved entries
+    const approvedCol = col("approved");
+    const approved = approvedCol !== -1 ? (r[approvedCol] || "").trim().toLowerCase() : "true";
+    if (approved === "false" || approved === "0") continue;
+
     const date = (r[col("date")] || "").trim();
     const time = (r[col("time")] || "").trim();
     entries.push({
-      num:          parseInt(r[col("num")], 10) || 0,
-      asker:        (r[col("asker")] || "Anonymous").trim() || "Anonymous",
-      date:         formatDate(date),
-      time:         time,
-      iso:          toIso(date, time),
+      num: parseInt(r[col("num")], 10) || 0,
+      asker: (r[col("asker")] || "Anonymous").trim() || "Anonymous",
+      date: formatDate(date),
+      time: time,
+      iso: toIso(date, time),
       category_key: meta.key,
-      title:        firstSentence(question),
-      question:     question.replace(/\n+/g, " "),
-      original:     question.replace(/\n+/g, " "),
-      answer:       paragraphsToHtml(answer),
+      title: firstSentence(question),
+      question: question.replace(/\n+/g, " "),
+      original: question.replace(/\n+/g, " "),
+      answer: paragraphsToHtml(answer),
     });
   }
   // Sort newest first (by iso desc, fallback to num desc)
@@ -170,7 +176,7 @@ async function loadData() {
 
 // Helpers
 const escapeHtml = s => String(s).replace(/[&<>"']/g, c => (
-  {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]
+  { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
 ));
 const norm = s => String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
@@ -225,7 +231,7 @@ function renderRecent() {
     const catLabel = cat ? cat.name.toUpperCase() : e.category_key.toUpperCase();
     const dateBits = e.date ? e.date.split(" ") : [];
     const dateShort = e.date
-      ? `${dateBits[0]} · ${(dateBits[1] || "").slice(0,3).toUpperCase()} · ${dateBits[2] || ""}`
+      ? `${dateBits[0]} · ${(dateBits[1] || "").slice(0, 3).toUpperCase()} · ${dateBits[2] || ""}`
       : "—";
     return `
       <div class="row" data-id="${e.num}" data-cat-key="${e.category_key}">
@@ -275,8 +281,8 @@ function renderFeatured() {
 
 function toRoman(n) {
   if (!n) return "";
-  const m = [["M",1000],["CM",900],["D",500],["CD",400],["C",100],["XC",90],
-             ["L",50],["XL",40],["X",10],["IX",9],["V",5],["IV",4],["I",1]];
+  const m = [["M", 1000], ["CM", 900], ["D", 500], ["CD", 400], ["C", 100], ["XC", 90],
+  ["L", 50], ["XL", 40], ["X", 10], ["IX", 9], ["V", 5], ["IV", 4], ["I", 1]];
   let s = "", x = n;
   for (const [r, v] of m) while (x >= v) { s += r; x -= v; }
   return s;
@@ -291,7 +297,7 @@ function renderEntry(id) {
   if (!e) return false;
   const cat = categoryByKey(e.category_key);
   const folioRoman = cat ? cat.roman : "";
-  const folioName  = cat ? cat.name.toUpperCase() : "";
+  const folioName = cat ? cat.name.toUpperCase() : "";
   const inFolioRoman = toRoman(e.in_folio);
 
   // Most answers don't have an explicit "lead" — wrap the first paragraph as the lead style
@@ -422,11 +428,11 @@ function applyHash() {
 // ---------- folio page renderer ----------
 const FOLIO_DESCRIPTIONS = {
   "mantra-japa": "On the form of mantra, the count, the breath; on the inward mechanics of repetition and the moment a sound becomes a doorway.",
-  "puja-aarti":  "Ācamana, offerings, the lamp, the prasādam. What may be substituted, what must not, and why the small details matter most.",
-  "mandala":     "The forty-eight-day cycle of transformation — vows undertaken, vows broken, what to do when the count slips, and how to begin again without despair.",
+  "puja-aarti": "Ācamana, offerings, the lamp, the prasādam. What may be substituted, what must not, and why the small details matter most.",
+  "mandala": "The forty-eight-day cycle of transformation — vows undertaken, vows broken, what to do when the count slips, and how to begin again without despair.",
   "experiences": "Peace and sleep, the night sweats, yoga-nidrā, the unprovoked tears, the signs of progress — and whether to make anything of them at all.",
-  "advanced":    "Yantra, nyāsa, homa, the worship of one's kuladevatā — the practices that wait until the foundation is steady.",
-  "women":       "On the body's seasons and the practice that must accommodate them — menstruation, menopause, the ground of women's devotion.",
+  "advanced": "Yantra, nyāsa, homa, the worship of one's kuladevatā — the practices that wait until the foundation is steady.",
+  "women": "On the body's seasons and the practice that must accommodate them — menstruation, menopause, the ground of women's devotion.",
 };
 
 function renderFolioPage(catKey) {
@@ -449,7 +455,7 @@ function renderFolioPage(catKey) {
   list.innerHTML = entries.map(e => {
     const dateBits = e.date ? e.date.split(" ") : [];
     const dateShort = e.date
-      ? `${dateBits[0]} · ${(dateBits[1] || "").slice(0,3).toUpperCase()} · ${dateBits[2] || ""}`
+      ? `${dateBits[0]} · ${(dateBits[1] || "").slice(0, 3).toUpperCase()} · ${dateBits[2] || ""}`
       : "—";
     return `
       <div class="row" data-id="${e.num}" data-cat-key="${e.category_key}">
@@ -498,7 +504,7 @@ function renderAllPage() {
     const skt = cat ? cat.skt.split(" ")[0] : "";
     const dateBits = e.date ? e.date.split(" ") : [];
     const dateShort = e.date
-      ? `${dateBits[0]} · ${(dateBits[1] || "").slice(0,3).toUpperCase()} · ${dateBits[2] || ""}`
+      ? `${dateBits[0]} · ${(dateBits[1] || "").slice(0, 3).toUpperCase()} · ${dateBits[2] || ""}`
       : "—";
     return `
       <div class="row" data-id="${e.num}" data-cat-key="${e.category_key}">
@@ -525,11 +531,11 @@ function buildSearchIndex() {
   DATA.categories.forEach(c => {
     idx.push({
       kind: `FOLIO ${c.roman}`,
-      skt:  c.skt,
+      skt: c.skt,
       titleHTML: c.name,
       titleText: c.name,
-      desc:  `${c.count} entries`,
-      type:  "category",
+      desc: `${c.count} entries`,
+      type: "category",
       catKey: c.key,
     });
   });
@@ -538,11 +544,11 @@ function buildSearchIndex() {
     const cat = categoryByKey(e.category_key);
     idx.push({
       kind: `№ ${e.num}`,
-      skt:  cat ? cat.skt.split(" ")[0] : "",
+      skt: cat ? cat.skt.split(" ")[0] : "",
       titleHTML: e.title,
       titleText: e.title + " " + (e.question || ""),
-      desc:  (cat ? cat.name : "") + (e.asker ? " — " + e.asker : ""),
-      type:  "entry",
+      desc: (cat ? cat.name : "") + (e.asker ? " — " + e.asker : ""),
+      type: "entry",
       entryId: String(e.num),
     });
   });
@@ -611,11 +617,11 @@ document.getElementById("folio-back-link").addEventListener("click", e => {
 
 // ---------- search palette controller ----------
 (function () {
-  const palette  = document.getElementById("palette");
-  const input    = document.getElementById("palette-input");
-  const results  = document.getElementById("palette-results");
-  const countEl  = document.getElementById("palette-count");
-  const trigger  = document.getElementById("chrome-search");
+  const palette = document.getElementById("palette");
+  const input = document.getElementById("palette-input");
+  const results = document.getElementById("palette-results");
+  const countEl = document.getElementById("palette-count");
+  const trigger = document.getElementById("chrome-search");
   const isOverlayOpen = () => overlay.classList.contains("is-open");
   const isOpen = () => palette.classList.contains("is-open");
 
@@ -627,17 +633,17 @@ document.getElementById("folio-back-link").addEventListener("click", e => {
   function score(item, tokens) {
     if (tokens.length === 0) return 0.001;
     const title = norm(item.titleText);
-    const desc  = norm(item.desc);
-    const skt   = item.skt.toLowerCase();
-    const kind  = item.kind.toLowerCase();
+    const desc = norm(item.desc);
+    const skt = item.skt.toLowerCase();
+    const kind = item.kind.toLowerCase();
     let total = 0;
     for (const tRaw of tokens) {
       const t = norm(tRaw);
       let hit = 0;
       if (title.includes(t)) hit += 4;
       if (skt.includes(tRaw)) hit += 3;
-      if (desc.includes(t))  hit += 2;
-      if (kind.includes(t))  hit += 1;
+      if (desc.includes(t)) hit += 2;
+      if (kind.includes(t)) hit += 1;
       if (hit === 0) return 0;
       total += hit;
     }
@@ -751,10 +757,10 @@ document.getElementById("folio-back-link").addEventListener("click", e => {
       if (!editing) { e.preventDefault(); openPalette(); return; }
     }
     if (!isOpen()) return;
-    if (k === "Escape")         { e.preventDefault(); closePalette(); }
+    if (k === "Escape") { e.preventDefault(); closePalette(); }
     else if (k === "ArrowDown") { e.preventDefault(); setActive(active + 1); }
-    else if (k === "ArrowUp")   { e.preventDefault(); setActive(active - 1); }
-    else if (k === "Enter")     { e.preventDefault(); if (filtered[active]) activate(filtered[active]); }
+    else if (k === "ArrowUp") { e.preventDefault(); setActive(active - 1); }
+    else if (k === "Enter") { e.preventDefault(); if (filtered[active]) activate(filtered[active]); }
   });
   window.__lacquer.openSearch = openPalette;
 })();
