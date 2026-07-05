@@ -61,9 +61,8 @@ class handler(BaseHTTPRequestHandler):
 
         # Otherwise, attempt to update local files
         success_qna = self.update_csv("qna.csv", num, rephrased_text, approved_val)
-        success_preview = self.update_csv("qna-preview.csv", num, rephrased_text, approved_val)
 
-        if success_qna and success_preview:
+        if success_qna:
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -75,7 +74,7 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(json.dumps({
-                "error": f"Failed to update files. qna.csv success: {success_qna}, qna-preview.csv success: {success_preview}"
+                "error": "Failed to update qna.csv file on disk"
             }).encode('utf-8'))
 
     def update_csv(self, filename, num, rephrased_text=None, approved_val=None):

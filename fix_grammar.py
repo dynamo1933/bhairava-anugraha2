@@ -252,6 +252,5 @@ def process_csv(input_path, output_path):
 
 if __name__ == '__main__':
     base = r'C:\Users\apgib\.gemini\antigravity-ide\scratch\bhairava-anugraha'
-    process_csv(f'{base}\\qna-preview.csv', f'{base}\\qna-preview.csv')
     process_csv(f'{base}\\qna.csv',         f'{base}\\qna.csv')
     print("Done.")

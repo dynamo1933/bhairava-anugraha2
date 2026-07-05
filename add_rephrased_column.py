@@ -59,5 +59,4 @@ def add_rephrased_column(file_path):
 if __name__ == '__main__':
     workspace_dir = r"c:\Users\dynam\Desktop\Bhairva"
     add_rephrased_column(os.path.join(workspace_dir, "qna.csv"))
-    add_rephrased_column(os.path.join(workspace_dir, "qna-preview.csv"))
     print("[+] Migration completed.")

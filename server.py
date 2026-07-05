@@ -115,12 +115,11 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         success_qna = self.update_csv("qna.csv", num, rephrased_text, approved_val)
-        success_preview = self.update_csv("qna-preview.csv", num, rephrased_text, approved_val)
 
-        if success_qna and success_preview:
+        if success_qna:
             self.send_json_response({"success": True, "message": "Updated successfully on disk"})
         else:
-            self.send_json_error(500, f"Failed to update files. qna.csv success: {success_qna}, qna-preview.csv success: {success_preview}")
+            self.send_json_error(500, "Failed to update qna.csv file on disk")
 
     def update_csv(self, filename, num, rephrased_text=None, approved_val=None):
         file_path = os.path.join(DIRECTORY, filename)
@@ -200,9 +199,9 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
 
 def migrate_csvs():
     """
-    Ensure 'approved' column exists in both qna.csv and qna-preview.csv.
+    Ensure 'approved' column exists in qna.csv.
     """
-    for name in ("qna.csv", "qna-preview.csv"):
+    for name in ("qna.csv",):
         path = os.path.join(DIRECTORY, name)
         if not os.path.exists(path):
             continue

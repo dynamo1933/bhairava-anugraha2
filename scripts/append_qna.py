@@ -191,10 +191,6 @@ def main() -> None:
         logger.info(f"Updating {QNA_PATH}...")
         append_to_target(QNA_PATH, new_data_rows, QNA_APPEND_MIN, QNA_APPEND_MAX)
 
-        # Perform merge into qna-preview.csv
-        logger.info(f"Updating {PREVIEW_PATH}...")
-        append_to_target(PREVIEW_PATH, new_data_rows, PREVIEW_APPEND_MIN, PREVIEW_APPEND_MAX)
-
         logger.info("CSV merge completed successfully.")
 
     except Exception as ex:
