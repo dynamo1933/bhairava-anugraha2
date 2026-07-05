@@ -17,6 +17,10 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
         parsed_url = urllib.parse.urlparse(self.path)
         if parsed_url.path == '/api/qna':
             self.handle_get_qna()
+        elif parsed_url.path in ('/rephrase', '/rephrase/'):
+            self.send_response(301)
+            self.send_header('Location', '/rephrase.html')
+            self.end_headers()
         else:
             super().do_GET()
 

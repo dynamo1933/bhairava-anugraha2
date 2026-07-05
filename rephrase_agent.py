@@ -31,40 +31,47 @@ def rephrase_question(question: str) -> str:
     azure_key = os.environ.get("AZURE_OPENAI_API_KEY")
     openai_key = os.environ.get("OPENAI_API_KEY")
     
+    gemini_failed = False
     # 1. Hitting Gemini endpoint if GEMINI_API_KEY is configured
     if gemini_key:
         print("[*] Hitting Gemini API for rephrasing...")
-        prompt_text = rephrase_prompt.format(question=question)
-        model_name = os.environ.get("GEMINI_MODEL_NAME", "gemini-flash-latest")
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
-        headers = {
-            "Content-Type": "application/json",
-            "X-goog-api-key": gemini_key
-        }
-        payload = {
-            "contents": [
-                {
-                    "parts": [
-                        {
-                            "text": prompt_text
-                        }
-                    ]
-                }
-            ]
-        }
-        response = requests.post(url, headers=headers, json=payload)
-        if response.status_code == 200:
-            data = response.json()
-            try:
-                return data['candidates'][0]['content']['parts'][0]['text'].strip()
-            except (KeyError, IndexError) as e:
-                raise Exception(f"Failed to parse Gemini response: {e}. Raw response: {data}")
-        else:
-            raise Exception(f"Gemini API returned status code {response.status_code}: {response.text}")
+        try:
+            prompt_text = rephrase_prompt.format(question=question)
+            model_name = os.environ.get("GEMINI_MODEL_NAME", "gemini-flash-latest")
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+            headers = {
+                "Content-Type": "application/json",
+                "X-goog-api-key": gemini_key
+            }
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {
+                                "text": prompt_text
+                            }
+                        ]
+                    }
+                ]
+            }
+            response = requests.post(url, headers=headers, json=payload, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                try:
+                    return data['candidates'][0]['content']['parts'][0]['text'].strip()
+                except (KeyError, IndexError) as e:
+                    print(f"[-] Failed to parse Gemini response: {e}. Raw response: {data}")
+                    gemini_failed = True
+            else:
+                print(f"[-] Gemini API returned status code {response.status_code}: {response.text}")
+                gemini_failed = True
+        except Exception as e:
+            print(f"[-] Gemini API request failed or timed out: {e}")
+            gemini_failed = True
 
     # 2. Check if API keys are set; if not, use a rule-based mock translator/rephraser for testing
-    if not azure_key and not openai_key:
-        print("[*] No OpenAI, Azure OpenAI, or Gemini keys found. Using local mock rephraser fallback.")
+    if (not azure_key and not openai_key) or gemini_failed:
+        print("[*] Using local mock rephraser fallback.")
         lower_q = question.lower()
         mock_rephrased = question
         
