@@ -112,6 +112,10 @@ function buildData(csvText) {
     const answer = (r[col("answer")] || "").trim();
     if (!question || !answer) continue;
 
+    const rephrasedCol = col("rephrased");
+    const rephrased = rephrasedCol !== -1 ? (r[rephrasedCol] || "").trim() : "";
+    const displayedQuestion = rephrased !== "" ? rephrased : question;
+
     // Filter out unapproved entries
     const approvedCol = col("approved");
     const approved = approvedCol !== -1 ? (r[approvedCol] || "").trim().toLowerCase() : "true";
@@ -126,9 +130,10 @@ function buildData(csvText) {
       time: time,
       iso: toIso(date, time),
       category_key: meta.key,
-      title: firstSentence(question),
-      question: question.replace(/\n+/g, " "),
+      title: firstSentence(displayedQuestion),
+      question: displayedQuestion.replace(/\n+/g, " "),
       original: question.replace(/\n+/g, " "),
+      rephrased: rephrased.replace(/\n+/g, " "),
       answer: paragraphsToHtml(answer),
     });
   }
@@ -334,7 +339,7 @@ function renderEntry(id) {
         <div class="head">
           <span>QUESTION</span>
         </div>
-        <div class="body"><p><em>"${escapeHtml(e.original || e.question)}"</em></p></div>
+        <div class="body"><p><em>"${escapeHtml(e.question)}"</em></p></div>
       </aside>
       <div class="answer">
         ${answerHtml}
@@ -554,7 +559,7 @@ function buildSearchIndex() {
       kind: `№ ${e.num}`,
       skt: cat ? cat.skt.split(" ")[0] : "",
       titleHTML: e.title,
-      titleText: e.title + " " + (e.question || ""),
+      titleText: e.title + " " + (e.question || "") + " " + (e.original || ""),
       desc: (cat ? cat.name : "") + (e.asker ? " — " + e.asker : ""),
       type: "entry",
       entryId: String(e.num),
