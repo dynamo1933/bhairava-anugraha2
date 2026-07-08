@@ -629,9 +629,202 @@
       background: rgba(7, 6, 10, 0.95);
       box-shadow: 0 0 8px rgba(212, 166, 74, 0.2);
     }
+
+    /* Login Wall Styles */
+    #login-wall {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at center, rgba(15, 12, 22, 0.85) 0%, rgba(5, 3, 8, 0.98) 100%),
+                  url('images/login_bg.jpg') no-repeat center center;
+      background-size: cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1),
+                  visibility 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    #login-wall.fade-out {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .login-card {
+      width: 420px;
+      padding: 40px;
+      background: rgba(15, 13, 22, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(212, 166, 74, 0.15);
+      border-radius: 12px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transform: scale(1);
+      transition: transform 0.3s ease;
+    }
+
+    .login-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .login-card h2 {
+      font-family: var(--serif);
+      color: var(--paper);
+      font-size: 28px;
+      font-weight: 400;
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+    }
+
+    .login-card h2 em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .login-card .om-logo {
+      font-size: 36px;
+      color: var(--gold);
+      margin-bottom: 16px;
+      opacity: 0.9;
+      animation: pulseOm 3s infinite ease-in-out;
+    }
+
+    .login-card p {
+      font-size: 13px;
+      color: rgba(245, 240, 225, 0.6);
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .login-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .login-group label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(7, 5, 10, 0.6);
+      border: 1px solid rgba(212, 166, 74, 0.2);
+      border-radius: 6px;
+      color: var(--paper);
+      font-family: var(--sans);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s, background-color 0.25s;
+    }
+
+    .login-input:focus {
+      border-color: var(--gold);
+      background: rgba(7, 5, 10, 0.85);
+      box-shadow: 0 0 10px rgba(212, 166, 74, 0.2);
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--gold);
+      border: none;
+      border-radius: 6px;
+      color: #0d0c12;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background-color 0.25s, transform 0.15s, box-shadow 0.25s;
+    }
+
+    .login-btn:hover {
+      background: #f7e2ad;
+      box-shadow: 0 5px 15px rgba(212, 166, 74, 0.3);
+    }
+
+    .login-btn:active {
+      transform: scale(0.98);
+    }
+
+    .login-error {
+      color: #ff5555;
+      font-size: 12px;
+      margin-top: 15px;
+      min-height: 18px;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .login-error.show {
+      opacity: 1;
+    }
+
+    /* Animations */
+    @keyframes pulseOm {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 1; text-shadow: 0 0 15px rgba(212, 166, 74, 0.5); }
+    }
+
+    .login-card.shake {
+      animation: shakeCard 0.4s ease-in-out;
+    }
+
+    @keyframes shakeCard {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
   </style>
 </head>
 <body>
+
+  <!-- ==================== LOGIN WALL OVERLAY ==================== -->
+  <div id="login-wall">
+    <div class="login-card" id="login-card">
+      <div class="om-logo">ॐ</div>
+      <h2>Bhairava <em>Codex</em></h2>
+      <p>Enter the administrator credentials to access the translation and rephrase portal.</p>
+      
+      <form id="login-form" onsubmit="handleLoginSubmit(event)">
+        <div class="login-group">
+          <label for="login-username">Username</label>
+          <input type="text" id="login-username" class="login-input" placeholder="e.g. admin" required autocomplete="username" />
+        </div>
+        <div class="login-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" class="login-input" placeholder="••••••••" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="login-btn">Enter Portal</button>
+        <div class="login-error" id="login-error-msg">Invalid credentials. Access denied.</div>
+      </form>
+    </div>
+  </div>
 
   <!-- ==================== CHROME HEADER ==================== -->
   <header class="chrome">
@@ -789,12 +982,55 @@
   </div>
 
   <!-- ==================== DASHBOARD LOGIC ==================== -->
-  <script>
+    <script>
     let qnaData = [];
     let filteredData = [];
     let currentPage = 1;
     const pageSize = 12;
     let selectedEntry = null;
+
+    // Session state verification and login wall logic
+    const loginWall = document.getElementById("login-wall");
+    const loginCard = document.getElementById("login-card");
+    const loginErrorMsg = document.getElementById("login-error-msg");
+    const usernameInput = document.getElementById("login-username");
+    const passwordInput = document.getElementById("login-password");
+
+    // Immediately check session flag on load
+    if (sessionStorage.getItem('bhairava_admin_logged_in') === 'true') {
+      loginWall.style.display = 'none';
+    }
+
+    function handleLoginSubmit(event) {
+      event.preventDefault();
+      
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+
+      if (username === 'admin' && password === 'admin123') {
+        // Successful login
+        sessionStorage.setItem('bhairava_admin_logged_in', 'true');
+        loginWall.classList.add('fade-out');
+        setTimeout(() => {
+          loginWall.style.display = 'none';
+        }, 600);
+      } else {
+        // Failed login - shake card and show error message
+        loginCard.classList.remove('shake');
+        void loginCard.offsetWidth; // Trigger reflow to restart animation
+        loginCard.classList.add('shake');
+        loginErrorMsg.classList.add('show');
+        
+        // Focus password input and clear it
+        passwordInput.value = '';
+        passwordInput.focus();
+        
+        // Remove shake class after animation finishes
+        setTimeout(() => {
+          loginCard.classList.remove('shake');
+        }, 400);
+      }
+    }
 
     // Cache DOM Elements
     const tableBody = document.getElementById('table-body');
