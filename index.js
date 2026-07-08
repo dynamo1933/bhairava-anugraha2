@@ -98,8 +98,16 @@ function buildData(csvText) {
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
     const cat = (r[col("category")] || "").trim();
-    const meta = CATEGORY_META[cat];
-    if (!meta) continue;
+    if (!cat) continue;
+    let meta = CATEGORY_META[cat];
+    if (!meta) {
+      const key = cat.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      meta = { key: key, skt: "साधना", roman: "•" };
+      CATEGORY_META[cat] = meta;
+      if (!CAT_ORDER.includes(key)) {
+        CAT_ORDER.push(key);
+      }
+    }
     const question = (r[col("question")] || "").trim();
     const answer = (r[col("answer")] || "").trim();
     if (!question || !answer) continue;

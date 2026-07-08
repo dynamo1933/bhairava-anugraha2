@@ -577,6 +577,32 @@
       font-style: italic;
       font-size: 16px;
     }
+
+    .cat-select {
+      background: rgba(7, 6, 10, 0.6);
+      color: var(--paper);
+      border: 1px solid rgba(212, 166, 74, 0.3);
+      padding: 6px 8px;
+      font-family: var(--serif);
+      font-size: 13px;
+      border-radius: 4px;
+      outline: none;
+      width: 100%;
+      min-width: 150px;
+      cursor: pointer;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .cat-select:focus {
+      border-color: var(--gold);
+      background: rgba(7, 6, 10, 0.95);
+    }
+
+    .cat-select option {
+      background: #0f0e13;
+      color: var(--paper);
+      padding: 8px;
+    }
   </style>
 </head>
 <body>
@@ -844,6 +870,9 @@
       const endIndex = Math.min(startIndex + pageSize, filteredData.length);
       const pageData = filteredData.slice(startIndex, endIndex);
 
+      // Get distinct categories dynamically
+      const distinctCats = Array.from(new Set(qnaData.map(item => item.category).filter(Boolean))).sort();
+
       tableBody.innerHTML = pageData.map(d => {
         const hasRephrased = d.rephrased && d.rephrased.trim() !== '';
         const rephrasedCell = hasRephrased 
@@ -855,10 +884,22 @@
         const isApproved = d.approved !== 'false' && d.approved !== '0';
         const approvedChecked = isApproved ? 'checked' : '';
 
+        const catOptions = distinctCats.map(cat => {
+          const selected = cat === d.category ? 'selected' : '';
+          return `<option value="${escapeHTML(cat)}" ${selected}>${escapeHTML(cat)}</option>`;
+        }).join('');
+
+        const catSelectHtml = `
+          <select onchange="handleCategoryChange('${d.num}', this)" class="cat-select" data-prev="${escapeHTML(d.category)}">
+            ${catOptions}
+            <option value="__other__">Other...</option>
+          </select>
+        `;
+
         return `
           <tr class="${rowClass}">
             <td class="col-num">№ ${d.num}</td>
-            <td class="col-cat">${escapeHTML(d.category)}</td>
+            <td class="col-cat">${catSelectHtml}</td>
             <td class="col-asker">${escapeHTML(d.asker)}</td>
             <td class="col-question">${escapeHTML(d.question)}</td>
             <td class="col-rephrased">${rephrasedCell}</td>
@@ -1014,6 +1055,63 @@
         showToast(`Update Error: ${err.message}`, 'error');
       } finally {
         checkbox.disabled = false;
+      }
+    }
+
+    // Handle category dropdown change
+    async function handleCategoryChange(num, selectEl) {
+      const entry = qnaData.find(d => d.num.toString() === num.toString());
+      if (!entry) return;
+
+      const prevVal = selectEl.getAttribute('data-prev') || entry.category;
+      let selectedVal = selectEl.value;
+
+      if (selectedVal === '__other__') {
+        const customCat = prompt("Enter custom category name:");
+        if (customCat && customCat.trim() !== "") {
+          selectedVal = customCat.trim();
+        } else {
+          // Revert selection
+          selectEl.value = prevVal;
+          return;
+        }
+      }
+
+      selectEl.disabled = true;
+
+      try {
+        const response = await fetch('/api/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            num: num,
+            category: selectedVal
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to update category');
+        }
+
+        // Update local state
+        entry.category = selectedVal;
+        selectEl.setAttribute('data-prev', selectedVal);
+        
+        showToast(`Category updated successfully to "${selectedVal}"!`, 'success');
+        
+        // Re-render table to rebuild dynamic categories dropdown options
+        renderTable();
+      } catch (err) {
+        console.error(err);
+        // Revert UI selection state
+        selectEl.value = prevVal;
+        showToast(`Update Error: ${err.message}`, 'error');
+      } finally {
+        selectEl.disabled = false;
       }
     }
 

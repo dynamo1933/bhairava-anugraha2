@@ -21,6 +21,7 @@ class handler(BaseHTTPRequestHandler):
             num = str(data.get('num', '')).strip()
             rephrased_text = data.get('rephrased')
             approved_val = data.get('approved')
+            category_val = data.get('category')
         except Exception:
             self.send_response(400)
             self.send_header('Content-Type', 'application/json')
@@ -37,12 +38,12 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"error": "num is required"}).encode('utf-8'))
             return
 
-        if rephrased_text is None and approved_val is None:
+        if rephrased_text is None and approved_val is None and category_val is None:
             self.send_response(400)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            self.wfile.write(json.dumps({"error": "Either rephrased or approved parameter is required"}).encode('utf-8'))
+            self.wfile.write(json.dumps({"error": "At least one of rephrased, approved, or category parameter is required"}).encode('utf-8'))
             return
 
         # If we are explicitly in Vercel environment, don't attempt to write to disk
@@ -77,7 +78,7 @@ class handler(BaseHTTPRequestHandler):
                 "error": "Failed to update qna.csv file on disk"
             }).encode('utf-8'))
 
-    def update_csv(self, filename, num, rephrased_text=None, approved_val=None):
+    def update_csv(self, filename, num, rephrased_text=None, approved_val=None, category_val=None):
         root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         file_path = os.path.join(root_dir, filename)
         if not os.path.exists(file_path):
@@ -107,6 +108,7 @@ class handler(BaseHTTPRequestHandler):
 
         rephrased_idx = header.index("rephrased") if "rephrased" in header else -1
         approved_idx = header.index("approved") if "approved" in header else -1
+        category_idx = header.index("category") if "category" in header else -1
 
         updated = False
         for row in rows[1:]:
@@ -120,6 +122,11 @@ class handler(BaseHTTPRequestHandler):
                     while len(row) <= approved_idx:
                         row.append("")
                     row[approved_idx] = str(approved_val).strip().lower()
+
+                if category_val is not None and category_idx != -1:
+                    while len(row) <= category_idx:
+                        row.append("")
+                    row[category_idx] = category_val.strip()
                 
                 updated = True
                 break

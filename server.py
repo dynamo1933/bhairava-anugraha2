@@ -108,6 +108,7 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             num = str(data.get('num', '')).strip()
             rephrased_text = data.get('rephrased')
             approved_val = data.get('approved')
+            category_val = data.get('category')
         except Exception:
             self.send_json_error(400, "Invalid JSON body")
             return
@@ -116,18 +117,18 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_error(400, "num is required")
             return
 
-        if rephrased_text is None and approved_val is None:
-            self.send_json_error(400, "Either rephrased or approved parameter is required")
+        if rephrased_text is None and approved_val is None and category_val is None:
+            self.send_json_error(400, "At least one of rephrased, approved, or category parameter is required")
             return
 
-        success_qna = self.update_csv("qna.csv", num, rephrased_text, approved_val)
+        success_qna = self.update_csv("qna.csv", num, rephrased_text, approved_val, category_val)
 
         if success_qna:
             self.send_json_response({"success": True, "message": "Updated successfully on disk"})
         else:
             self.send_json_error(500, "Failed to update qna.csv file on disk")
 
-    def update_csv(self, filename, num, rephrased_text=None, approved_val=None):
+    def update_csv(self, filename, num, rephrased_text=None, approved_val=None, category_val=None):
         file_path = os.path.join(DIRECTORY, filename)
         if not os.path.exists(file_path):
             return False
@@ -156,6 +157,7 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
 
         rephrased_idx = header.index("rephrased") if "rephrased" in header else -1
         approved_idx = header.index("approved") if "approved" in header else -1
+        category_idx = header.index("category") if "category" in header else -1
 
         updated = False
         for row in rows[1:]:
@@ -169,6 +171,11 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
                     while len(row) <= approved_idx:
                         row.append("")
                     row[approved_idx] = str(approved_val).strip().lower()
+
+                if category_val is not None and category_idx != -1:
+                    while len(row) <= category_idx:
+                        row.append("")
+                    row[category_idx] = category_val.strip()
                 
                 updated = True
                 break
