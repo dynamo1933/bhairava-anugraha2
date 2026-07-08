@@ -603,6 +603,32 @@
       color: var(--paper);
       padding: 8px;
     }
+
+    .col-question textarea,
+    .col-rephrased textarea,
+    .col-answer textarea {
+      width: 100%;
+      height: 90px;
+      background: transparent;
+      color: var(--paper);
+      border: 1px dashed rgba(212, 166, 74, 0.15);
+      padding: 6px;
+      font-family: var(--serif);
+      font-size: 13px;
+      line-height: 1.4;
+      border-radius: 4px;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+    }
+    
+    .col-question textarea:focus,
+    .col-rephrased textarea:focus,
+    .col-answer textarea:focus {
+      border-color: var(--gold);
+      background: rgba(7, 6, 10, 0.95);
+      box-shadow: 0 0 8px rgba(212, 166, 74, 0.2);
+    }
   </style>
 </head>
 <body>
@@ -693,15 +719,16 @@
             <th class="col-num">№</th>
             <th class="col-cat">Folio</th>
             <th class="col-asker">Seeker</th>
-            <th class="col-question">Original Question</th>
-            <th class="col-rephrased">Rephrased Question</th>
+            <th class="col-question" style="width: 25%;">Original Question</th>
+            <th class="col-rephrased" style="width: 25%;">Rephrased Question</th>
+            <th class="col-answer" style="width: 25%;">Answer</th>
             <th class="col-approved">Published</th>
             <th class="col-actions">Actions</th>
           </tr>
         </thead>
         <tbody id="table-body">
           <tr>
-            <td colspan="7" class="empty-state">Loading Q&As from database...</td>
+            <td colspan="8" class="empty-state">Loading Q&As from database...</td>
           </tr>
         </tbody>
       </table>
@@ -859,7 +886,7 @@
     // Render Table Page
     function renderTable() {
       if (filteredData.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="7" class="empty-state">No matching Q&A entries found.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="8" class="empty-state">No matching Q&A entries found.</td></tr>`;
         paginationInfo.textContent = `Showing 0-0 of 0 entries`;
         btnPrev.disabled = true;
         btnNext.disabled = true;
@@ -875,9 +902,6 @@
 
       tableBody.innerHTML = pageData.map(d => {
         const hasRephrased = d.rephrased && d.rephrased.trim() !== '';
-        const rephrasedCell = hasRephrased 
-          ? escapeHTML(d.rephrased) 
-          : `<span class="badge badge-pending">Pending Rephrase</span>`;
         const actionLabel = hasRephrased ? 'Rephrase Again' : 'Rephrase';
         const rowClass = hasRephrased ? 'has-rephrased' : 'pending-rephrase';
 
@@ -896,13 +920,24 @@
           </select>
         `;
 
+        const questionVal = d.question || '';
+        const rephrasedVal = d.rephrased || '';
+        const answerVal = d.answer || '';
+
         return `
           <tr class="${rowClass}">
             <td class="col-num">№ ${d.num}</td>
             <td class="col-cat">${catSelectHtml}</td>
             <td class="col-asker">${escapeHTML(d.asker)}</td>
-            <td class="col-question">${escapeHTML(d.question)}</td>
-            <td class="col-rephrased">${rephrasedCell}</td>
+            <td class="col-question">
+              <textarea onblur="handleFieldBlur('${d.num}', 'question', this)" data-prev="${escapeHTML(questionVal)}">${escapeHTML(questionVal)}</textarea>
+            </td>
+            <td class="col-rephrased">
+              <textarea onblur="handleFieldBlur('${d.num}', 'rephrased', this)" data-prev="${escapeHTML(rephrasedVal)}" placeholder="Pending Rephrase">${escapeHTML(rephrasedVal)}</textarea>
+            </td>
+            <td class="col-answer">
+              <textarea onblur="handleFieldBlur('${d.num}', 'answer', this)" data-prev="${escapeHTML(answerVal)}" placeholder="No answer yet">${escapeHTML(answerVal)}</textarea>
+            </td>
             <td class="col-approved">
               <input type="checkbox" ${approvedChecked} onchange="toggleApproval('${d.num}', this)" />
             </td>
@@ -1112,6 +1147,52 @@
         showToast(`Update Error: ${err.message}`, 'error');
       } finally {
         selectEl.disabled = false;
+      }
+    }
+
+    // Handle inline field text modifications
+    async function handleFieldBlur(num, fieldName, textareaEl) {
+      const entry = qnaData.find(d => d.num.toString() === num.toString());
+      if (!entry) return;
+
+      const prevVal = textareaEl.getAttribute('data-prev') || '';
+      const newVal = textareaEl.value;
+
+      // Only perform update if content actually changed
+      if (newVal === prevVal) return;
+
+      textareaEl.disabled = true;
+
+      try {
+        const payload = { num: num };
+        payload[fieldName] = newVal;
+
+        const response = await fetch('/api/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || `Failed to update ${fieldName}`);
+        }
+
+        // Update local state and set new comparison reference
+        entry[fieldName] = newVal;
+        textareaEl.setAttribute('data-prev', newVal);
+
+        showToast(`Question № ${num} ${fieldName} updated successfully!`, 'success');
+      } catch (err) {
+        console.error(err);
+        // Revert text on failure
+        textareaEl.value = prevVal;
+        showToast(`Update Error: ${err.message}`, 'error');
+      } finally {
+        textareaEl.disabled = false;
       }
     }
 

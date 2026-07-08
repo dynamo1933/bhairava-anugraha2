@@ -22,6 +22,8 @@ class handler(BaseHTTPRequestHandler):
             rephrased_text = data.get('rephrased')
             approved_val = data.get('approved')
             category_val = data.get('category')
+            question_val = data.get('question')
+            answer_val = data.get('answer')
         except Exception:
             self.send_response(400)
             self.send_header('Content-Type', 'application/json')
@@ -38,12 +40,12 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"error": "num is required"}).encode('utf-8'))
             return
 
-        if rephrased_text is None and approved_val is None and category_val is None:
+        if rephrased_text is None and approved_val is None and category_val is None and question_val is None and answer_val is None:
             self.send_response(400)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            self.wfile.write(json.dumps({"error": "At least one of rephrased, approved, or category parameter is required"}).encode('utf-8'))
+            self.wfile.write(json.dumps({"error": "At least one parameter to update is required"}).encode('utf-8'))
             return
 
         # If we are explicitly in Vercel environment, don't attempt to write to disk
@@ -61,7 +63,7 @@ class handler(BaseHTTPRequestHandler):
             return
 
         # Otherwise, attempt to update local files
-        success_qna = self.update_csv("qna.csv", num, rephrased_text, approved_val)
+        success_qna = self.update_csv("qna.csv", num, rephrased_text, approved_val, category_val, question_val, answer_val)
 
         if success_qna:
             self.send_response(200)
@@ -78,7 +80,7 @@ class handler(BaseHTTPRequestHandler):
                 "error": "Failed to update qna.csv file on disk"
             }).encode('utf-8'))
 
-    def update_csv(self, filename, num, rephrased_text=None, approved_val=None, category_val=None):
+    def update_csv(self, filename, num, rephrased_text=None, approved_val=None, category_val=None, question_val=None, answer_val=None):
         root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         file_path = os.path.join(root_dir, filename)
         if not os.path.exists(file_path):
@@ -109,6 +111,8 @@ class handler(BaseHTTPRequestHandler):
         rephrased_idx = header.index("rephrased") if "rephrased" in header else -1
         approved_idx = header.index("approved") if "approved" in header else -1
         category_idx = header.index("category") if "category" in header else -1
+        question_idx = header.index("question") if "question" in header else -1
+        answer_idx = header.index("answer") if "answer" in header else -1
 
         updated = False
         for row in rows[1:]:
@@ -127,6 +131,16 @@ class handler(BaseHTTPRequestHandler):
                     while len(row) <= category_idx:
                         row.append("")
                     row[category_idx] = category_val.strip()
+
+                if question_val is not None and question_idx != -1:
+                    while len(row) <= question_idx:
+                        row.append("")
+                    row[question_idx] = question_val.strip()
+
+                if answer_val is not None and answer_idx != -1:
+                    while len(row) <= answer_idx:
+                        row.append("")
+                    row[answer_idx] = answer_val.strip()
                 
                 updated = True
                 break

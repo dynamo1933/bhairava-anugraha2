@@ -109,6 +109,8 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             rephrased_text = data.get('rephrased')
             approved_val = data.get('approved')
             category_val = data.get('category')
+            question_val = data.get('question')
+            answer_val = data.get('answer')
         except Exception:
             self.send_json_error(400, "Invalid JSON body")
             return
@@ -117,18 +119,18 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_error(400, "num is required")
             return
 
-        if rephrased_text is None and approved_val is None and category_val is None:
-            self.send_json_error(400, "At least one of rephrased, approved, or category parameter is required")
+        if rephrased_text is None and approved_val is None and category_val is None and question_val is None and answer_val is None:
+            self.send_json_error(400, "At least one parameter to update is required")
             return
 
-        success_qna = self.update_csv("qna.csv", num, rephrased_text, approved_val, category_val)
+        success_qna = self.update_csv("qna.csv", num, rephrased_text, approved_val, category_val, question_val, answer_val)
 
         if success_qna:
             self.send_json_response({"success": True, "message": "Updated successfully on disk"})
         else:
             self.send_json_error(500, "Failed to update qna.csv file on disk")
 
-    def update_csv(self, filename, num, rephrased_text=None, approved_val=None, category_val=None):
+    def update_csv(self, filename, num, rephrased_text=None, approved_val=None, category_val=None, question_val=None, answer_val=None):
         file_path = os.path.join(DIRECTORY, filename)
         if not os.path.exists(file_path):
             return False
@@ -158,6 +160,8 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
         rephrased_idx = header.index("rephrased") if "rephrased" in header else -1
         approved_idx = header.index("approved") if "approved" in header else -1
         category_idx = header.index("category") if "category" in header else -1
+        question_idx = header.index("question") if "question" in header else -1
+        answer_idx = header.index("answer") if "answer" in header else -1
 
         updated = False
         for row in rows[1:]:
@@ -176,6 +180,16 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
                     while len(row) <= category_idx:
                         row.append("")
                     row[category_idx] = category_val.strip()
+
+                if question_val is not None and question_idx != -1:
+                    while len(row) <= question_idx:
+                        row.append("")
+                    row[question_idx] = question_val.strip()
+
+                if answer_val is not None and answer_idx != -1:
+                    while len(row) <= answer_idx:
+                        row.append("")
+                    row[answer_idx] = answer_val.strip()
                 
                 updated = True
                 break
