@@ -78,7 +78,7 @@ def rephrase_question(question: str) -> str:
     # Helper to call Gemini API with a specific key
     def try_gemini_request(api_key: str) -> str:
         prompt_text = rephrase_prompt.format(question=question)
-        model_name = os.environ.get("GEMINI_MODEL_NAME", "gemini-flash-latest")
+        model_name = os.environ.get("GEMINI_MODEL_NAME", "gemini-2.5-flash")
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
         headers = {
             "Content-Type": "application/json",
@@ -95,7 +95,7 @@ def rephrase_question(question: str) -> str:
                 }
             ]
         }
-        response = requests.post(url, headers=headers, json=payload, timeout=3)
+        response = requests.post(url, headers=headers, json=payload, timeout=10)
         if response.status_code == 200:
             data = response.json()
             return data['candidates'][0]['content']['parts'][0]['text'].strip()
