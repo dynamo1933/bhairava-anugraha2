@@ -153,9 +153,7 @@ function buildData(csvText) {
     folio[e.category_key] = (folio[e.category_key] || 0) + 1;
     e.in_folio = folio[e.category_key];
   });
-  // Renumber codex (1..N, newest = N)
-  const N = entries.length;
-  entries.forEach((e, i) => { e.num = N - i; });
+  // Renumbering removed so entry numbers match the database/CSV/rephrase portal exactly and permalinks are stable.
   // Category list with counts
   const totals = {};
   entries.forEach(e => { totals[e.category_key] = (totals[e.category_key] || 0) + 1; });
