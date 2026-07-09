@@ -24,6 +24,7 @@ class handler(BaseHTTPRequestHandler):
             category_val = data.get('category')
             question_val = data.get('question')
             answer_val = data.get('answer')
+            followup_val = data.get('followup')  # comma-separated string of nums or empty
         except Exception:
             self.send_response(400)
             self.send_header('Content-Type', 'application/json')
@@ -40,7 +41,7 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"error": "num is required"}).encode('utf-8'))
             return
 
-        if rephrased_text is None and approved_val is None and category_val is None and question_val is None and answer_val is None:
+        if rephrased_text is None and approved_val is None and category_val is None and question_val is None and answer_val is None and followup_val is None:
             self.send_response(400)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -63,7 +64,7 @@ class handler(BaseHTTPRequestHandler):
             return
 
         # Otherwise, attempt to update local files
-        success_qna = self.update_csv("qna.csv", num, rephrased_text, approved_val, category_val, question_val, answer_val)
+        success_qna = self.update_csv("qna.csv", num, rephrased_text, approved_val, category_val, question_val, answer_val, followup_val)
 
         if success_qna:
             self.send_response(200)
@@ -80,7 +81,7 @@ class handler(BaseHTTPRequestHandler):
                 "error": "Failed to update qna.csv file on disk"
             }).encode('utf-8'))
 
-    def update_csv(self, filename, num, rephrased_text=None, approved_val=None, category_val=None, question_val=None, answer_val=None):
+    def update_csv(self, filename, num, rephrased_text=None, approved_val=None, category_val=None, question_val=None, answer_val=None, followup_val=None):
         root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         file_path = os.path.join(root_dir, filename)
         if not os.path.exists(file_path):
@@ -113,6 +114,7 @@ class handler(BaseHTTPRequestHandler):
         category_idx = header.index("category") if "category" in header else -1
         question_idx = header.index("question") if "question" in header else -1
         answer_idx = header.index("answer") if "answer" in header else -1
+        followup_idx = header.index("followup") if "followup" in header else -1
 
         updated = False
         for row in rows[1:]:
@@ -141,6 +143,11 @@ class handler(BaseHTTPRequestHandler):
                     while len(row) <= answer_idx:
                         row.append("")
                     row[answer_idx] = answer_val.strip()
+
+                if followup_val is not None and followup_idx != -1:
+                    while len(row) <= followup_idx:
+                        row.append("")
+                    row[followup_idx] = str(followup_val).strip()
                 
                 updated = True
                 break

@@ -800,7 +800,138 @@
       20%, 60% { transform: translateX(-8px); }
       40%, 80% { transform: translateX(8px); }
     }
+
+    /* ======= FOLLOWUP COLUMN ======= */
+    .col-followup { width: 80px; text-align: center; }
+    .followup-cell {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .followup-parent-badge, .followup-child-badge {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: 12px; white-space: nowrap;
+      cursor: default;
+    }
+    .followup-parent-badge {
+      background: rgba(212,166,74,0.15); color: #d4a64a;
+      border: 1px solid rgba(212,166,74,0.4);
+    }
+    .followup-child-badge {
+      background: rgba(130,170,212,0.12); color: #82aad4;
+      border: 1px solid rgba(130,170,212,0.35);
+    }
+    .followup-none { color: #555; font-size: 12px; }
+    .btn-link-followup {
+      background: none; border: 1px solid rgba(212,166,74,0.25);
+      color: #d4a64a; border-radius: 4px; cursor: pointer;
+      padding: 2px 6px; font-size: 13px;
+      transition: background 0.2s;
+    }
+    .btn-link-followup:hover { background: rgba(212,166,74,0.15); }
+
+    /* ======= LINK MANAGEMENT MODAL ======= */
+    .link-modal {
+      display: none; position: fixed; inset: 0; z-index: 9000;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+      align-items: center; justify-content: center; padding: 24px;
+    }
+    .link-modal.is-open { display: flex; }
+    .link-modal-card {
+      width: 100%; max-width: 620px;
+      background: linear-gradient(160deg, #1a1a2e 0%, #0f0f1a 100%);
+      border: 1px solid rgba(212,166,74,0.3);
+      border-radius: 12px; overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(212,166,74,0.1);
+      display: flex; flex-direction: column; max-height: 85vh;
+    }
+    .link-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid rgba(212,166,74,0.15);
+    }
+    .link-modal-header h3 {
+      margin: 0; font-size: 16px; color: #d4a64a;
+      font-family: 'Cinzel Decorative', serif; letter-spacing: 0.04em;
+    }
+    .link-modal-close {
+      background: none; border: none; color: #888; font-size: 22px;
+      cursor: pointer; line-height: 1; padding: 0 4px;
+      transition: color 0.2s;
+    }
+    .link-modal-close:hover { color: #d4a64a; }
+    .link-modal-body {
+      flex: 1; overflow-y: auto; padding: 20px 24px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .link-section-label {
+      font-size: 10px; letter-spacing: 0.2em; color: #d4a64a;
+      font-weight: 700; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .link-parent-preview p {
+      margin: 0; font-size: 13px; color: #ccc; font-style: italic;
+      line-height: 1.5;
+      padding: 10px 14px; background: rgba(255,255,255,0.04);
+      border-left: 3px solid rgba(212,166,74,0.4); border-radius: 3px;
+    }
+    .link-list {
+      list-style: none; margin: 0; padding: 0;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .link-list li {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(212,166,74,0.12); border-radius: 6px;
+    }
+    .link-list .link-empty {
+      color: #555; font-style: italic; font-size: 13px;
+      border: none; background: none; padding: 4px 0;
+    }
+    .link-num {
+      font-family: monospace; color: #d4a64a; font-size: 12px;
+      font-weight: 700; flex-shrink: 0;
+    }
+    .link-preview {
+      flex: 1; font-size: 12px; color: #aaa; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
+    .btn-remove-link {
+      background: none; border: 1px solid rgba(220,80,80,0.3);
+      color: #e06060; padding: 2px 7px; border-radius: 4px;
+      font-size: 11px; cursor: pointer; flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .btn-remove-link:hover { background: rgba(220,80,80,0.15); }
+    .link-search-box {
+      width: 100%; box-sizing: border-box;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(212,166,74,0.25);
+      color: #ddd; padding: 10px 14px; border-radius: 6px; font-size: 13px;
+      outline: none; transition: border-color 0.2s;
+    }
+    .link-search-box:focus { border-color: rgba(212,166,74,0.6); }
+    .link-search-results {
+      margin-top: 8px; display: flex; flex-direction: column; gap: 5px;
+    }
+    .link-result-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; background: rgba(212,166,74,0.05);
+      border: 1px solid rgba(212,166,74,0.15); border-radius: 6px;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .link-result-row:hover { background: rgba(212,166,74,0.12); }
+    .btn-add-link {
+      flex-shrink: 0; background: rgba(212,166,74,0.15);
+      border: 1px solid rgba(212,166,74,0.35); color: #d4a64a;
+      font-size: 11px; padding: 3px 10px; border-radius: 4px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-add-link:hover { background: rgba(212,166,74,0.3); }
+    .link-no-results { font-size: 12px; color: #666; font-style: italic; padding: 6px 0; }
+    .link-modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid rgba(212,166,74,0.12);
+      display: flex; justify-content: flex-end; gap: 10px;
+    }
   </style>
+
 </head>
 <body>
 
@@ -921,10 +1052,11 @@
             <th class="col-num">№</th>
             <th class="col-cat">Folio</th>
             <th class="col-asker">Seeker</th>
-            <th class="col-question" style="width: 25%;">Original Question</th>
-            <th class="col-rephrased" style="width: 25%;">Rephrased Question</th>
-            <th class="col-answer" style="width: 25%;">Answer</th>
+            <th class="col-question" style="width: 22%;">Original Question</th>
+            <th class="col-rephrased" style="width: 22%;">Rephrased Question</th>
+            <th class="col-answer" style="width: 22%;">Answer</th>
             <th class="col-approved">Published</th>
+            <th class="col-followup">Follow-up</th>
             <th class="col-actions">Actions</th>
           </tr>
         </thead>
@@ -988,6 +1120,50 @@
   <div class="toast" id="toast-notification">
     <span class="icon">ॐ</span>
     <span class="message" id="toast-message">Action completed successfully.</span>
+  </div>
+
+  <!-- ==================== FOLLOW-UP LINK MODAL ==================== -->
+  <div class="link-modal" id="link-modal">
+    <div class="link-modal-card">
+      <div class="link-modal-header">
+        <h3 id="link-modal-title">Manage Follow-ups</h3>
+        <button class="link-modal-close" onclick="closeLinkModal()">&times;</button>
+      </div>
+
+      <div class="link-modal-body">
+        <!-- Parent question preview -->
+        <div class="link-parent-preview">
+          <div class="link-section-label">This Question</div>
+          <p id="link-modal-parent-q"></p>
+        </div>
+
+        <!-- Current links -->
+        <div class="link-current-section">
+          <div class="link-section-label">Linked Follow-ups</div>
+          <ul id="link-current-list" class="link-list">
+            <li class="link-empty">No follow-ups linked yet.</li>
+          </ul>
+        </div>
+
+        <!-- Search to add -->
+        <div class="link-search-section">
+          <div class="link-section-label">Search &amp; Add Follow-up</div>
+          <input
+            type="text"
+            id="link-search-input"
+            class="link-search-box"
+            placeholder="Type a question number or keywords…"
+            oninput="renderLinkSearchResults(this.value)"
+          />
+          <div id="link-search-results" class="link-search-results"></div>
+        </div>
+      </div>
+
+      <div class="link-modal-footer">
+        <button class="btn-action btn-secondary" onclick="closeLinkModal()">Cancel</button>
+        <button class="btn-action" onclick="saveFollowupLinks()">💾 Save Links</button>
+      </div>
+    </div>
   </div>
 
   <!-- ==================== DASHBOARD LOGIC ==================== -->
@@ -1139,7 +1315,7 @@
     // Render Table Page
     function renderTable() {
       if (filteredData.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="8" class="empty-state">No matching Q&A entries found.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="9" class="empty-state">No matching Q&A entries found.</td></tr>`;
         paginationInfo.textContent = `Showing 0-0 of 0 entries`;
         btnPrev.disabled = true;
         btnNext.disabled = true;
@@ -1176,6 +1352,22 @@
         const questionVal = d.question || '';
         const rephrasedVal = d.rephrased || '';
         const answerVal = d.answer || '';
+        const followupVal = d.followup || '';
+        const followupNums = followupVal ? followupVal.split(',').map(s => s.trim()).filter(Boolean) : [];
+        const hasFollowups = followupNums.length > 0;
+
+        // Check if this entry is a followup child of another
+        const parentEntry = qnaData.find(x => {
+          const fv = x.followup || '';
+          return fv.split(',').map(s => s.trim()).filter(Boolean).includes(String(d.num));
+        });
+        const isChildOf = parentEntry ? parentEntry.num : null;
+
+        const followupCellHtml = `
+          ${isChildOf ? `<span class="followup-child-badge" title="Follow-up of #${isChildOf}">↑ of #${isChildOf}</span>` : ''}
+          ${hasFollowups ? `<span class="followup-parent-badge" title="Has ${followupNums.length} follow-up(s): #${followupNums.join(', #')}">↓ ${followupNums.length}</span>` : ''}
+          ${(!hasFollowups && !isChildOf) ? `<span class="followup-none">—</span>` : ''}
+        `;
 
         return `
           <tr class="${rowClass}">
@@ -1193,6 +1385,12 @@
             </td>
             <td class="col-approved">
               <input type="checkbox" ${approvedChecked} onchange="toggleApproval('${d.num}', this)" />
+            </td>
+            <td class="col-followup">
+              <div class="followup-cell">
+                ${followupCellHtml}
+                <button class="btn-link-followup" onclick="openLinkModal('${d.num}')" title="Manage Follow-up Links">🔗</button>
+              </div>
             </td>
             <td class="col-actions">
               <button class="btn-action" onclick="triggerRephrase('${d.num}')">${actionLabel}</button>
@@ -1462,6 +1660,119 @@
       );
     }
 
+    // =========================================================
+    // FOLLOW-UP LINK MANAGEMENT MODAL
+    // =========================================================
+    let linkModalNum = null;         // entry being edited
+    let pendingFollowupNums = [];    // working copy of linked nums
+
+    function openLinkModal(num) {
+      linkModalNum = String(num);
+      const entry = qnaData.find(d => String(d.num) === linkModalNum);
+      if (!entry) return;
+
+      // Init working copy from current data
+      const fv = entry.followup || '';
+      pendingFollowupNums = fv.split(',').map(s => s.trim()).filter(Boolean);
+
+      document.getElementById('link-modal-title').textContent = `Manage Follow-ups — № ${entry.num}`;
+      document.getElementById('link-modal-parent-q').textContent =
+        (entry.rephrased || entry.question || '').slice(0, 200);
+
+      refreshLinkList();
+      document.getElementById('link-search-input').value = '';
+      renderLinkSearchResults('');
+
+      document.getElementById('link-modal').classList.add('is-open');
+    }
+
+    function closeLinkModal() {
+      document.getElementById('link-modal').classList.remove('is-open');
+      linkModalNum = null;
+      pendingFollowupNums = [];
+    }
+
+    function refreshLinkList() {
+      const list = document.getElementById('link-current-list');
+      if (pendingFollowupNums.length === 0) {
+        list.innerHTML = '<li class="link-empty">No follow-ups linked yet.</li>';
+        return;
+      }
+      list.innerHTML = pendingFollowupNums.map(n => {
+        const child = qnaData.find(d => String(d.num) === String(n));
+        const preview = child ? (child.rephrased || child.question || '').slice(0, 80) : 'Unknown entry';
+        return `<li>
+          <span class="link-num">№ ${n}</span>
+          <span class="link-preview">${escapeHTML(preview)}</span>
+          <button class="btn-remove-link" onclick="removeFollowupLink('${n}')" title="Remove link">✕</button>
+        </li>`;
+      }).join('');
+    }
+
+    function renderLinkSearchResults(query) {
+      const container = document.getElementById('link-search-results');
+      if (!query.trim()) { container.innerHTML = ''; return; }
+      const q = query.toLowerCase();
+      const results = qnaData.filter(d => {
+        if (String(d.num) === linkModalNum) return false;  // skip self
+        if (pendingFollowupNums.includes(String(d.num))) return false;  // already linked
+        const text = (d.rephrased || d.question || '') + ' ' + String(d.num);
+        return text.toLowerCase().includes(q);
+      }).slice(0, 8);
+
+      if (results.length === 0) {
+        container.innerHTML = '<div class="link-no-results">No matching entries found.</div>';
+        return;
+      }
+      container.innerHTML = results.map(d => {
+        const preview = (d.rephrased || d.question || '').slice(0, 100);
+        return `<div class="link-result-row" onclick="addFollowupLink('${d.num}')">
+          <span class="link-num">№ ${d.num}</span>
+          <span class="link-preview">${escapeHTML(preview)}</span>
+          <button class="btn-add-link" tabindex="-1">+ Add</button>
+        </div>`;
+      }).join('');
+    }
+
+    function addFollowupLink(childNum) {
+      const s = String(childNum);
+      if (!pendingFollowupNums.includes(s)) {
+        pendingFollowupNums.push(s);
+        refreshLinkList();
+        renderLinkSearchResults(document.getElementById('link-search-input').value);
+      }
+    }
+
+    function removeFollowupLink(childNum) {
+      pendingFollowupNums = pendingFollowupNums.filter(n => n !== String(childNum));
+      refreshLinkList();
+    }
+
+    async function saveFollowupLinks() {
+      if (!linkModalNum) return;
+      const followupStr = pendingFollowupNums.join(',');
+
+      try {
+        const res = await fetch('/api/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ num: linkModalNum, followup: followupStr })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Save failed');
+
+        // Update local data
+        const entry = qnaData.find(d => String(d.num) === linkModalNum);
+        if (entry) entry.followup = followupStr;
+
+        showToast('Follow-up links saved ✓', 'success');
+        closeLinkModal();
+        renderTable();
+      } catch (err) {
+        showToast('Error saving links: ' + err.message, 'error');
+      }
+    }
+
     // Toast Manager
     function showToast(message, type = 'success') {
       toastMessage.textContent = message;
@@ -1507,6 +1818,14 @@
       if (e.key === 'Escape' && rephraseModal.classList.contains('is-open')) {
         closeModal();
       }
+      if (e.key === 'Escape' && document.getElementById('link-modal').classList.contains('is-open')) {
+        closeLinkModal();
+      }
+    });
+
+    // Backdrop click for link modal
+    document.getElementById('link-modal').addEventListener('click', e => {
+      if (e.target === document.getElementById('link-modal')) closeLinkModal();
     });
 
     // Bootstrap

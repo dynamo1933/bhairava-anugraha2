@@ -121,6 +121,13 @@ function buildData(csvText) {
     const approved = approvedCol !== -1 ? (r[approvedCol] || "").trim().toLowerCase() : "true";
     if (approved === "false" || approved === "0") continue;
 
+    // Read followup links (comma-separated nums)
+    const followupCol = col("followup");
+    const followupRaw = followupCol !== -1 ? (r[followupCol] || "").trim() : "";
+    const followupNums = followupRaw
+      ? followupRaw.split(",").map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n))
+      : [];
+
     const date = (r[col("date")] || "").trim();
     const time = (r[col("time")] || "").trim();
     entries.push({
@@ -135,6 +142,7 @@ function buildData(csvText) {
       original: question.replace(/\n+/g, " "),
       rephrased: rephrased.replace(/\n+/g, " "),
       answer: paragraphsToHtml(answer),
+      followupNums,          // array of followup entry nums
     });
   }
   // Sort newest first (by iso desc, fallback to num desc)
@@ -185,6 +193,51 @@ async function loadData() {
     console.error("[Lacquer] data load failed:", err);
     showLoadError(err);
   }
+}
+
+// ---------- followup chain index ----------
+// FOLLOWUP_OF[childNum] = parentNum  (any entry whose parent lists it as a followup)
+// Built after data loads because we need all nums resolved.
+const FOLLOWUP_OF = Object.create(null);
+
+function buildFollowupIndex() {
+  // Clear
+  Object.keys(FOLLOWUP_OF).forEach(k => delete FOLLOWUP_OF[k]);
+  DATA.entries.forEach(e => {
+    (e.followupNums || []).forEach(childNum => {
+      FOLLOWUP_OF[String(childNum)] = e.num;
+    });
+  });
+}
+
+// Returns the full ordered chain starting from the root ancestor of any entry.
+function getChain(numStr) {
+  const e = BY_NUM[String(numStr)];
+  if (!e) return null;
+
+  // Walk up to root
+  let root = e;
+  const visited = new Set();
+  while (FOLLOWUP_OF[String(root.num)] !== undefined) {
+    const parentNum = FOLLOWUP_OF[String(root.num)];
+    if (visited.has(parentNum)) break; // guard against cycles
+    visited.add(parentNum);
+    const parent = BY_NUM[String(parentNum)];
+    if (!parent) break;
+    root = parent;
+  }
+
+  // Walk down the chain from root
+  const chain = [];
+  function walk(node) {
+    chain.push(node);
+    (node.followupNums || []).forEach(n => {
+      const child = BY_NUM[String(n)];
+      if (child && !chain.includes(child)) walk(child);
+    });
+  }
+  walk(root);
+  return chain.length > 1 ? chain : null; // null if no chain
 }
 
 // Helpers
@@ -308,19 +361,32 @@ const overlayCard = overlay.querySelector(".overlay-card");
 function renderEntry(id) {
   const e = BY_NUM[String(id)];
   if (!e) return false;
+
+  const chain = getChain(String(id));
+
+  if (chain && chain.length > 1) {
+    // ---- THREAD VIEW ----
+    overlayCard.innerHTML = _buildThreadHtml(chain, e.num);
+  } else {
+    // ---- SINGLE ENTRY VIEW ----
+    overlayCard.innerHTML = _buildSingleEntryHtml(e);
+  }
+  return true;
+}
+
+function _buildSingleEntryHtml(e) {
   const cat = categoryByKey(e.category_key);
   const folioRoman = cat ? cat.roman : "";
   const folioName = cat ? cat.name.toUpperCase() : "";
   const inFolioRoman = toRoman(e.in_folio);
 
-  // Most answers don't have an explicit "lead" — wrap the first paragraph as the lead style
   let answerHtml = e.answer || "";
   const leadMatch = answerHtml.match(/^<p>(.*?)<\/p>/);
   if (leadMatch) {
     answerHtml = `<p class="lead">${leadMatch[1]}</p>` + answerHtml.slice(leadMatch[0].length);
   }
 
-  overlayCard.innerHTML = `
+  return `
     <button class="overlay-close" aria-label="Close">×</button>
     <div class="breadcrumb">
       <span>BHAIRAVA ANUGRAHA</span>
@@ -349,7 +415,73 @@ function renderEntry(id) {
         </div>
       </div>
     </div>`;
-  return true;
+}
+
+function _buildThreadHtml(chain, activeNum) {
+  const firstEntry = chain[0];
+  const cat = categoryByKey(firstEntry.category_key);
+  const folioRoman = cat ? cat.roman : "";
+  const folioName = cat ? cat.name.toUpperCase() : "";
+
+  const sections = chain.map((e, idx) => {
+    const isActive = e.num === activeNum;
+    let answerHtml = e.answer || "";
+    const leadMatch = answerHtml.match(/^<p>(.*?)<\/p>/);
+    if (leadMatch) {
+      answerHtml = `<p class="lead">${leadMatch[1]}</p>` + answerHtml.slice(leadMatch[0].length);
+    }
+
+    const isFollowup = idx > 0;
+    const inFolioRoman = toRoman(e.in_folio);
+    const divider = isFollowup
+      ? `<div class="thread-divider" id="thread-entry-${e.num}">
+           <span class="thread-divider-icon">↓</span>
+           <span class="thread-divider-label">FOLLOW-UP · № ${e.num}</span>
+           <button class="thread-back-btn" onclick="document.getElementById('thread-entry-${firstEntry.num}').scrollIntoView({behavior:'smooth',block:'start'})">↑ Back to Question</button>
+         </div>`
+      : `<div class="thread-divider thread-root" id="thread-entry-${e.num}">
+           <span class="thread-divider-label">ORIGINAL QUESTION · № ${e.num}</span>
+           ${chain.length > 1 ? `<button class="thread-back-btn" onclick="document.getElementById('thread-entry-${chain[1].num}').scrollIntoView({behavior:'smooth',block:'start'})">↓ See Follow-up</button>` : ""}
+         </div>`;
+
+    return `
+      ${divider}
+      <div class="thread-entry${isActive ? " thread-active" : ""}"
+           data-entry-num="${e.num}">
+        <div class="meta-row">
+          ${e.date ? `<span><span class="v">${escapeHtml(e.date)}</span></span>` : ""}
+          <span style="margin-left:auto;">№ <span class="v">${e.num}</span></span>
+        </div>
+        <div class="layout">
+          <aside class="original">
+            <div class="head"><span>${isFollowup ? "FOLLOW-UP QUESTION" : "QUESTION"}</span></div>
+            <div class="body"><p><em>"${escapeHtml(e.question)}"</em></p></div>
+          </aside>
+          <div class="answer">
+            ${answerHtml}
+            <div class="signoff">
+              <span>— Guruji</span>
+              <span class="om-mark">ॐ</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  return `
+    <button class="overlay-close" aria-label="Close">×</button>
+    <div class="breadcrumb">
+      <span>BHAIRAVA ANUGRAHA</span>
+      <span class="sep">/</span>
+      <span>FOLIO ${escapeHtml(folioRoman)} · ${escapeHtml(folioName)}</span>
+      <span class="sep">/</span>
+      <span>THREAD · ${chain.length} ENTRIES</span>
+    </div>
+    <h1 class="thread-title">${escapeHtml(asciiTitle(firstEntry.title))}</h1>
+    <div class="thread-meta">
+      <span class="thread-badge">🔗 ${chain.length}-PART THREAD</span>
+    </div>
+    ${sections}`;
 }
 
 // Track whether the user opened an entry from a folio page
@@ -573,6 +705,8 @@ function buildSearchIndex() {
   await loadData();
   // Re-index for lookups after load
   DATA.entries.forEach(e => { BY_NUM[String(e.num)] = e; });
+  // Build followup chain index
+  buildFollowupIndex();
   // Update folio-card counts dynamically (in case the CSV has changed counts)
   DATA.categories.forEach(c => {
     document.querySelectorAll(`.cat-grid .cat[data-cat-key="${c.key}"] .count`).forEach(el => {

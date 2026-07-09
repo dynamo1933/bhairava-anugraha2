@@ -111,6 +111,7 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             category_val = data.get('category')
             question_val = data.get('question')
             answer_val = data.get('answer')
+            followup_val = data.get('followup')  # comma-separated string of nums or empty
         except Exception:
             self.send_json_error(400, "Invalid JSON body")
             return
@@ -119,18 +120,18 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_error(400, "num is required")
             return
 
-        if rephrased_text is None and approved_val is None and category_val is None and question_val is None and answer_val is None:
+        if rephrased_text is None and approved_val is None and category_val is None and question_val is None and answer_val is None and followup_val is None:
             self.send_json_error(400, "At least one parameter to update is required")
             return
 
-        success_qna = self.update_csv("qna.csv", num, rephrased_text, approved_val, category_val, question_val, answer_val)
+        success_qna = self.update_csv("qna.csv", num, rephrased_text, approved_val, category_val, question_val, answer_val, followup_val)
 
         if success_qna:
             self.send_json_response({"success": True, "message": "Updated successfully on disk"})
         else:
             self.send_json_error(500, "Failed to update qna.csv file on disk")
 
-    def update_csv(self, filename, num, rephrased_text=None, approved_val=None, category_val=None, question_val=None, answer_val=None):
+    def update_csv(self, filename, num, rephrased_text=None, approved_val=None, category_val=None, question_val=None, answer_val=None, followup_val=None):
         file_path = os.path.join(DIRECTORY, filename)
         if not os.path.exists(file_path):
             return False
@@ -162,6 +163,7 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
         category_idx = header.index("category") if "category" in header else -1
         question_idx = header.index("question") if "question" in header else -1
         answer_idx = header.index("answer") if "answer" in header else -1
+        followup_idx = header.index("followup") if "followup" in header else -1
 
         updated = False
         for row in rows[1:]:
@@ -190,6 +192,11 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
                     while len(row) <= answer_idx:
                         row.append("")
                     row[answer_idx] = answer_val.strip()
+
+                if followup_val is not None and followup_idx != -1:
+                    while len(row) <= followup_idx:
+                        row.append("")
+                    row[followup_idx] = str(followup_val).strip()
                 
                 updated = True
                 break
@@ -226,7 +233,7 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
 
 def migrate_csvs():
     """
-    Ensure 'approved' column exists in qna.csv.
+    Ensure 'approved' and 'followup' columns exist in qna.csv.
     """
     for name in ("qna.csv",):
         path = os.path.join(DIRECTORY, name)
@@ -249,18 +256,33 @@ def migrate_csvs():
             
         header = rows[0]
         header_lower = [h.strip().lower() for h in header]
+        changed = False
+
         if "approved" not in header_lower:
             header.append("approved")
             for r in rows[1:]:
                 while len(r) < len(header) - 1:
                     r.append("")
                 r.append("true")
-            
+            changed = True
+            print(f"[+] Migrated {name} to include 'approved' column.")
+
+        # Re-read header_lower after possible append
+        header_lower = [h.strip().lower() for h in header]
+        if "followup" not in header_lower:
+            header.append("followup")
+            for r in rows[1:]:
+                while len(r) < len(header) - 1:
+                    r.append("")
+                r.append("")
+            changed = True
+            print(f"[+] Migrated {name} to include 'followup' column.")
+
+        if changed:
             try:
                 with open(path, 'w', newline='', encoding='utf-8') as f:
                     writer = csv.writer(f, quoting=csv.QUOTE_ALL)
                     writer.writerows(rows)
-                print(f"[+] Migrated {name} to include 'approved' column.")
             except Exception as e:
                 print(f"[-] Failed to migrate {name}: {e}")
 
