@@ -69,45 +69,54 @@ def rephrase_question(question: str) -> str:
     global GEMINI_NETWORK_BLOCKED
     # Setup LLM based on environment variables
     gemini_key = os.environ.get("GEMINI_API_KEY")
+    gemini_backup_key = os.environ.get("GEMINI_API_KEY_BACKUP")
     azure_key = os.environ.get("AZURE_OPENAI_API_KEY")
     openai_key = os.environ.get("OPENAI_API_KEY")
     
     gemini_failed = False
+    
+    # Helper to call Gemini API with a specific key
+    def try_gemini_request(api_key: str) -> str:
+        prompt_text = rephrase_prompt.format(question=question)
+        model_name = os.environ.get("GEMINI_MODEL_NAME", "gemini-flash-latest")
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+        headers = {
+            "Content-Type": "application/json",
+            "X-goog-api-key": api_key
+        }
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "text": prompt_text
+                        }
+                    ]
+                }
+            ]
+        }
+        response = requests.post(url, headers=headers, json=payload, timeout=3)
+        if response.status_code == 200:
+            data = response.json()
+            return data['candidates'][0]['content']['parts'][0]['text'].strip()
+        else:
+            raise Exception(f"API returned status code {response.status_code}: {response.text}")
+
     # 1. Hitting Gemini endpoint if GEMINI_API_KEY is configured
     if gemini_key and not GEMINI_NETWORK_BLOCKED:
-        print("[*] Hitting Gemini API for rephrasing...")
+        print("[*] Hitting Primary Gemini API for rephrasing...")
         try:
-            prompt_text = rephrase_prompt.format(question=question)
-            model_name = os.environ.get("GEMINI_MODEL_NAME", "gemini-flash-latest")
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
-            headers = {
-                "Content-Type": "application/json",
-                "X-goog-api-key": gemini_key
-            }
-            payload = {
-                "contents": [
-                    {
-                        "parts": [
-                            {
-                                "text": prompt_text
-                            }
-                        ]
-                    }
-                ]
-            }
-            response = requests.post(url, headers=headers, json=payload, timeout=3)
-            if response.status_code == 200:
-                data = response.json()
-                try:
-                    return data['candidates'][0]['content']['parts'][0]['text'].strip()
-                except (KeyError, IndexError) as e:
-                    print(f"[-] Failed to parse Gemini response: {e}. Raw response: {data}")
-                    gemini_failed = True
-            else:
-                print(f"[-] Gemini API returned status code {response.status_code}: {response.text}")
-                gemini_failed = True
+            return try_gemini_request(gemini_key)
         except Exception as e:
-            print(f"[-] Gemini API request failed or timed out: {e}")
+            print(f"[-] Primary Gemini API request failed: {e}")
+            # Try backup key if available
+            if gemini_backup_key:
+                print("[*] Hitting Backup Gemini API...")
+                try:
+                    return try_gemini_request(gemini_backup_key)
+                except Exception as e_backup:
+                    print(f"[-] Backup Gemini API request also failed: {e_backup}")
+            
             gemini_failed = True
             GEMINI_NETWORK_BLOCKED = True
             print("[-] Gemini API network blocked/timed out; disabling future attempts for this process session.")
