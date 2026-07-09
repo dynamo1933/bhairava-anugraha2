@@ -880,6 +880,15 @@
         <label for="search-input">Search Q&As</label>
         <input type="text" id="search-input" class="filter-input" placeholder="Search by question text, asker, number..." />
       </div>
+
+      <div class="filter-group">
+        <label for="publish-filter">Publish Status</label>
+        <select id="publish-filter" class="filter-select">
+          <option value="all">All (Pub & Unpub)</option>
+          <option value="published">Published Only</option>
+          <option value="unpublished">Unpublished Only</option>
+        </select>
+      </div>
       
       <div class="filter-group">
         <label for="category-filter">Folio / Category</label>
@@ -1038,6 +1047,7 @@
     const statsRephrased = document.getElementById('stats-rephrased');
     const statsPending = document.getElementById('stats-pending');
     const searchInput = document.getElementById('search-input');
+    const publishFilter = document.getElementById('publish-filter');
     const categoryFilter = document.getElementById('category-filter');
     const statusFilter = document.getElementById('status-filter');
     const paginationInfo = document.getElementById('pagination-info');
@@ -1091,6 +1101,7 @@
     // Filter and Search
     function applyFilters() {
       const searchVal = searchInput.value.toLowerCase().trim();
+      const publishVal = publishFilter.value;
       const catVal = categoryFilter.value;
       const statusVal = statusFilter.value;
 
@@ -1103,6 +1114,12 @@
           d.asker.toLowerCase().includes(searchVal) ||
           d.category.toLowerCase().includes(searchVal);
 
+        // Publish status filter
+        const isApproved = d.approved !== 'false' && d.approved !== '0';
+        const matchesPublish = publishVal === 'all' ||
+          (publishVal === 'published' && isApproved) ||
+          (publishVal === 'unpublished' && !isApproved);
+
         // Category filter
         const matchesCat = catVal === 'all' || d.category === catVal;
 
@@ -1112,7 +1129,7 @@
           (statusVal === 'pending' && !hasRephrased) ||
           (statusVal === 'completed' && hasRephrased);
 
-        return matchesSearch && matchesCat && matchesStatus;
+        return matchesSearch && matchesPublish && matchesCat && matchesStatus;
       });
 
       currentPage = 1;
@@ -1458,6 +1475,7 @@
 
     // Event Listeners
     searchInput.addEventListener('input', applyFilters);
+    publishFilter.addEventListener('change', applyFilters);
     categoryFilter.addEventListener('change', applyFilters);
     statusFilter.addEventListener('change', applyFilters);
     
