@@ -395,6 +395,7 @@ function _buildSingleEntryHtml(e) {
     </div>
     <h1>${escapeHtml(asciiTitle(e.title))}</h1>
     <div class="meta-row">
+      ${e.asker ? `<span>SEEKER <span class="v">${escapeHtml(e.asker)}</span></span>` : ""}
       ${e.date ? `<span><span class="v">${escapeHtml(e.date)}</span></span>` : ""}
       <span style="margin-left:auto;">№ <span class="v">${e.num}</span></span>
     </div>
@@ -447,6 +448,7 @@ function _buildThreadHtml(chain, activeNum) {
       <div class="thread-entry${isActive ? " thread-active" : ""}"
            data-entry-num="${e.num}">
         <div class="meta-row">
+          ${e.asker ? `<span>SEEKER <span class="v">${escapeHtml(e.asker)}</span></span>` : ""}
           ${e.date ? `<span><span class="v">${escapeHtml(e.date)}</span></span>` : ""}
           <span style="margin-left:auto;">№ <span class="v">${e.num}</span></span>
         </div>
