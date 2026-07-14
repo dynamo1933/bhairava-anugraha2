@@ -58,6 +58,13 @@ function toIso(d, t) {
   const hhmm = time.split(":").map(s => s.padStart(2, "0")).join(":");
   return m[3] + "-" + m[2].padStart(2, "0") + "-" + m[1].padStart(2, "0") + "T" + hhmm + ":00";
 }
+function capitalizeFirstLetter(str) {
+  if (!str) return "";
+  const match = str.match(/\p{L}/u);
+  if (!match) return str;
+  const index = match.index;
+  return str.slice(0, index) + str.charAt(index).toUpperCase() + str.slice(index + 1);
+}
 function stripGreeting(s) {
   return s.replace(/^\s*(namaskaram|namaskara|namaste|pranam(s)?|pranaam)\s*[,!\.]?\s*/i, "").trim();
 }
@@ -108,12 +115,12 @@ function buildData(csvText) {
         CAT_ORDER.push(key);
       }
     }
-    const question = (r[col("question")] || "").trim();
-    const answer = (r[col("answer")] || "").trim();
+    const question = capitalizeFirstLetter((r[col("question")] || "").trim());
+    const answer = capitalizeFirstLetter((r[col("answer")] || "").trim());
     if (!question || !answer) continue;
 
     const rephrasedCol = col("rephrased");
-    const rephrased = rephrasedCol !== -1 ? (r[rephrasedCol] || "").trim() : "";
+    const rephrased = rephrasedCol !== -1 ? capitalizeFirstLetter((r[col("rephrased")] || "").trim()) : "";
     const displayedQuestion = rephrased !== "" ? rephrased : question;
 
     // Filter out unapproved entries
@@ -195,11 +202,11 @@ function buildDataFromJson(jsonList) {
         CAT_ORDER.push(key);
       }
     }
-    const question = (item.question || "").trim();
-    const answer = (item.answer || "").trim();
+    const question = capitalizeFirstLetter((item.question || "").trim());
+    const answer = capitalizeFirstLetter((item.answer || "").trim());
     if (!question || !answer) continue;
 
-    const rephrased = (item.rephrased || "").trim();
+    const rephrased = capitalizeFirstLetter((item.rephrased || "").trim());
     const displayedQuestion = rephrased !== "" ? rephrased : question;
 
     // Filter out unapproved entries
