@@ -5,6 +5,7 @@ import csv
 import os
 import urllib.parse
 from rephrase_agent import rephrase_question
+from db_helper import get_all_qna, update_qna_entry
 
 PORT = 8080
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
@@ -40,43 +41,11 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(404, "API Endpoint Not Found")
 
     def handle_get_qna(self):
-        csv_path = os.path.join(DIRECTORY, "qna.csv")
-        if not os.path.exists(csv_path):
-            self.send_json_error(404, "qna.csv file not found")
-            return
-
-        rows = []
-        for encoding in ('utf-8-sig', 'utf-8', 'cp1252', 'latin-1'):
-            try:
-                with open(csv_path, 'r', newline='', encoding=encoding) as f:
-                    reader = csv.reader(f)
-                    rows = list(reader)
-                if rows:
-                    break
-            except Exception:
-                continue
-        else:
-            self.send_json_error(500, "Could not decode qna.csv")
-            return
-
-        if len(rows) < 1:
-            self.send_json_error(500, "qna.csv is empty")
-            return
-
-        header = [h.strip().lower() for h in rows[0]]
-        entries = []
-        for row in rows[1:]:
-            if not row:
-                continue
-            entry = {}
-            for idx, col_name in enumerate(header):
-                if idx < len(row):
-                    entry[col_name] = row[idx]
-                else:
-                    entry[col_name] = ""
-            entries.append(entry)
-
-        self.send_json_response(entries)
+        try:
+            entries = get_all_qna()
+            self.send_json_response(entries)
+        except Exception as e:
+            self.send_json_error(500, str(e))
 
     def handle_post_rephrase(self):
         content_length = int(self.headers.get('Content-Length', 0))
@@ -124,93 +93,20 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_error(400, "At least one parameter to update is required")
             return
 
-        success_qna = self.update_csv("qna.csv", num, rephrased_text, approved_val, category_val, question_val, answer_val, followup_val)
+        success = update_qna_entry(
+            num,
+            rephrased_text=rephrased_text,
+            approved_val=approved_val,
+            category_val=category_val,
+            question_val=question_val,
+            answer_val=answer_val,
+            followup_val=followup_val
+        )
 
-        if success_qna:
-            self.send_json_response({"success": True, "message": "Updated successfully on disk"})
+        if success:
+            self.send_json_response({"success": True, "message": "Updated successfully"})
         else:
-            self.send_json_error(500, "Failed to update qna.csv file on disk")
-
-    def update_csv(self, filename, num, rephrased_text=None, approved_val=None, category_val=None, question_val=None, answer_val=None, followup_val=None):
-        file_path = os.path.join(DIRECTORY, filename)
-        if not os.path.exists(file_path):
-            return False
-
-        rows = []
-        for encoding in ('utf-8-sig', 'utf-8', 'cp1252', 'latin-1'):
-            try:
-                with open(file_path, 'r', newline='', encoding=encoding) as f:
-                    reader = csv.reader(f)
-                    rows = list(reader)
-                if rows:
-                    break
-            except Exception:
-                continue
-        else:
-            return False
-
-        if not rows:
-            return False
-
-        header = [h.strip().lower() for h in rows[0]]
-        try:
-            num_idx = header.index("num")
-        except ValueError:
-            return False
-
-        rephrased_idx = header.index("rephrased") if "rephrased" in header else -1
-        approved_idx = header.index("approved") if "approved" in header else -1
-        category_idx = header.index("category") if "category" in header else -1
-        question_idx = header.index("question") if "question" in header else -1
-        answer_idx = header.index("answer") if "answer" in header else -1
-        followup_idx = header.index("followup") if "followup" in header else -1
-
-        updated = False
-        for row in rows[1:]:
-            if len(row) > num_idx and row[num_idx].strip() == num:
-                if rephrased_text is not None and rephrased_idx != -1:
-                    while len(row) <= rephrased_idx:
-                        row.append("")
-                    row[rephrased_idx] = rephrased_text.strip()
-                
-                if approved_val is not None and approved_idx != -1:
-                    while len(row) <= approved_idx:
-                        row.append("")
-                    row[approved_idx] = str(approved_val).strip().lower()
-
-                if category_val is not None and category_idx != -1:
-                    while len(row) <= category_idx:
-                        row.append("")
-                    row[category_idx] = category_val.strip()
-
-                if question_val is not None and question_idx != -1:
-                    while len(row) <= question_idx:
-                        row.append("")
-                    row[question_idx] = question_val.strip()
-
-                if answer_val is not None and answer_idx != -1:
-                    while len(row) <= answer_idx:
-                        row.append("")
-                    row[answer_idx] = answer_val.strip()
-
-                if followup_val is not None and followup_idx != -1:
-                    while len(row) <= followup_idx:
-                        row.append("")
-                    row[followup_idx] = str(followup_val).strip()
-                
-                updated = True
-                break
-
-        if not updated:
-            return False
-
-        try:
-            with open(file_path, 'w', newline='', encoding='utf-8') as f:
-                writer = csv.writer(f, quoting=csv.QUOTE_ALL)
-                writer.writerows(rows)
-            return True
-        except Exception:
-            return False
+            self.send_json_error(500, "Failed to update entry")
 
     def send_json_response(self, data, status=200):
         self.send_response(status)

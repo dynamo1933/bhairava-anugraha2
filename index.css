@@ -955,11 +955,13 @@ footer {
 }
 
 /* When a folio page is active, hide all homepage sections. */
+body.is-folio-view > .chrome,
 body.is-folio-view .hero,
 body.is-folio-view .categories,
 body.is-folio-view .featured,
 body.is-folio-view .recent,
-body.is-folio-view .about { display: none; }
+body.is-folio-view .about,
+body.is-folio-view > footer { display: none; }
 body:not(.is-folio-view) .folio-page { display: none; }
 
 @media (max-width: 1100px) {
