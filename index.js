@@ -180,16 +180,95 @@ function showLoadError(err) {
 let DATA = { categories: [], entries: [] };
 const BY_NUM = Object.create(null);
 
+function buildDataFromJson(jsonList) {
+  const entries = [];
+  for (let i = 0; i < jsonList.length; i++) {
+    const item = jsonList[i];
+    const cat = (item.category || "").trim();
+    if (!cat) continue;
+    let meta = CATEGORY_META[cat];
+    if (!meta) {
+      const key = cat.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      meta = { key: key, skt: "साधना", roman: "•" };
+      CATEGORY_META[cat] = meta;
+      if (!CAT_ORDER.includes(key)) {
+        CAT_ORDER.push(key);
+      }
+    }
+    const question = (item.question || "").trim();
+    const answer = (item.answer || "").trim();
+    if (!question || !answer) continue;
+
+    const rephrased = (item.rephrased || "").trim();
+    const displayedQuestion = rephrased !== "" ? rephrased : question;
+
+    // Filter out unapproved entries
+    const approved = (item.approved || "").trim().toLowerCase();
+    if (approved === "false" || approved === "0") continue;
+
+    // Read followup links (comma-separated nums)
+    const followupRaw = (item.followup || "").trim();
+    const followupNums = followupRaw
+      ? followupRaw.split(",").map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n))
+      : [];
+
+    const date = (item.date || "").trim();
+    const time = (item.time || "").trim();
+    entries.push({
+      num: parseInt(item.num, 10) || 0,
+      asker: (item.asker || "Anonymous").trim() || "Anonymous",
+      date: formatDate(date),
+      time: time,
+      iso: toIso(date, time),
+      category_key: meta.key,
+      title: firstSentence(displayedQuestion),
+      question: displayedQuestion.replace(/\n+/g, " "),
+      original: question.replace(/\n+/g, " "),
+      rephrased: rephrased.replace(/\n+/g, " "),
+      answer: paragraphsToHtml(answer),
+      followupNums,
+    });
+  }
+  // Sort newest first (by iso desc, fallback to num desc)
+  entries.sort((a, b) => (b.iso || "").localeCompare(a.iso || "") || (b.num - a.num));
+
+  // In-folio numbering: oldest first within each folio
+  const folio = {};
+  entries.slice().sort((a, b) => (a.iso || "").localeCompare(b.iso || "")).forEach(e => {
+    folio[e.category_key] = (folio[e.category_key] || 0) + 1;
+    e.in_folio = folio[e.category_key];
+  });
+
+  const totals = {};
+  entries.forEach(e => { totals[e.category_key] = (totals[e.category_key] || 0) + 1; });
+  const categories = CAT_ORDER.map(k => {
+    const found = Object.entries(CATEGORY_META).find(entry => entry[1].key === k);
+    return { key: k, name: found[0], skt: found[1].skt, roman: found[1].roman, count: totals[k] || 0 };
+  });
+  return { categories, entries };
+}
+
 async function loadData() {
   try {
-    const resp = await fetch("qna.csv", { cache: "no-cache" });
-    if (!resp.ok) throw new Error("Failed to load qna.csv (HTTP " + resp.status + ")");
-    const text = await resp.text();
-    DATA = buildData(text);
+    // Try loading live data from API first
+    const resp = await fetch("/api/qna", { cache: "no-cache" });
+    if (!resp.ok) throw new Error("HTTP Status " + resp.status);
+    const json = await resp.json();
+    if (json && json.error) throw new Error(json.error);
+    DATA = buildDataFromJson(json);
     DATA.entries.forEach(e => { BY_NUM[String(e.num)] = e; });
-  } catch (err) {
-    console.error("[Lacquer] data load failed:", err);
-    showLoadError(err);
+  } catch (apiErr) {
+    console.warn("[Lacquer] live API load failed, falling back to static CSV:", apiErr);
+    try {
+      const resp = await fetch("qna.csv", { cache: "no-cache" });
+      if (!resp.ok) throw new Error("Failed to load qna.csv (HTTP " + resp.status + ")");
+      const text = await resp.text();
+      DATA = buildData(text);
+      DATA.entries.forEach(e => { BY_NUM[String(e.num)] = e; });
+    } catch (csvErr) {
+      console.error("[Lacquer] CSV fallback load failed:", csvErr);
+      showLoadError(csvErr);
+    }
   }
 }
 
