@@ -65,6 +65,14 @@ function capitalizeFirstLetter(str) {
   const index = match.index;
   return str.slice(0, index) + str.charAt(index).toUpperCase() + str.slice(index + 1);
 }
+function stripEmojis(str) {
+  if (!str) return "";
+  return str.replace(/\p{Extended_Pictographic}/gu, "")
+            .replace(/[\uFE0E\uFE0F]/g, "")
+            .replace(/[\u{1F3FB}-\u{1F3FF}]/gu, "")
+            .replace(/\u200D/g, "")
+            .replace(/[ \t]{2,}/g, " ");
+}
 function stripGreeting(s) {
   return s.replace(/^\s*(namaskaram|namaskara|namaste|pranam(s)?|pranaam)\s*[,!\.]?\s*/i, "").trim();
 }
@@ -115,12 +123,12 @@ function buildData(csvText) {
         CAT_ORDER.push(key);
       }
     }
-    const question = capitalizeFirstLetter((r[col("question")] || "").trim());
-    const answer = capitalizeFirstLetter((r[col("answer")] || "").trim());
+    const question = capitalizeFirstLetter(stripEmojis((r[col("question")] || "").trim()));
+    const answer = capitalizeFirstLetter(stripEmojis((r[col("answer")] || "").trim()));
     if (!question || !answer) continue;
 
     const rephrasedCol = col("rephrased");
-    const rephrased = rephrasedCol !== -1 ? capitalizeFirstLetter((r[col("rephrased")] || "").trim()) : "";
+    const rephrased = rephrasedCol !== -1 ? capitalizeFirstLetter(stripEmojis((r[col("rephrased")] || "").trim())) : "";
     const displayedQuestion = rephrased !== "" ? rephrased : question;
 
     // Filter out unapproved entries
@@ -202,11 +210,11 @@ function buildDataFromJson(jsonList) {
         CAT_ORDER.push(key);
       }
     }
-    const question = capitalizeFirstLetter((item.question || "").trim());
-    const answer = capitalizeFirstLetter((item.answer || "").trim());
+    const question = capitalizeFirstLetter(stripEmojis((item.question || "").trim()));
+    const answer = capitalizeFirstLetter(stripEmojis((item.answer || "").trim()));
     if (!question || !answer) continue;
 
-    const rephrased = capitalizeFirstLetter((item.rephrased || "").trim());
+    const rephrased = capitalizeFirstLetter(stripEmojis((item.rephrased || "").trim()));
     const displayedQuestion = rephrased !== "" ? rephrased : question;
 
     // Filter out unapproved entries
