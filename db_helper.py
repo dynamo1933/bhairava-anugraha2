@@ -4,31 +4,91 @@ import json
 import requests
 import sys
 
-# Load .env file manually if it exists in the root folder
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 ENV_PATH = os.path.join(ROOT_DIR, ".env")
-if os.path.exists(ENV_PATH):
-    with open(ENV_PATH, 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith('#') and '=' in line:
-                k, v = line.split('=', 1)
-                os.environ[k.strip()] = v.strip()
 
-TURSO_DB_URL = os.environ.get("TURSO_DB_URL")
-TURSO_AUTH_TOKEN = os.environ.get("TURSO_AUTH_TOKEN")
+def load_env():
+    if os.path.exists(ENV_PATH):
+        try:
+            with open(ENV_PATH, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        k, v = line.split('=', 1)
+                        os.environ[k.strip()] = v.strip()
+        except Exception:
+            pass
+
+load_env()
+
+DB_CONFIG_PATH = os.path.join(ROOT_DIR, ".db_config.json")
 CSV_PATH = os.path.join(ROOT_DIR, "qna.csv")
 
-def is_turso_configured():
-    return bool(TURSO_DB_URL and TURSO_AUTH_TOKEN)
+def get_db_config():
+    load_env()
+    prod_url = os.environ.get("TURSO_DB_URL") or "https://daqna-dynamo1933.aws-ap-south-1.turso.io"
+    prod_token = os.environ.get("TURSO_AUTH_TOKEN") or ""
+    
+    uat_url = os.environ.get("TURSO_UAT_DB_URL") or "https://daqnauat-dynamo1933.aws-ap-south-1.turso.io"
+    uat_token = os.environ.get("TURSO_UAT_AUTH_TOKEN") or ""
+    
+    config = {
+        "active_db": "prod",
+        "prod_url": prod_url,
+        "prod_token": prod_token,
+        "uat_url": uat_url,
+        "uat_token": uat_token
+    }
+    
+    if os.path.exists(DB_CONFIG_PATH):
+        try:
+            with open(DB_CONFIG_PATH, "r", encoding="utf-8") as f:
+                saved = json.load(f)
+                config["active_db"] = saved.get("active_db", "prod")
+                config["prod_url"] = saved.get("prod_url", prod_url)
+                config["prod_token"] = saved.get("prod_token", prod_token)
+                config["uat_url"] = saved.get("uat_url", uat_url)
+                config["uat_token"] = saved.get("uat_token", uat_token)
+        except Exception:
+            pass
+            
+    # Clean urls starting with libsql:// to https://
+    for key in ("prod_url", "uat_url"):
+        if config[key] and config[key].startswith("libsql://"):
+            config[key] = config[key].replace("libsql://", "https://", 1)
+            
+    return config
 
-def execute_turso_statements(statements):
+def save_db_config(config):
+    try:
+        with open(DB_CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump(config, f, indent=2)
+    except Exception as e:
+        print(f"Error saving database config: {e}", file=sys.stderr)
+
+def get_active_credentials():
+    cfg = get_db_config()
+    if cfg["active_db"] == "uat":
+        return cfg["uat_url"], cfg["uat_token"]
+    return cfg["prod_url"], cfg["prod_token"]
+
+def is_turso_configured():
+    url, token = get_active_credentials()
+    return bool(url and token)
+
+def execute_turso_statements(statements, db_url=None, auth_token=None):
     """
     Executes a list of statement dicts in a single pipeline.
     """
-    url = f"{TURSO_DB_URL.rstrip('/')}/v2/pipeline"
+    if db_url is None or auth_token is None:
+        db_url, auth_token = get_active_credentials()
+        
+    if not db_url or not auth_token:
+        raise Exception("Turso database credentials not configured.")
+        
+    url = f"{db_url.rstrip('/')}/v2/pipeline"
     headers = {
-        "Authorization": f"Bearer {TURSO_AUTH_TOKEN}",
+        "Authorization": f"Bearer {auth_token}",
         "Content-Type": "application/json"
     }
     payload = {
@@ -244,3 +304,108 @@ def update_qna_entry(num, rephrased_text=None, approved_val=None, category_val=N
         return True
     except Exception:
         return False
+
+def get_all_qna_from_db(db_url, auth_token):
+    sql = "SELECT num, category, asker, date, time, question, answer, rephrased, approved, followup FROM qna ORDER BY num;"
+    stmt = {
+        "type": "execute",
+        "stmt": {
+            "sql": sql
+        }
+    }
+    results = execute_turso_statements([stmt], db_url=db_url, auth_token=auth_token)
+    execute_result = results[0]["response"]["result"]
+    cols = [c["name"] for c in execute_result["cols"]]
+    rows = execute_result["rows"]
+    
+    entries = []
+    for row in rows:
+        entry = {}
+        for idx, col_name in enumerate(cols):
+            cell = row[idx]
+            val = cell.get("value") if cell.get("type") != "null" else ""
+            if col_name == "num" and val is not None:
+                val = str(val)
+            entry[col_name] = val
+        entries.append(entry)
+    return entries
+
+def sync_databases(source_db_name, target_db_name):
+    cfg = get_db_config()
+    
+    src_url = cfg[f"{source_db_name}_url"]
+    src_token = cfg[f"{source_db_name}_token"]
+    
+    tgt_url = cfg[f"{target_db_name}_url"]
+    tgt_token = cfg[f"{target_db_name}_token"]
+    
+    if not src_url or not src_token:
+        raise Exception(f"Source database ({source_db_name}) credentials are not configured.")
+    if not tgt_url or not tgt_token:
+        raise Exception(f"Target database ({target_db_name}) credentials are not configured.")
+        
+    # Get all from source
+    entries = get_all_qna_from_db(src_url, src_token)
+    
+    # Ensure target table exists
+    create_table_sql = """
+    CREATE TABLE IF NOT EXISTS qna (
+        num INTEGER PRIMARY KEY,
+        category TEXT,
+        asker TEXT,
+        date TEXT,
+        time TEXT,
+        question TEXT,
+        answer TEXT,
+        rephrased TEXT,
+        approved TEXT,
+        followup TEXT
+    );
+    """
+    execute_turso_statements([{"type": "execute", "stmt": {"sql": create_table_sql}}], db_url=tgt_url, auth_token=tgt_token)
+    
+    # Clear target table
+    execute_turso_statements([{"type": "execute", "stmt": {"sql": "DELETE FROM qna;"}}], db_url=tgt_url, auth_token=tgt_token)
+    
+    # Prepare batch inserts
+    insert_sql = """
+    INSERT OR REPLACE INTO qna (
+        num, category, asker, date, time, question, answer, rephrased, approved, followup
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    """
+    
+    statements = []
+    for d in entries:
+        try:
+            num_val = int(d["num"])
+        except ValueError:
+            continue
+            
+        args = [
+            {"type": "integer", "value": str(num_val)},
+            {"type": "text", "value": d.get("category", "")},
+            {"type": "text", "value": d.get("asker", "")},
+            {"type": "text", "value": d.get("date", "")},
+            {"type": "text", "value": d.get("time", "")},
+            {"type": "text", "value": d.get("question", "")},
+            {"type": "text", "value": d.get("answer", "")},
+            {"type": "text", "value": d.get("rephrased", "")},
+            {"type": "text", "value": d.get("approved", "")},
+            {"type": "text", "value": d.get("followup", "")}
+        ]
+        
+        statements.append({
+            "type": "execute",
+            "stmt": {
+                "sql": insert_sql,
+                "args": args
+            }
+        })
+        
+    # Execute batch inserts
+    batch_size = 50
+    for i in range(0, len(statements), batch_size):
+        batch = statements[i:i + batch_size]
+        execute_turso_statements(batch, db_url=tgt_url, auth_token=tgt_token)
+        
+    return len(entries)

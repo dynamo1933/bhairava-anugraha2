@@ -26,5 +26,7 @@ Revised-Questions.docx
 
 # Environment and backups
 .env
+.db_config.json
+out.txt
 *.bak
 __pycache__/

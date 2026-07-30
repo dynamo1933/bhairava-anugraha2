@@ -930,6 +930,29 @@
       border-top: 1px solid rgba(212,166,74,0.12);
       display: flex; justify-content: flex-end; gap: 10px;
     }
+    
+    /* Switch toggle styles */
+    .switch-toggle input:checked + .slider-round {
+      background-color: var(--gold) !important;
+      border-color: var(--gold-2) !important;
+    }
+    
+    .switch-toggle input:checked + .slider-round:before {
+      transform: translateX(26px);
+      background-color: var(--void);
+    }
+    
+    .slider-round:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 4px;
+      bottom: 4px;
+      background-color: var(--gold);
+      transition: .4s;
+      border-radius: 50%;
+    }
   </style>
 
 </head>
@@ -969,7 +992,9 @@
         <a href="index.html">Codex</a>
         <a class="is-active" href="#">Rephrase Tool</a>
       </nav>
-      <div class="right">
+      <div class="right" style="display: flex; gap: 14px; align-items: center;">
+        <div id="header-db-badge" class="badge" style="background: rgba(212,166,74,0.1); border: 1px solid var(--gold); color: var(--gold); font-size: 9px; padding: 3px 8px; font-family: var(--mono); text-transform: uppercase;">DB: LOADING...</div>
+        <button id="btn-db-panel" class="btn-action" style="padding: 6px 12px; font-size: 9px;">⚙️ DB Panel</button>
         <span class="mono" style="color: var(--gold); font-size: 10px; letter-spacing: 0.15em;">ADMIN PANEL</span>
       </div>
     </div>
@@ -1112,6 +1137,132 @@
       <div class="modal-footer">
         <button class="btn-action btn-secondary" id="modal-cancel-btn">Discard</button>
         <button class="btn-action" id="modal-save-btn">Keep &amp; Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== DATABASE PANEL MODAL ==================== -->
+  <div class="rephrase-modal" id="db-modal">
+    <div class="modal-card" style="max-width: 800px;">
+      
+      <!-- Database modal loader -->
+      <div class="modal-loader" id="db-modal-loader">
+        <div class="spinner-ring"></div>
+        <div class="loader-text" id="db-loader-text">Performing operations...</div>
+        <div class="loader-subtext">PLEASE DO NOT CLOSE THIS DIALOG</div>
+      </div>
+      
+      <div class="modal-header">
+        <h3>Bhairava Codex · Database Controls</h3>
+        <span class="modal-close" id="db-modal-close-btn">&times;</span>
+      </div>
+      
+      <div class="modal-body" style="grid-template-columns: 1fr; gap: 20px; padding: 24px;">
+        
+        <!-- Toggle Switch Row -->
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(212, 166, 74, 0.05); padding: 16px 20px; border-radius: 6px; border: 1px dashed rgba(212, 166, 74, 0.3);">
+          <div>
+            <div style="font-family: var(--display); font-size: 18px; color: var(--gold-3); margin-bottom: 2px;">Active Webapp Connection</div>
+            <div style="font-size: 12px; color: var(--ink-mute);">Switch between the Production and Staging (UAT) Turso instances.</div>
+          </div>
+          <!-- Custom Slider Toggle Switch -->
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-family: var(--mono); font-size: 11px; font-weight: bold; color: var(--gold-3);" id="lbl-db-switch-prod">PROD</span>
+            <label class="switch-toggle" style="position: relative; display: inline-block; width: 60px; height: 32px;">
+              <input type="checkbox" id="db-switch-toggle" style="opacity: 0; width: 0; height: 0;">
+              <span class="slider-round" style="position: absolute; cursor: pointer; inset: 0; background-color: rgba(7, 6, 10, 0.8); border: 1px solid rgba(212, 166, 74, 0.4); transition: .4s; border-radius: 34px;"></span>
+            </label>
+            <span style="font-family: var(--mono); font-size: 11px; font-weight: bold; color: var(--ink-dim);" id="lbl-db-switch-uat">UAT</span>
+          </div>
+        </div>
+
+        <!-- Database Stats and Details Row -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <!-- Prod Database Details Card -->
+          <div class="stat-card" style="margin-bottom: 0;">
+            <div class="label" style="font-size: 9px;">PRODUCTION DATABASE</div>
+            <div class="value" id="db-prod-count" style="font-size: 28px; margin: 4px 0;">— <span style="font-size: 14px; font-family: var(--serif); font-weight: normal; color: var(--paper-2);">entries</span></div>
+            <div style="font-size: 11px; color: var(--ink-mute); font-family: var(--mono); margin-top: 6px; word-break: break-all;" id="db-prod-url">URL: Loading...</div>
+            <div style="margin-top: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px;">
+              <span id="db-prod-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555;"></span>
+              <span id="db-prod-status" style="color: var(--ink-mute);">Checking status...</span>
+            </div>
+            <div class="decorator">तत्व</div>
+          </div>
+          
+          <!-- UAT Database Details Card -->
+          <div class="stat-card" style="margin-bottom: 0;">
+            <div class="label" style="font-size: 9px;">UAT (STAGING) DATABASE</div>
+            <div class="value" id="db-uat-count" style="font-size: 28px; margin: 4px 0;">— <span style="font-size: 14px; font-family: var(--serif); font-weight: normal; color: var(--paper-2);">entries</span></div>
+            <div style="font-size: 11px; color: var(--ink-mute); font-family: var(--mono); margin-top: 6px; word-break: break-all;" id="db-uat-url">URL: Loading...</div>
+            <div style="margin-top: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px;">
+              <span id="db-uat-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555;"></span>
+              <span id="db-uat-status" style="color: var(--ink-mute);">Checking status...</span>
+            </div>
+            <div class="decorator">प्रश्न</div>
+          </div>
+        </div>
+
+        <!-- Overwrite Warning -->
+        <div style="background: rgba(106, 16, 16, 0.15); border: 1px solid var(--crimson); border-radius: 4px; padding: 12px 16px; font-size: 13px; color: #ffbfbf;">
+          <strong>⚠️ CAUTION:</strong> Actions below modify database content directly. Download backups before proceeding.
+        </div>
+
+        <!-- Database Actions Grids -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <!-- Prod Database Controls -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 6px; font-weight: bold;">PROD OPERATIONS</div>
+            
+            <button class="btn-action btn-secondary" id="btn-sync-prod-from-uat" style="text-align: left; padding: 10px 14px; font-size: 11px; display: flex; justify-content: space-between; align-items: center;">
+              <span>🔄 Sync Prod from UAT</span>
+              <span style="font-size: 9px; opacity: 0.7;">OVERWRITES PROD</span>
+            </button>
+            
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <select id="select-download-prod" class="filter-select" style="padding: 6px 10px; font-size: 11px; flex: 1; height: auto;">
+                <option value="db">SQLite (.db)</option>
+                <option value="csv">CSV (.csv)</option>
+                <option value="json">JSON (.json)</option>
+              </select>
+              <button class="btn-action" id="btn-download-prod" style="padding: 8px 14px; font-size: 10px;">📥 Download Prod</button>
+            </div>
+            
+            <button class="btn-action btn-secondary" id="btn-trigger-upload-prod" style="text-align: left; padding: 10px 14px; font-size: 11px;">
+              📂 Upload &amp; Restore to Prod (.db/.csv/.json)
+            </button>
+            <input type="file" id="input-upload-prod" accept=".db,.csv,.json" style="display: none;">
+          </div>
+          
+          <!-- UAT Database Controls -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 6px; font-weight: bold;">UAT OPERATIONS</div>
+            
+            <button class="btn-action btn-secondary" id="btn-sync-uat-from-prod" style="text-align: left; padding: 10px 14px; font-size: 11px; display: flex; justify-content: space-between; align-items: center;">
+              <span>🔄 Sync UAT from Prod</span>
+              <span style="font-size: 9px; opacity: 0.7;">OVERWRITES UAT</span>
+            </button>
+            
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <select id="select-download-uat" class="filter-select" style="padding: 6px 10px; font-size: 11px; flex: 1; height: auto;">
+                <option value="db">SQLite (.db)</option>
+                <option value="csv">CSV (.csv)</option>
+                <option value="json">JSON (.json)</option>
+              </select>
+              <button class="btn-action" id="btn-download-uat" style="padding: 8px 14px; font-size: 10px;">📥 Download UAT</button>
+            </div>
+            
+            <button class="btn-action btn-secondary" id="btn-trigger-upload-uat" style="text-align: left; padding: 10px 14px; font-size: 11px;">
+              📂 Upload &amp; Restore to UAT (.db/.csv/.json)
+            </button>
+            <input type="file" id="input-upload-uat" accept=".db,.csv,.json" style="display: none;">
+          </div>
+        </div>
+
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn-action btn-secondary" id="db-modal-close-footer">Close</button>
       </div>
     </div>
   </div>
@@ -1828,8 +1979,301 @@
       if (e.target === document.getElementById('link-modal')) closeLinkModal();
     });
 
+    // =========================================================
+    // DATABASE PANEL MANAGEMENT
+    // =========================================================
+    const dbModal = document.getElementById('db-modal');
+    const btnDbPanel = document.getElementById('btn-db-panel');
+    const dbModalCloseBtn = document.getElementById('db-modal-close-btn');
+    const dbModalCloseFooter = document.getElementById('db-modal-close-footer');
+    const dbModalLoader = document.getElementById('db-modal-loader');
+    const dbLoaderText = document.getElementById('db-loader-text');
+    
+    const dbSwitchToggle = document.getElementById('db-switch-toggle');
+    const lblDbSwitchProd = document.getElementById('lbl-db-switch-prod');
+    const lblDbSwitchUat = document.getElementById('lbl-db-switch-uat');
+    const headerDbBadge = document.getElementById('header-db-badge');
+    
+    // Status elements
+    const dbProdCount = document.getElementById('db-prod-count');
+    const dbProdUrl = document.getElementById('db-prod-url');
+    const dbProdDot = document.getElementById('db-prod-dot');
+    const dbProdStatus = document.getElementById('db-prod-status');
+    
+    const dbUatCount = document.getElementById('db-uat-count');
+    const dbUatUrl = document.getElementById('db-uat-url');
+    const dbUatDot = document.getElementById('db-uat-dot');
+    const dbUatStatus = document.getElementById('db-uat-status');
+    
+    // Action Buttons
+    const btnSyncProdFromUat = document.getElementById('btn-sync-prod-from-uat');
+    const btnSyncUatFromProd = document.getElementById('btn-sync-uat-from-prod');
+    const btnDownloadProd = document.getElementById('btn-download-prod');
+    const btnDownloadUat = document.getElementById('btn-download-uat');
+    const selectDownloadProd = document.getElementById('select-download-prod');
+    const selectDownloadUat = document.getElementById('select-download-uat');
+    
+    const btnTriggerUploadProd = document.getElementById('btn-trigger-upload-prod');
+    const inputUploadProd = document.getElementById('input-upload-prod');
+    const btnTriggerUploadUat = document.getElementById('btn-trigger-upload-uat');
+    const inputUploadUat = document.getElementById('input-upload-uat');
+
+    // Open/Close Modal
+    btnDbPanel.addEventListener('click', () => {
+      openDbModal();
+    });
+    
+    dbModalCloseBtn.addEventListener('click', closeDbModal);
+    dbModalCloseFooter.addEventListener('click', closeDbModal);
+    
+    dbModal.addEventListener('click', e => {
+      if (e.target === dbModal) closeDbModal();
+    });
+    
+    function openDbModal() {
+      dbModal.classList.add('is-open');
+      loadDbStatus();
+    }
+    
+    function closeDbModal() {
+      dbModal.classList.remove('is-open');
+      dbModalLoader.classList.remove('is-active');
+    }
+
+    // Load Database status dynamically
+    async function loadDbStatus() {
+      try {
+        const response = await fetch('/api/db/status');
+        if (!response.ok) throw new Error('Failed to load database status.');
+        const data = await response.json();
+        
+        // Update URL texts
+        dbProdUrl.textContent = `URL: ${data.prod_url || 'Not configured'}`;
+        dbUatUrl.textContent = `URL: ${data.uat_url || 'Not configured'}`;
+        
+        // Update Count values
+        dbProdCount.innerHTML = `${data.prod_count} <span style="font-size: 14px; font-family: var(--serif); font-weight: normal; color: var(--paper-2);">entries</span>`;
+        dbUatCount.innerHTML = `${data.uat_count} <span style="font-size: 14px; font-family: var(--serif); font-weight: normal; color: var(--paper-2);">entries</span>`;
+        
+        // Update status indicators (dots & label)
+        if (data.prod_status === 'Connected') {
+          dbProdDot.style.background = '#d4a64a'; // gold
+          dbProdStatus.textContent = 'Connected';
+          dbProdStatus.style.color = 'var(--gold)';
+        } else {
+          dbProdDot.style.background = 'var(--crimson)';
+          dbProdStatus.textContent = data.prod_status;
+          dbProdStatus.style.color = '#ff9999';
+        }
+        
+        if (data.uat_status === 'Connected') {
+          dbUatDot.style.background = '#82aad4'; // slate-blue / cyan
+          dbUatStatus.textContent = 'Connected';
+          dbUatStatus.style.color = '#82aad4';
+        } else {
+          dbUatDot.style.background = 'var(--crimson)';
+          dbUatStatus.textContent = data.uat_status;
+          dbUatStatus.style.color = '#ff9999';
+        }
+        
+        // Update Slider Toggle active state
+        const isUat = data.active_db === 'uat';
+        dbSwitchToggle.checked = isUat;
+        updateSliderLabels(isUat);
+        
+        // Update Header Badge
+        headerDbBadge.textContent = `DB: ${data.active_db.toUpperCase()}`;
+        if (isUat) {
+          headerDbBadge.style.color = '#82aad4';
+          headerDbBadge.style.borderColor = '#82aad4';
+          headerDbBadge.style.background = 'rgba(130,170,212,0.1)';
+        } else {
+          headerDbBadge.style.color = 'var(--gold)';
+          headerDbBadge.style.borderColor = 'var(--gold)';
+          headerDbBadge.style.background = 'rgba(212,166,74,0.1)';
+        }
+        
+      } catch (err) {
+        console.error(err);
+        showToast('Error retrieving database status: ' + err.message, 'error');
+      }
+    }
+    
+    function updateSliderLabels(isUat) {
+      if (isUat) {
+        lblDbSwitchUat.style.color = '#82aad4';
+        lblDbSwitchProd.style.color = 'var(--ink-dim)';
+      } else {
+        lblDbSwitchProd.style.color = 'var(--gold-3)';
+        lblDbSwitchUat.style.color = 'var(--ink-dim)';
+      }
+    }
+
+    // Wire up Switch Toggle changes
+    dbSwitchToggle.addEventListener('change', async (e) => {
+      const targetDb = e.target.checked ? 'uat' : 'prod';
+      dbLoaderText.textContent = `Switching database connection to ${targetDb.toUpperCase()}...`;
+      dbModalLoader.classList.add('is-active');
+      
+      try {
+        const response = await fetch('/api/db/switch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ db: targetDb })
+        });
+        
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Switch failed.');
+        
+        showToast(`Successfully switched database to ${targetDb.toUpperCase()}`, 'success');
+        updateSliderLabels(targetDb === 'uat');
+        
+        // Reload all data list from backend based on the new database
+        await loadData();
+        await loadDbStatus();
+        
+      } catch (err) {
+        console.error(err);
+        showToast('Error switching database: ' + err.message, 'error');
+        // revert check state on failure
+        dbSwitchToggle.checked = !dbSwitchToggle.checked;
+      } finally {
+        dbModalLoader.classList.remove('is-active');
+      }
+    });
+
+    // Sync database operations
+    async function triggerDbSync(sourceDb, targetDb) {
+      const confirmed = confirm(`⚠️ DANGER: Are you absolutely sure you want to sync ${targetDb.toUpperCase()} from ${sourceDb.toUpperCase()}?\n\nThis will completely erase all current Q&A entries in ${targetDb.toUpperCase()} and overwrite them with a copy of ${sourceDb.toUpperCase()} database.`);
+      if (!confirmed) return;
+      
+      dbLoaderText.textContent = `Syncing ${targetDb.toUpperCase()} database from ${sourceDb.toUpperCase()}...`;
+      dbModalLoader.classList.add('is-active');
+      
+      try {
+        const response = await fetch('/api/db/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source: sourceDb, target: targetDb })
+        });
+        
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Sync failed.');
+        
+        showToast(data.message, 'success');
+        
+        // Reload statistics and entries list
+        await loadData();
+        await loadDbStatus();
+      } catch (err) {
+        console.error(err);
+        showToast('Sync failed: ' + err.message, 'error');
+      } finally {
+        dbModalLoader.classList.remove('is-active');
+      }
+    }
+
+    btnSyncProdFromUat.addEventListener('click', () => triggerDbSync('uat', 'prod'));
+    btnSyncUatFromProd.addEventListener('click', () => triggerDbSync('prod', 'uat'));
+
+    // Download database operations
+    function triggerDbDownload(dbChoice, selectEl) {
+      const format = selectEl.value;
+      const downloadUrl = `/api/db/download?db=${dbChoice}&format=${format}`;
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = '';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast(`Initiated ${dbChoice.toUpperCase()} download in ${format.toUpperCase()} format`, 'success');
+    }
+
+    btnDownloadProd.addEventListener('click', () => triggerDbDownload('prod', selectDownloadProd));
+    btnDownloadUat.addEventListener('click', () => triggerDbDownload('uat', selectDownloadUat));
+
+    // Upload database operations
+    btnTriggerUploadProd.addEventListener('click', () => inputUploadProd.click());
+    btnTriggerUploadUat.addEventListener('click', () => inputUploadUat.click());
+
+    function handleFileUpload(inputEl, dbChoice) {
+      const file = inputEl.files[0];
+      if (!file) return;
+      
+      const confirmed = confirm(`⚠️ DANGER: Are you absolutely sure you want to upload "${file.name}" to ${dbChoice.toUpperCase()} database?\n\nThis will completely overwrite the existing data in the target database!`);
+      if (!confirmed) {
+        inputEl.value = '';
+        return;
+      }
+      
+      dbLoaderText.textContent = `Uploading and restoring database for ${dbChoice.toUpperCase()}...`;
+      dbModalLoader.classList.add('is-active');
+      
+      const reader = new FileReader();
+      const ext = file.name.split('.').pop().toLowerCase();
+      
+      reader.onload = async (e) => {
+        let content = '';
+        if (ext === 'db') {
+          const arrayBuffer = e.target.result;
+          const bytes = new Uint8Array(arrayBuffer);
+          let binary = '';
+          for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          content = btoa(binary);
+        } else {
+          content = e.target.result;
+        }
+        
+        try {
+          const response = await fetch('/api/db/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              db: dbChoice,
+              filename: file.name,
+              content: content
+            })
+          });
+          
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'Upload restoration failed.');
+          
+          showToast(data.message, 'success');
+          inputEl.value = '';
+          
+          await loadData();
+          await loadDbStatus();
+        } catch (err) {
+          console.error(err);
+          showToast('Database restore failed: ' + err.message, 'error');
+          inputEl.value = '';
+        } finally {
+          dbModalLoader.classList.remove('is-active');
+        }
+      };
+      
+      if (ext === 'db') {
+        reader.readAsArrayBuffer(file);
+      } else {
+        reader.readAsText(file);
+      }
+    }
+
+    inputUploadProd.addEventListener('change', () => handleFileUpload(inputUploadProd, 'prod'));
+    inputUploadUat.addEventListener('change', () => handleFileUpload(inputUploadUat, 'uat'));
+
+    // Handle ESC for DB Modal
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && dbModal.classList.contains('is-open')) {
+        closeDbModal();
+      }
+    });
+
     // Bootstrap
     loadData();
+    loadDbStatus();
   </script>
 </body>
 </html>
