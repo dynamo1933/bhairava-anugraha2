@@ -995,6 +995,7 @@
       <div class="right" style="display: flex; gap: 14px; align-items: center;">
         <div id="header-db-badge" class="badge" style="background: rgba(212,166,74,0.1); border: 1px solid var(--gold); color: var(--gold); font-size: 9px; padding: 3px 8px; font-family: var(--mono); text-transform: uppercase;">DB: LOADING...</div>
         <button id="btn-db-panel" class="btn-action" style="padding: 6px 12px; font-size: 9px;">⚙️ DB Panel</button>
+        <button id="btn-analytics-panel" class="btn-action" style="padding: 6px 12px; font-size: 9px; background: linear-gradient(180deg, #d4a64a 0%, #aa7c27 100%);">📊 Guest Analytics</button>
         <span class="mono" style="color: var(--gold); font-size: 10px; letter-spacing: 0.15em;">ADMIN PANEL</span>
       </div>
     </div>
@@ -1263,6 +1264,210 @@
       
       <div class="modal-footer">
         <button class="btn-action btn-secondary" id="db-modal-close-footer">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== GUEST ANALYTICS PANEL MODAL ==================== -->
+  <div class="rephrase-modal" id="analytics-modal">
+    <div class="modal-card" style="max-width: 1200px; width: 95vw;">
+      
+      <!-- Analytics modal loader -->
+      <div class="modal-loader" id="analytics-modal-loader">
+        <div class="spinner-ring"></div>
+        <div class="loader-text">Fetching Telemetry &amp; Analytics...</div>
+        <div class="loader-subtext">QUERYING TURSO USER ANALYSIS DB</div>
+      </div>
+      
+      <div class="modal-header" style="background: linear-gradient(90deg, rgba(212,166,74,0.08) 0%, rgba(7,6,10,0.8) 100%);">
+        <div>
+          <h3 style="margin: 0; font-family: var(--display); font-size: 24px; color: var(--gold-3);">📊 Bhairava Codex · Guest Analytics Intelligence</h3>
+          <div style="font-size: 11px; color: var(--ink-mute); font-family: var(--mono); margin-top: 4px;">Real-time Telemetry &amp; Audience Insights from Turso Database</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <button class="btn-action btn-secondary" id="btn-refresh-analytics" style="padding: 6px 12px; font-size: 10px;">🔄 Refresh Data</button>
+          <span class="modal-close" id="analytics-modal-close-btn">&times;</span>
+        </div>
+      </div>
+      
+      <div class="modal-body" style="grid-template-columns: 1fr; gap: 24px; padding: 24px; max-height: 80vh; overflow-y: auto;">
+        
+        <!-- TOP KPI CARDS (6 Metrics) -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px;">
+          <!-- 1. Active Users -->
+          <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
+            <div class="label" style="font-size: 9px; color: #55ff55;">⚡ ACTIVE USERS (5M)</div>
+            <div class="value" id="an-active-users" style="font-size: 30px; color: #77ff77; margin: 4px 0;">—</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Live concurrent sessions</div>
+          </div>
+          <!-- 2. Daily Users -->
+          <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
+            <div class="label" style="font-size: 9px;">📅 DAILY USERS (DAU)</div>
+            <div class="value" id="an-daily-users" style="font-size: 30px; color: var(--gold); margin: 4px 0;">—</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Unique visitors in 24h</div>
+          </div>
+          <!-- 3. Monthly Users -->
+          <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
+            <div class="label" style="font-size: 9px;">🗓️ MONTHLY USERS (MAU)</div>
+            <div class="value" id="an-monthly-users" style="font-size: 30px; color: var(--paper); margin: 4px 0;">—</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Unique visitors in 30d</div>
+          </div>
+          <!-- 4. Avg Session Time -->
+          <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
+            <div class="label" style="font-size: 9px;">⏱️ AVG SESSION TIME</div>
+            <div class="value" id="an-avg-session-time" style="font-size: 30px; color: #82aad4; margin: 4px 0;">—</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Time per session</div>
+          </div>
+          <!-- 5. Error Rate -->
+          <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
+            <div class="label" style="font-size: 9px;">⚠️ ERROR RATE</div>
+            <div class="value" id="an-error-rate" style="font-size: 30px; color: #ff9999; margin: 4px 0;">—</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);" id="an-error-subtext">0 errors out of 0 requests</div>
+          </div>
+          <!-- 6. Avg Response Time -->
+          <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
+            <div class="label" style="font-size: 9px;">🚀 AVG RESPONSE TIME</div>
+            <div class="value" id="an-avg-response-time" style="font-size: 30px; color: #f7e2ad; margin: 4px 0;">—</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Average latency in ms</div>
+          </div>
+        </div>
+
+        <!-- SECTION 1: PAGES & SLOW APIS (2 Columns) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <!-- Most Visited Pages -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between;">
+              <span>📄 MOST VISITED PAGES</span>
+              <span style="color: var(--ink-dim); font-weight: normal;">URL &amp; PAGE VIEWS</span>
+            </div>
+            <div style="max-height: 220px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+                <thead>
+                  <tr style="color: var(--gold-3); font-family: var(--mono); border-bottom: 1px solid rgba(212,166,74,0.1);">
+                    <th style="padding: 6px;">Page Title / URL</th>
+                    <th style="padding: 6px; text-align: right;">Views</th>
+                    <th style="padding: 6px; text-align: right;">Avg Time</th>
+                  </tr>
+                </thead>
+                <tbody id="an-table-top-pages">
+                  <tr><td colspan="3" style="color: var(--ink-mute); text-align: center; padding: 16px;">No pageview data recorded yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Slow APIs -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between;">
+              <span>🐢 SLOW APIS &amp; ENDPOINTS</span>
+              <span style="color: var(--ink-dim); font-weight: normal;">LATENCY (MS)</span>
+            </div>
+            <div style="max-height: 220px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+                <thead>
+                  <tr style="color: var(--gold-3); font-family: var(--mono); border-bottom: 1px solid rgba(212,166,74,0.1);">
+                    <th style="padding: 6px;">API Endpoint</th>
+                    <th style="padding: 6px; text-align: center;">Calls</th>
+                    <th style="padding: 6px; text-align: right;">Avg Latency</th>
+                    <th style="padding: 6px; text-align: right;">Max</th>
+                  </tr>
+                </thead>
+                <tbody id="an-table-slow-apis">
+                  <tr><td colspan="4" style="color: var(--ink-mute); text-align: center; padding: 16px;">No API telemetry data recorded yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: BROWSER, OS & DEVICE BREAKDOWN (3 Columns) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+          <!-- Browser Usage -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🌐 BROWSER USAGE</div>
+            <div id="an-list-browsers" style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="color: var(--ink-mute); font-size: 12px;">No browser data recorded.</div>
+            </div>
+          </div>
+
+          <!-- OS Usage -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">💻 OS USAGE</div>
+            <div id="an-list-os" style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="color: var(--ink-mute); font-size: 12px;">No OS data recorded.</div>
+            </div>
+          </div>
+
+          <!-- Device Usage -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">📱 DEVICE USAGE</div>
+            <div id="an-list-devices" style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="color: var(--ink-mute); font-size: 12px;">No device data recorded.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: TOP SEARCHES, DOWNLOADS & RPM (3 Columns) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+          <!-- Top Searches -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🔍 TOP SEARCHES</div>
+            <div id="an-list-searches" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
+              <div style="color: var(--ink-mute); font-size: 12px;">No search queries recorded.</div>
+            </div>
+          </div>
+
+          <!-- Top Downloads -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">📥 TOP DOWNLOADS</div>
+            <div id="an-list-downloads" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
+              <div style="color: var(--ink-mute); font-size: 12px;">No download events recorded.</div>
+            </div>
+          </div>
+
+          <!-- Requests Per Minute (RPM) -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">📈 REQUESTS PER MINUTE (RPM)</div>
+            <div id="an-list-rpm" style="display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto;">
+              <div style="color: var(--ink-mute); font-size: 12px;">No traffic RPM trend recorded.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: HEATMAP & GEOGRAPHIC DISTRIBUTION (2 Columns) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <!-- Heat Map of User Activity -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🗺️ HEAT MAP OF USER ACTIVITY (7 DAYS X 24 HOURS)</div>
+            <div id="an-heatmap-container" style="display: flex; flex-direction: column; gap: 4px; overflow-x: auto; padding: 6px 0;">
+              <!-- 24-hour visual heat grid generated dynamically -->
+            </div>
+          </div>
+
+          <!-- Traffic by Country & City -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🌍 TRAFFIC BY COUNTRY &amp; CITY</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div>
+                <div style="font-family: var(--mono); font-size: 10px; color: var(--gold-3); margin-bottom: 6px;">COUNTRIES</div>
+                <div id="an-list-countries" style="display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto;">
+                  <div style="color: var(--ink-mute); font-size: 11px;">No country data yet.</div>
+                </div>
+              </div>
+              <div>
+                <div style="font-family: var(--mono); font-size: 10px; color: var(--gold-3); margin-bottom: 6px;">CITIES</div>
+                <div id="an-list-cities" style="display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto;">
+                  <div style="color: var(--ink-mute); font-size: 11px;">No city data yet.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn-action btn-secondary" id="analytics-modal-close-footer">Close Panel</button>
       </div>
     </div>
   </div>
@@ -2270,6 +2475,243 @@
         closeDbModal();
       }
     });
+
+    // ==================== GUEST ANALYTICS MODAL LOGIC ====================
+    const btnAnalyticsPanel = document.getElementById('btn-analytics-panel');
+    const analyticsModal = document.getElementById('analytics-modal');
+    const analyticsModalLoader = document.getElementById('analytics-modal-loader');
+    const analyticsModalCloseBtn = document.getElementById('analytics-modal-close-btn');
+    const analyticsModalCloseFooter = document.getElementById('analytics-modal-close-footer');
+    const btnRefreshAnalytics = document.getElementById('btn-refresh-analytics');
+
+    btnAnalyticsPanel.addEventListener('click', openAnalyticsModal);
+    analyticsModalCloseBtn.addEventListener('click', closeAnalyticsModal);
+    analyticsModalCloseFooter.addEventListener('click', closeAnalyticsModal);
+    btnRefreshAnalytics.addEventListener('click', loadGuestAnalytics);
+
+    analyticsModal.addEventListener('click', e => {
+      if (e.target === analyticsModal) closeAnalyticsModal();
+    });
+
+    function openAnalyticsModal() {
+      analyticsModal.classList.add('is-open');
+      loadGuestAnalytics();
+    }
+
+    function closeAnalyticsModal() {
+      analyticsModal.classList.remove('is-open');
+      analyticsModalLoader.classList.remove('is-active');
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && analyticsModal.classList.contains('is-open')) {
+        closeAnalyticsModal();
+      }
+    });
+
+    function formatSecs(sec) {
+      if (!sec || sec <= 0) return '0s';
+      if (sec < 60) return Math.round(sec) + 's';
+      const m = Math.floor(sec / 60);
+      const s = Math.round(sec % 60);
+      return m + 'm ' + s + 's';
+    }
+
+    async function loadGuestAnalytics() {
+      analyticsModalLoader.classList.add('is-active');
+      try {
+        const response = await fetch('/api/analytics/stats');
+        if (!response.ok) throw new Error('Failed to fetch analytics telemetry data');
+        const data = await response.json();
+
+        // 1. KPI Cards
+        document.getElementById('an-active-users').textContent = data.active_users || 0;
+        document.getElementById('an-daily-users').textContent = data.daily_users || 0;
+        document.getElementById('an-monthly-users').textContent = data.monthly_users || 0;
+        document.getElementById('an-avg-session-time').textContent = formatSecs(data.avg_session_time);
+        document.getElementById('an-error-rate').textContent = (data.error_rate || 0) + '%';
+        document.getElementById('an-error-subtext').textContent = `${data.total_errors || 0} errors out of ${data.total_requests || 0} requests`;
+        document.getElementById('an-avg-response-time').textContent = (data.avg_response_time || 0) + ' ms';
+
+        // 2. Most Visited Pages
+        const topPagesBody = document.getElementById('an-table-top-pages');
+        if (data.most_visited_pages && data.most_visited_pages.length > 0) {
+          topPagesBody.innerHTML = data.most_visited_pages.map(p => `
+            <tr style="border-bottom: 1px solid rgba(212,166,74,0.06);">
+              <td style="padding: 6px; color: var(--paper);">
+                <div style="font-weight: 500;">${p.page_title || 'Untitled'}</div>
+                <div style="font-family: var(--mono); font-size: 10px; color: var(--gold-3);">${p.page_url}</div>
+              </td>
+              <td style="padding: 6px; text-align: right; font-family: var(--mono); color: var(--gold); font-weight: bold;">${p.views}</td>
+              <td style="padding: 6px; text-align: right; font-family: var(--mono); color: var(--ink-mute);">${formatSecs(p.avg_time)}</td>
+            </tr>
+          `).join('');
+        } else {
+          topPagesBody.innerHTML = `<tr><td colspan="3" style="color: var(--ink-mute); text-align: center; padding: 16px;">No pageview telemetry recorded yet.</td></tr>`;
+        }
+
+        // 3. Slow APIs
+        const slowApisBody = document.getElementById('an-table-slow-apis');
+        if (data.slow_apis && data.slow_apis.length > 0) {
+          slowApisBody.innerHTML = data.slow_apis.map(api => `
+            <tr style="border-bottom: 1px solid rgba(212,166,74,0.06);">
+              <td style="padding: 6px; font-family: var(--mono); font-size: 11px; color: var(--paper);">${api.api_endpoint}</td>
+              <td style="padding: 6px; text-align: center; font-family: var(--mono); color: var(--ink-mute);">${api.calls}</td>
+              <td style="padding: 6px; text-align: right; font-family: var(--mono); color: #f7e2ad; font-weight: bold;">${api.avg_ms} ms</td>
+              <td style="padding: 6px; text-align: right; font-family: var(--mono); color: #ff9999;">${api.max_ms} ms</td>
+            </tr>
+          `).join('');
+        } else {
+          slowApisBody.innerHTML = `<tr><td colspan="4" style="color: var(--ink-mute); text-align: center; padding: 16px;">No API performance data recorded yet.</td></tr>`;
+        }
+
+        // Helper for Distribution Bars
+        const renderDistList = (items, keyName, elId, color = 'var(--gold)') => {
+          const container = document.getElementById(elId);
+          if (!items || items.length === 0) {
+            container.innerHTML = `<div style="color: var(--ink-mute); font-size: 12px;">No data recorded.</div>`;
+            return;
+          }
+          const total = items.reduce((sum, item) => sum + parseInt(item.count || 0), 0) || 1;
+          container.innerHTML = items.map(item => {
+            const cnt = parseInt(item.count || 0);
+            const pct = Math.round((cnt / total) * 100);
+            const name = item[keyName] || 'Unknown';
+            return `
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; font-family: var(--mono); margin-bottom: 3px;">
+                  <span style="color: var(--paper);">${name}</span>
+                  <span style="color: var(--gold-3);">${cnt} (${pct}%)</span>
+                </div>
+                <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden;">
+                  <div style="width: ${pct}%; height: 100%; background: ${color}; border-radius: 3px;"></div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        };
+
+        // 4. Browser Usage
+        renderDistList(data.browser_usage, 'browser', 'an-list-browsers', '#82aad4');
+
+        // 5. OS Usage
+        renderDistList(data.os_usage, 'os', 'an-list-os', 'var(--gold)');
+
+        // 6. Device Usage
+        renderDistList(data.device_usage, 'device', 'an-list-devices', '#55ff77');
+
+        // 7. Top Searches
+        const searchesList = document.getElementById('an-list-searches');
+        if (data.top_searches && data.top_searches.length > 0) {
+          searchesList.innerHTML = data.top_searches.map(s => `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(7,6,10,0.4); padding: 6px 10px; border-radius: 4px; border: 1px solid rgba(212,166,74,0.1); font-size: 12px;">
+              <span style="color: var(--paper); font-style: italic;">"${s.search_query}"</span>
+              <span style="font-family: var(--mono); font-size: 10px; color: var(--gold); font-weight: bold;">${s.count} searches</span>
+            </div>
+          `).join('');
+        } else {
+          searchesList.innerHTML = `<div style="color: var(--ink-mute); font-size: 12px;">No search queries recorded yet.</div>`;
+        }
+
+        // 8. Top Downloads
+        const downloadsList = document.getElementById('an-list-downloads');
+        if (data.top_downloads && data.top_downloads.length > 0) {
+          downloadsList.innerHTML = data.top_downloads.map(d => `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(7,6,10,0.4); padding: 6px 10px; border-radius: 4px; border: 1px solid rgba(212,166,74,0.1); font-size: 12px;">
+              <span style="color: var(--paper); font-family: var(--mono); font-size: 11px;">${d.download_file}</span>
+              <span style="font-family: var(--mono); font-size: 10px; color: #82aad4; font-weight: bold;">${d.count} downloads</span>
+            </div>
+          `).join('');
+        } else {
+          downloadsList.innerHTML = `<div style="color: var(--ink-mute); font-size: 12px;">No download events recorded yet.</div>`;
+        }
+
+        // 9. Requests Per Minute (RPM)
+        const rpmList = document.getElementById('an-list-rpm');
+        if (data.requests_per_minute && data.requests_per_minute.length > 0) {
+          const maxRpm = Math.max(...data.requests_per_minute.map(r => parseInt(r.count || 0)), 1);
+          rpmList.innerHTML = data.requests_per_minute.slice(-8).map(r => {
+            const cnt = parseInt(r.count || 0);
+            const pct = Math.round((cnt / maxRpm) * 100);
+            return `
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 10px; font-family: var(--mono); margin-bottom: 2px;">
+                  <span style="color: var(--ink-mute);">${r.minute}</span>
+                  <span style="color: var(--gold);">${cnt} RPM</span>
+                </div>
+                <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden;">
+                  <div style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, var(--gold) 0%, #77ff77 100%);"></div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          rpmList.innerHTML = `<div style="color: var(--ink-mute); font-size: 12px;">No RPM data recorded yet.</div>`;
+        }
+
+        // 10. Heatmap of User Activity (7 Days x 24 Hours)
+        const heatmapContainer = document.getElementById('an-heatmap-container');
+        const daysMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const heatGrid = {};
+        (data.heatmap || []).forEach(h => {
+          const key = `${h.day_of_week}_${parseInt(h.hour_of_day)}`;
+          heatGrid[key] = parseInt(h.count || 0);
+        });
+
+        const maxHeat = Math.max(...Object.values(heatGrid), 1);
+        let heatHtml = `<div style="display: flex; gap: 2px; align-items: center; font-family: var(--mono); font-size: 9px; color: var(--ink-mute); margin-bottom: 4px;">`;
+        heatHtml += `<span style="width: 32px;">Day</span>`;
+        for (let hr = 0; hr < 24; hr += 3) {
+          heatHtml += `<span style="flex: 1; text-align: center;">${hr}h</span>`;
+        }
+        heatHtml += `</div>`;
+
+        daysMap.forEach((dayName, dayIdx) => {
+          heatHtml += `<div style="display: flex; gap: 3px; align-items: center;">`;
+          heatHtml += `<span style="width: 32px; font-family: var(--mono); font-size: 10px; color: var(--gold-3);">${dayName}</span>`;
+          for (let hr = 0; hr < 24; hr++) {
+            const count = heatGrid[`${dayIdx}_${hr}`] || 0;
+            const opacity = count > 0 ? Math.min(0.2 + (count / maxHeat) * 0.8, 1) : 0.05;
+            heatHtml += `
+              <div title="${dayName} ${hr}:00 — ${count} events" style="flex: 1; height: 16px; border-radius: 2px; background: rgba(212, 166, 74, ${opacity}); border: 1px solid rgba(212, 166, 74, 0.1);"></div>
+            `;
+          }
+          heatHtml += `</div>`;
+        });
+        heatmapContainer.innerHTML = heatHtml;
+
+        // 11. Traffic by Country & City
+        const countriesList = document.getElementById('an-list-countries');
+        if (data.traffic_by_country && data.traffic_by_country.length > 0) {
+          countriesList.innerHTML = data.traffic_by_country.map(c => `
+            <div style="display: flex; justify-content: space-between; font-size: 11px; font-family: var(--mono); background: rgba(7,6,10,0.3); padding: 4px 8px; border-radius: 3px;">
+              <span style="color: var(--paper);">${c.country}</span>
+              <span style="color: var(--gold); font-weight: bold;">${c.count} sessions</span>
+            </div>
+          `).join('');
+        } else {
+          countriesList.innerHTML = `<div style="color: var(--ink-mute); font-size: 11px;">No country data yet.</div>`;
+        }
+
+        const citiesList = document.getElementById('an-list-cities');
+        if (data.traffic_by_city && data.traffic_by_city.length > 0) {
+          citiesList.innerHTML = data.traffic_by_city.map(c => `
+            <div style="display: flex; justify-content: space-between; font-size: 11px; font-family: var(--mono); background: rgba(7,6,10,0.3); padding: 4px 8px; border-radius: 3px;">
+              <span style="color: var(--paper);">${c.city}, ${c.country}</span>
+              <span style="color: #82aad4; font-weight: bold;">${c.count} sessions</span>
+            </div>
+          `).join('');
+        } else {
+          citiesList.innerHTML = `<div style="color: var(--ink-mute); font-size: 11px;">No city data yet.</div>`;
+        }
+
+      } catch (err) {
+        console.error(err);
+        showToast('Analytics Load Error: ' + err.message, 'error');
+      } finally {
+        analyticsModalLoader.classList.remove('is-active');
+      }
+    }
 
     // Bootstrap
     loadData();

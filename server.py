@@ -14,6 +14,11 @@ from db_helper import (
     get_all_qna_from_db, 
     execute_turso_statements
 )
+from analytics_db_helper import (
+    init_analytics_db,
+    record_guest_event,
+    get_guest_analytics_stats
+)
 
 PORT = 8080
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
@@ -36,6 +41,8 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_get_db_status()
         elif parsed_url.path == '/api/db/download':
             self.handle_get_db_download(parsed_url.query)
+        elif parsed_url.path == '/api/analytics/stats':
+            self.handle_get_analytics_stats()
         elif parsed_url.path in ('/rephrase', '/rephrase/'):
             self.send_response(301)
             self.send_header('Location', '/rephrase.html')
@@ -55,8 +62,37 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_post_db_sync()
         elif parsed_url.path == '/api/db/upload':
             self.handle_post_db_upload()
+        elif parsed_url.path == '/api/analytics/collect':
+            self.handle_post_analytics_collect()
         else:
             self.send_error(404, "API Endpoint Not Found")
+
+    def handle_get_analytics_stats(self):
+        try:
+            stats = get_guest_analytics_stats()
+            self.send_json_response(stats)
+        except Exception as e:
+            self.send_json_error(500, str(e))
+
+    def handle_post_analytics_collect(self):
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length).decode('utf-8')
+            data = json.loads(body) if body else {}
+            
+            # Attach Client IP and User-Agent if not sent
+            client_ip = self.headers.get('X-Forwarded-For', self.client_address[0])
+            user_agent = self.headers.get('User-Agent', '')
+            
+            if not data.get('ip_address'):
+                data['ip_address'] = client_ip
+            if not data.get('user_agent'):
+                data['user_agent'] = user_agent
+                
+            record_guest_event(data)
+            self.send_json_response({"success": True})
+        except Exception as e:
+            self.send_json_error(500, str(e))
 
     def handle_get_qna(self):
         try:
@@ -571,6 +607,11 @@ if __name__ == '__main__':
                 if line and not line.startswith('#') and '=' in line:
                     k, v = line.split('=', 1)
                     os.environ[k.strip()] = v.strip()
+
+    try:
+        init_analytics_db()
+    except Exception as e:
+        print(f"[-] Analytics DB Init Warning: {e}")
 
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("", PORT), QnAAPIHandler) as httpd:
