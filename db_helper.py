@@ -315,6 +315,83 @@ def update_qna_entry(num, rephrased_text=None, approved_val=None, category_val=N
     except Exception:
         return False
 
+def add_qna_entry(entry_data, active_db=None):
+    """
+    Inserts a new Q&A entry into Turso (or local CSV fallback).
+    """
+    import datetime
+    num = str(entry_data.get('num', '')).strip()
+    if not num:
+        existing = get_all_qna(active_db=active_db)
+        nums = [int(e['num']) for e in existing if str(e.get('num', '')).isdigit()]
+        num = str(max(nums) + 1 if nums else 1)
+        
+    category = str(entry_data.get('category', '')).strip() or "Mantra & Japa"
+    asker = str(entry_data.get('asker', '')).strip() or "UAT Contributor"
+    now = datetime.datetime.now()
+    date_str = str(entry_data.get('date', '')).strip() or now.strftime("%d.%m.%Y")
+    time_str = str(entry_data.get('time', '')).strip() or now.strftime("%H:%M")
+    question = str(entry_data.get('question', '')).strip()
+    answer = str(entry_data.get('answer', '')).strip()
+    rephrased = str(entry_data.get('rephrased', '')).strip()
+    approved = str(entry_data.get('approved', 'false')).strip().lower()
+    followup = str(entry_data.get('followup', '')).strip()
+    
+    if is_turso_configured(active_db=active_db):
+        insert_sql = """
+        INSERT OR REPLACE INTO qna (num, category, asker, date, time, question, answer, rephrased, approved, followup)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """
+        args = [
+            {"type": "integer", "value": num},
+            {"type": "text", "value": category},
+            {"type": "text", "value": asker},
+            {"type": "text", "value": date_str},
+            {"type": "text", "value": time_str},
+            {"type": "text", "value": question},
+            {"type": "text", "value": answer},
+            {"type": "text", "value": rephrased},
+            {"type": "text", "value": approved},
+            {"type": "text", "value": followup}
+        ]
+        
+        stmt = {
+            "type": "execute",
+            "stmt": {
+                "sql": insert_sql,
+                "args": args
+            }
+        }
+        execute_turso_statements([stmt], active_db=active_db)
+        return {"success": True, "num": num}
+
+    # CSV Fallback
+    if not os.path.exists(CSV_PATH):
+        raise FileNotFoundError(f"qna.csv not found at {CSV_PATH}")
+        
+    rows = []
+    for encoding in ('utf-8-sig', 'utf-8', 'cp1252', 'latin-1'):
+        try:
+            with open(CSV_PATH, 'r', newline='', encoding=encoding) as f:
+                reader = csv.reader(f)
+                rows = list(reader)
+            if rows:
+                break
+        except Exception:
+            continue
+            
+    if not rows:
+        return {"success": False, "error": "CSV empty"}
+        
+    new_row = [num, category, asker, date_str, time_str, question, answer, rephrased, approved, followup]
+    rows.append(new_row)
+    
+    with open(CSV_PATH, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f, quoting=csv.QUOTE_ALL)
+        writer.writerows(rows)
+        
+    return {"success": True, "num": num}
+
 def get_all_qna_from_db(db_url, auth_token):
     sql = "SELECT num, category, asker, date, time, question, answer, rephrased, approved, followup FROM qna ORDER BY num;"
     stmt = {

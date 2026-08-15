@@ -7,7 +7,8 @@ import urllib.parse
 from rephrase_agent import rephrase_question
 from db_helper import (
     get_all_qna, 
-    update_qna_entry, 
+    update_qna_entry,
+    add_qna_entry, 
     get_db_config, 
     save_db_config, 
     sync_databases, 
@@ -56,6 +57,8 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_post_rephrase()
         elif parsed_url.path == '/api/save':
             self.handle_post_save()
+        elif parsed_url.path == '/api/add':
+            self.handle_post_add()
         elif parsed_url.path == '/api/db/switch':
             self.handle_post_db_switch()
         elif parsed_url.path == '/api/db/sync':
@@ -135,6 +138,27 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_response(response_data)
         except Exception as e:
             self.send_json_error(500, str(e))
+
+    def handle_post_add(self):
+        active_db = self.headers.get('x-active-db') or self.headers.get('X-Active-DB')
+        content_length = int(self.headers.get('Content-Length', 0))
+        post_data = self.rfile.read(content_length)
+        
+        try:
+            data = json.loads(post_data.decode('utf-8'))
+        except Exception:
+            self.send_json_error(400, "Invalid JSON body")
+            return
+            
+        if not data.get('question', '').strip():
+            self.send_json_error(400, "Question text is required")
+            return
+            
+        try:
+            res = add_qna_entry(data, active_db=active_db)
+            self.send_json_response({"success": True, "message": "Entry created successfully", "num": res.get("num")})
+        except Exception as e:
+            self.send_json_error(500, f"Failed to add entry: {str(e)}")
 
     def handle_post_db_switch(self):
         content_length = int(self.headers.get('Content-Length', 0))
