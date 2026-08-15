@@ -25,6 +25,7 @@ class handler(BaseHTTPRequestHandler):
             data = json.loads(post_data.decode('utf-8'))
             source = data.get('source', '').strip().lower()
             target = data.get('target', '').strip().lower()
+            mode = data.get('mode', 'overwrite').strip().lower()
         except Exception:
             self.send_response(400)
             self.send_header('Content-Type', 'application/json')
@@ -50,8 +51,9 @@ class handler(BaseHTTPRequestHandler):
             return
             
         try:
-            count = sync_databases(source, target)
-            res_payload = {"success": True, "message": f"Successfully synced {count} entries from {source} to {target}."}
+            count = sync_databases(source, target, mode=mode)
+            action_word = "appended" if mode == "append" else "synced"
+            res_payload = {"success": True, "message": f"Successfully {action_word} {count} entries from {source.upper()} to {target.upper()}."}
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')

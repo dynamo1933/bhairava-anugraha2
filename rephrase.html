@@ -1257,12 +1257,24 @@
           </div>
           
           <!-- UAT Database Controls -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 6px; font-weight: bold;">UAT OPERATIONS</div>
+          <div style="background: rgba(130, 170, 212, 0.04); border: 1px solid rgba(130, 170, 212, 0.3); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: #82aad4; border-bottom: 1px solid rgba(130, 170, 212, 0.2); padding-bottom: 6px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+              <span>UAT OPERATIONS</span>
+              <span style="font-size: 9px; background: rgba(130,170,212,0.15); padding: 2px 6px; border-radius: 3px; color: #b8d5f3;">STAGING ONLY</span>
+            </div>
+
+            <!-- UAT Append Mode Toggle -->
+            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(130, 170, 212, 0.08); padding: 8px 12px; border-radius: 4px; border: 1px solid rgba(130, 170, 212, 0.25);">
+              <span style="font-size: 11px; color: #b8d5f3; font-family: var(--mono);">Sync / Import Mode:</span>
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; color: #ffffff;">
+                <input type="checkbox" id="chk-uat-append-mode" checked style="accent-color: #82aad4; width: 15px; height: 15px;" />
+                <span><strong id="lbl-uat-mode-title">Append Mode</strong> <span style="font-size: 9px; color: #82aad4;" id="lbl-uat-mode-sub">(Preserves existing UAT data)</span></span>
+              </label>
+            </div>
             
-            <button class="btn-action btn-secondary" id="btn-sync-uat-from-prod" style="text-align: left; padding: 10px 14px; font-size: 11px; display: flex; justify-content: space-between; align-items: center;">
-              <span>🔄 Sync UAT from Prod</span>
-              <span style="font-size: 9px; opacity: 0.7;">OVERWRITES UAT</span>
+            <button class="btn-action btn-secondary" id="btn-sync-uat-from-prod" style="text-align: left; padding: 10px 14px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; border-color: rgba(130,170,212,0.4);">
+              <span id="txt-sync-uat-btn">🔄 Sync &amp; Append UAT from Prod</span>
+              <span id="badge-sync-uat-btn" style="font-size: 9px; color: #82aad4; font-family: var(--mono);">PRESERVES UAT</span>
             </button>
             
             <div style="display: flex; gap: 10px; align-items: center;">
@@ -1271,11 +1283,11 @@
                 <option value="csv">CSV (.csv)</option>
                 <option value="json">JSON (.json)</option>
               </select>
-              <button class="btn-action" id="btn-download-uat" style="padding: 8px 14px; font-size: 10px;">📥 Download UAT</button>
+              <button class="btn-action" id="btn-download-uat" style="padding: 8px 14px; font-size: 10px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #fff;">📥 Download UAT</button>
             </div>
             
-            <button class="btn-action btn-secondary" id="btn-trigger-upload-uat" style="text-align: left; padding: 10px 14px; font-size: 11px;">
-              📂 Upload &amp; Restore to UAT (.db/.csv/.json)
+            <button class="btn-action btn-secondary" id="btn-trigger-upload-uat" style="text-align: left; padding: 10px 14px; font-size: 11px; border-color: rgba(130,170,212,0.4);">
+              <span id="txt-upload-uat-btn">📂 Upload &amp; Append to UAT (.db/.csv/.json)</span>
             </button>
             <input type="file" id="input-upload-uat" accept=".db,.csv,.json" style="display: none;">
 
@@ -2667,18 +2679,58 @@
     });
 
     // Sync database operations
+    const chkUatAppendMode = document.getElementById('chk-uat-append-mode');
+    const txtSyncUatBtn = document.getElementById('txt-sync-uat-btn');
+    const badgeSyncUatBtn = document.getElementById('badge-sync-uat-btn');
+    const txtUploadUatBtn = document.getElementById('txt-upload-uat-btn');
+    const lblUatModeTitle = document.getElementById('lbl-uat-mode-title');
+    const lblUatModeSub = document.getElementById('lbl-uat-mode-sub');
+
+    if (chkUatAppendMode) {
+      chkUatAppendMode.addEventListener('change', () => {
+        const isAppend = chkUatAppendMode.checked;
+        if (isAppend) {
+          if (lblUatModeTitle) lblUatModeTitle.textContent = 'Append Mode';
+          if (lblUatModeSub) lblUatModeSub.textContent = '(Preserves existing UAT data)';
+          if (txtSyncUatBtn) txtSyncUatBtn.textContent = '🔄 Sync & Append UAT from Prod';
+          if (badgeSyncUatBtn) {
+            badgeSyncUatBtn.textContent = 'PRESERVES UAT';
+            badgeSyncUatBtn.style.color = '#82aad4';
+          }
+          if (txtUploadUatBtn) txtUploadUatBtn.textContent = '📂 Upload & Append to UAT (.db/.csv/.json)';
+        } else {
+          if (lblUatModeTitle) lblUatModeTitle.textContent = 'Overwrite Mode';
+          if (lblUatModeSub) lblUatModeSub.textContent = '(Wipes existing UAT data)';
+          if (txtSyncUatBtn) txtSyncUatBtn.textContent = '🔄 Sync & Overwrite UAT from Prod';
+          if (badgeSyncUatBtn) {
+            badgeSyncUatBtn.textContent = 'OVERWRITES UAT';
+            badgeSyncUatBtn.style.color = 'var(--crimson)';
+          }
+          if (txtUploadUatBtn) txtUploadUatBtn.textContent = '📂 Upload & Overwrite UAT (.db/.csv/.json)';
+        }
+      });
+    }
+
     async function triggerDbSync(sourceDb, targetDb) {
-      const confirmed = confirm(`⚠️ DANGER: Are you absolutely sure you want to sync ${targetDb.toUpperCase()} from ${sourceDb.toUpperCase()}?\n\nThis will completely erase all current Q&A entries in ${targetDb.toUpperCase()} and overwrite them with a copy of ${sourceDb.toUpperCase()} database.`);
+      const isUat = targetDb === 'uat';
+      const isAppend = isUat && chkUatAppendMode && chkUatAppendMode.checked;
+      
+      const actionText = isAppend 
+        ? `append entries from ${sourceDb.toUpperCase()} into ${targetDb.toUpperCase()} without wiping existing data` 
+        : `completely erase all current Q&A entries in ${targetDb.toUpperCase()} and overwrite them with a copy of ${sourceDb.toUpperCase()} database`;
+
+      const confirmed = confirm(`⚠️ Confirm Database Sync:\n\nAre you sure you want to ${actionText}?`);
       if (!confirmed) return;
       
-      dbLoaderText.textContent = `Syncing ${targetDb.toUpperCase()} database from ${sourceDb.toUpperCase()}...`;
+      const modeVal = isAppend ? 'append' : 'overwrite';
+      dbLoaderText.textContent = `${isAppend ? 'Appending' : 'Syncing'} ${targetDb.toUpperCase()} database from ${sourceDb.toUpperCase()}...`;
       dbModalLoader.classList.add('is-active');
       
       try {
         const response = await fetch('/api/db/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ source: sourceDb, target: targetDb })
+          body: JSON.stringify({ source: sourceDb, target: targetDb, mode: modeVal })
         });
         
         const data = await response.json();
@@ -2724,13 +2776,21 @@
       const file = inputEl.files[0];
       if (!file) return;
       
-      const confirmed = confirm(`⚠️ DANGER: Are you absolutely sure you want to upload "${file.name}" to ${dbChoice.toUpperCase()} database?\n\nThis will completely overwrite the existing data in the target database!`);
+      const isUat = dbChoice === 'uat';
+      const isAppend = isUat && chkUatAppendMode && chkUatAppendMode.checked;
+      
+      const actionText = isAppend 
+        ? `upload "${file.name}" and append its entries into ${dbChoice.toUpperCase()} (preserving existing data)` 
+        : `upload "${file.name}" to ${dbChoice.toUpperCase()} database (this will completely OVERWRITE existing data)`;
+
+      const confirmed = confirm(`⚠️ Confirm File Upload:\n\nAre you sure you want to ${actionText}?`);
       if (!confirmed) {
         inputEl.value = '';
         return;
       }
       
-      dbLoaderText.textContent = `Uploading and restoring database for ${dbChoice.toUpperCase()}...`;
+      const modeVal = isAppend ? 'append' : 'overwrite';
+      dbLoaderText.textContent = `${isAppend ? 'Uploading and appending' : 'Uploading and restoring'} database for ${dbChoice.toUpperCase()}...`;
       dbModalLoader.classList.add('is-active');
       
       const reader = new FileReader();
@@ -2757,7 +2817,8 @@
             body: JSON.stringify({
               db: dbChoice,
               filename: file.name,
-              content: content
+              content: content,
+              mode: modeVal
             })
           });
           

@@ -191,6 +191,7 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             data = json.loads(post_data.decode('utf-8'))
             source = data.get('source', '').strip().lower()
             target = data.get('target', '').strip().lower()
+            mode = data.get('mode', 'overwrite').strip().lower()
         except Exception:
             self.send_json_error(400, "Invalid JSON body")
             return
@@ -204,8 +205,9 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             return
             
         try:
-            count = sync_databases(source, target)
-            self.send_json_response({"success": True, "message": f"Successfully synced {count} entries from {source} to {target}."})
+            count = sync_databases(source, target, mode=mode)
+            action_word = "appended" if mode == "append" else "synced"
+            self.send_json_response({"success": True, "message": f"Successfully {action_word} {count} entries from {source.upper()} to {target.upper()}."})
         except Exception as e:
             self.send_json_error(500, f"Sync error: {str(e)}")
 
@@ -426,6 +428,7 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             db_url = cfg[f"{db_choice}_url"]
             db_token = cfg[f"{db_choice}_token"]
             
+            mode = data.get('mode', 'overwrite').strip().lower()
             create_table_sql = """
             CREATE TABLE IF NOT EXISTS qna (
                 num INTEGER PRIMARY KEY,
@@ -442,45 +445,84 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             """
             execute_turso_statements([{"type": "execute", "stmt": {"sql": create_table_sql}}], db_url=db_url, auth_token=db_token)
             
-            execute_turso_statements([{"type": "execute", "stmt": {"sql": "DELETE FROM qna;"}}], db_url=db_url, auth_token=db_token)
-            
             insert_sql = """
             INSERT OR REPLACE INTO qna (
                 num, category, asker, date, time, question, answer, rephrased, approved, followup
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
             """
             statements = []
-            for d in entries:
-                try:
-                    num_val = int(d["num"])
-                except ValueError:
-                    continue
-                args = [
-                    {"type": "integer", "value": str(num_val)},
-                    {"type": "text", "value": d.get("category", "")},
-                    {"type": "text", "value": d.get("asker", "")},
-                    {"type": "text", "value": d.get("date", "")},
-                    {"type": "text", "value": d.get("time", "")},
-                    {"type": "text", "value": d.get("question", "")},
-                    {"type": "text", "value": d.get("answer", "")},
-                    {"type": "text", "value": d.get("rephrased", "")},
-                    {"type": "text", "value": d.get("approved", "")},
-                    {"type": "text", "value": d.get("followup", "")}
-                ]
-                statements.append({
-                    "type": "execute",
-                    "stmt": {
-                        "sql": insert_sql,
-                        "args": args
-                    }
-                })
+
+            if mode == 'append' and db_choice == 'uat':
+                existing_tgt = get_all_qna_from_db(db_url, db_token)
+                existing_nums = set(int(e["num"]) for e in existing_tgt if str(e.get("num", "")).isdigit())
+                max_num = max(existing_nums) if existing_nums else 0
+
+                for d in entries:
+                    try:
+                        num_val = int(d["num"])
+                    except ValueError:
+                        continue
+
+                    if num_val in existing_nums:
+                        max_num += 1
+                        target_num = max_num
+                    else:
+                        target_num = num_val
+
+                    args = [
+                        {"type": "integer", "value": str(target_num)},
+                        {"type": "text", "value": d.get("category", "")},
+                        {"type": "text", "value": d.get("asker", "")},
+                        {"type": "text", "value": d.get("date", "")},
+                        {"type": "text", "value": d.get("time", "")},
+                        {"type": "text", "value": d.get("question", "")},
+                        {"type": "text", "value": d.get("answer", "")},
+                        {"type": "text", "value": d.get("rephrased", "")},
+                        {"type": "text", "value": d.get("approved", "")},
+                        {"type": "text", "value": d.get("followup", "")}
+                    ]
+                    statements.append({
+                        "type": "execute",
+                        "stmt": {
+                            "sql": insert_sql,
+                            "args": args
+                        }
+                    })
+            else:
+                execute_turso_statements([{"type": "execute", "stmt": {"sql": "DELETE FROM qna;"}}], db_url=db_url, auth_token=db_token)
+
+                for d in entries:
+                    try:
+                        num_val = int(d["num"])
+                    except ValueError:
+                        continue
+                    args = [
+                        {"type": "integer", "value": str(num_val)},
+                        {"type": "text", "value": d.get("category", "")},
+                        {"type": "text", "value": d.get("asker", "")},
+                        {"type": "text", "value": d.get("date", "")},
+                        {"type": "text", "value": d.get("time", "")},
+                        {"type": "text", "value": d.get("question", "")},
+                        {"type": "text", "value": d.get("answer", "")},
+                        {"type": "text", "value": d.get("rephrased", "")},
+                        {"type": "text", "value": d.get("approved", "")},
+                        {"type": "text", "value": d.get("followup", "")}
+                    ]
+                    statements.append({
+                        "type": "execute",
+                        "stmt": {
+                            "sql": insert_sql,
+                            "args": args
+                        }
+                    })
                 
             batch_size = 50
             for i in range(0, len(statements), batch_size):
                 batch = statements[i:i + batch_size]
                 execute_turso_statements(batch, db_url=db_url, auth_token=db_token)
                 
-            self.send_json_response({"success": True, "message": f"Successfully uploaded and restored {len(entries)} entries to {db_choice} db."})
+            action_desc = "appended" if (mode == "append" and db_choice == "uat") else "uploaded and restored"
+            self.send_json_response({"success": True, "message": f"Successfully {action_desc} {len(statements)} entries to {db_choice.upper()} database."})
             
         except Exception as e:
             self.send_json_error(500, f"Upload error: {str(e)}")

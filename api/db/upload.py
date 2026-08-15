@@ -137,7 +137,6 @@ class handler(BaseHTTPRequestHandler):
             );
             """
             execute_turso_statements([{"type": "execute", "stmt": {"sql": create_table_sql}}], db_url=db_url, auth_token=db_token)
-            execute_turso_statements([{"type": "execute", "stmt": {"sql": "DELETE FROM qna;"}}], db_url=db_url, auth_token=db_token)
             
             insert_sql = """
             INSERT OR REPLACE INTO qna (
@@ -145,37 +144,81 @@ class handler(BaseHTTPRequestHandler):
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
             """
             statements = []
-            for d in entries:
-                try:
-                    num_val = int(d["num"])
-                except ValueError:
-                    continue
-                args = [
-                    {"type": "integer", "value": str(num_val)},
-                    {"type": "text", "value": d.get("category", "")},
-                    {"type": "text", "value": d.get("asker", "")},
-                    {"type": "text", "value": d.get("date", "")},
-                    {"type": "text", "value": d.get("time", "")},
-                    {"type": "text", "value": d.get("question", "")},
-                    {"type": "text", "value": d.get("answer", "")},
-                    {"type": "text", "value": d.get("rephrased", "")},
-                    {"type": "text", "value": d.get("approved", "")},
-                    {"type": "text", "value": d.get("followup", "")}
-                ]
-                statements.append({
-                    "type": "execute",
-                    "stmt": {
-                        "sql": insert_sql,
-                        "args": args
-                    }
-                })
+
+            mode = data.get("mode", "overwrite").strip().lower()
+            if mode == "append" and db_choice == "uat":
+                # Append mode: preserve existing UAT entries
+                existing_tgt = get_all_qna_from_db(db_url, db_token)
+                existing_nums = set(int(e["num"]) for e in existing_tgt if str(e.get("num", "")).isdigit())
+                max_num = max(existing_nums) if existing_nums else 0
+
+                for d in entries:
+                    try:
+                        num_val = int(d["num"])
+                    except ValueError:
+                        continue
+
+                    if num_val in existing_nums:
+                        max_num += 1
+                        target_num = max_num
+                    else:
+                        target_num = num_val
+
+                    args = [
+                        {"type": "integer", "value": str(target_num)},
+                        {"type": "text", "value": d.get("category", "")},
+                        {"type": "text", "value": d.get("asker", "")},
+                        {"type": "text", "value": d.get("date", "")},
+                        {"type": "text", "value": d.get("time", "")},
+                        {"type": "text", "value": d.get("question", "")},
+                        {"type": "text", "value": d.get("answer", "")},
+                        {"type": "text", "value": d.get("rephrased", "")},
+                        {"type": "text", "value": d.get("approved", "")},
+                        {"type": "text", "value": d.get("followup", "")}
+                    ]
+                    statements.append({
+                        "type": "execute",
+                        "stmt": {
+                            "sql": insert_sql,
+                            "args": args
+                        }
+                    })
+            else:
+                # Overwrite mode: Clear database table first
+                execute_turso_statements([{"type": "execute", "stmt": {"sql": "DELETE FROM qna;"}}], db_url=db_url, auth_token=db_token)
+
+                for d in entries:
+                    try:
+                        num_val = int(d["num"])
+                    except ValueError:
+                        continue
+                    args = [
+                        {"type": "integer", "value": str(num_val)},
+                        {"type": "text", "value": d.get("category", "")},
+                        {"type": "text", "value": d.get("asker", "")},
+                        {"type": "text", "value": d.get("date", "")},
+                        {"type": "text", "value": d.get("time", "")},
+                        {"type": "text", "value": d.get("question", "")},
+                        {"type": "text", "value": d.get("answer", "")},
+                        {"type": "text", "value": d.get("rephrased", "")},
+                        {"type": "text", "value": d.get("approved", "")},
+                        {"type": "text", "value": d.get("followup", "")}
+                    ]
+                    statements.append({
+                        "type": "execute",
+                        "stmt": {
+                            "sql": insert_sql,
+                            "args": args
+                        }
+                    })
                 
             batch_size = 50
             for i in range(0, len(statements), batch_size):
                 batch = statements[i:i+batch_size]
                 execute_turso_statements(batch, db_url=db_url, auth_token=db_token)
                 
-            res_payload = {"success": True, "message": f"Successfully uploaded and restored {len(entries)} entries to {db_choice.upper()} database."}
+            action_desc = "appended" if (mode == "append" and db_choice == "uat") else "uploaded and restored"
+            res_payload = {"success": True, "message": f"Successfully {action_desc} {len(statements)} entries to {db_choice.upper()} database."}
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')

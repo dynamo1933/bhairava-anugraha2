@@ -417,7 +417,7 @@ def get_all_qna_from_db(db_url, auth_token):
         entries.append(entry)
     return entries
 
-def sync_databases(source_db_name, target_db_name):
+def sync_databases(source_db_name, target_db_name, mode="overwrite"):
     cfg = get_db_config()
     
     src_url = cfg[f"{source_db_name}_url"]
@@ -451,48 +451,84 @@ def sync_databases(source_db_name, target_db_name):
     """
     execute_turso_statements([{"type": "execute", "stmt": {"sql": create_table_sql}}], db_url=tgt_url, auth_token=tgt_token)
     
-    # Clear target table
-    execute_turso_statements([{"type": "execute", "stmt": {"sql": "DELETE FROM qna;"}}], db_url=tgt_url, auth_token=tgt_token)
-    
-    # Prepare batch inserts
     insert_sql = """
     INSERT OR REPLACE INTO qna (
         num, category, asker, date, time, question, answer, rephrased, approved, followup
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """
-    
     statements = []
-    for d in entries:
-        try:
-            num_val = int(d["num"])
-        except ValueError:
-            continue
+
+    if mode == "append" and target_db_name == "uat":
+        # Append mode: preserve existing UAT data
+        existing_tgt = get_all_qna_from_db(tgt_url, tgt_token)
+        existing_nums = set(int(e["num"]) for e in existing_tgt if str(e.get("num", "")).isdigit())
+        max_num = max(existing_nums) if existing_nums else 0
+
+        for d in entries:
+            try:
+                num_val = int(d["num"])
+            except ValueError:
+                continue
+
+            if num_val in existing_nums:
+                max_num += 1
+                target_num = max_num
+            else:
+                target_num = num_val
+
+            args = [
+                {"type": "integer", "value": str(target_num)},
+                {"type": "text", "value": d.get("category", "")},
+                {"type": "text", "value": d.get("asker", "")},
+                {"type": "text", "value": d.get("date", "")},
+                {"type": "text", "value": d.get("time", "")},
+                {"type": "text", "value": d.get("question", "")},
+                {"type": "text", "value": d.get("answer", "")},
+                {"type": "text", "value": d.get("rephrased", "")},
+                {"type": "text", "value": d.get("approved", "")},
+                {"type": "text", "value": d.get("followup", "")}
+            ]
+            statements.append({
+                "type": "execute",
+                "stmt": {
+                    "sql": insert_sql,
+                    "args": args
+                }
+            })
+    else:
+        # Overwrite mode: Clear target table
+        execute_turso_statements([{"type": "execute", "stmt": {"sql": "DELETE FROM qna;"}}], db_url=tgt_url, auth_token=tgt_token)
+
+        for d in entries:
+            try:
+                num_val = int(d["num"])
+            except ValueError:
+                continue
+
+            args = [
+                {"type": "integer", "value": str(num_val)},
+                {"type": "text", "value": d.get("category", "")},
+                {"type": "text", "value": d.get("asker", "")},
+                {"type": "text", "value": d.get("date", "")},
+                {"type": "text", "value": d.get("time", "")},
+                {"type": "text", "value": d.get("question", "")},
+                {"type": "text", "value": d.get("answer", "")},
+                {"type": "text", "value": d.get("rephrased", "")},
+                {"type": "text", "value": d.get("approved", "")},
+                {"type": "text", "value": d.get("followup", "")}
+            ]
+            statements.append({
+                "type": "execute",
+                "stmt": {
+                    "sql": insert_sql,
+                    "args": args
+                }
+            })
             
-        args = [
-            {"type": "integer", "value": str(num_val)},
-            {"type": "text", "value": d.get("category", "")},
-            {"type": "text", "value": d.get("asker", "")},
-            {"type": "text", "value": d.get("date", "")},
-            {"type": "text", "value": d.get("time", "")},
-            {"type": "text", "value": d.get("question", "")},
-            {"type": "text", "value": d.get("answer", "")},
-            {"type": "text", "value": d.get("rephrased", "")},
-            {"type": "text", "value": d.get("approved", "")},
-            {"type": "text", "value": d.get("followup", "")}
-        ]
-        
-        statements.append({
-            "type": "execute",
-            "stmt": {
-                "sql": insert_sql,
-                "args": args
-            }
-        })
-        
     # Execute batch inserts
     batch_size = 50
     for i in range(0, len(statements), batch_size):
         batch = statements[i:i + batch_size]
         execute_turso_statements(batch, db_url=tgt_url, auth_token=tgt_token)
         
-    return len(entries)
+    return len(statements)
