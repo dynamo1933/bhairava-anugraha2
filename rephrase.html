@@ -932,14 +932,28 @@
     }
     
     /* Switch toggle styles */
+    .switch-toggle {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 32px;
+      cursor: pointer;
+    }
+    .switch-toggle input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
     .switch-toggle input:checked + .slider-round {
-      background-color: var(--gold) !important;
-      border-color: var(--gold-2) !important;
+      background-color: rgba(130, 170, 212, 0.25) !important;
+      border-color: #82aad4 !important;
     }
     
     .switch-toggle input:checked + .slider-round:before {
       transform: translateX(26px);
-      background-color: var(--void);
+      background-color: #82aad4;
     }
     
     .slider-round:before {
@@ -1168,12 +1182,12 @@
           </div>
           <!-- Custom Slider Toggle Switch -->
           <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="font-family: var(--mono); font-size: 11px; font-weight: bold; color: var(--gold-3);" id="lbl-db-switch-prod">PROD</span>
-            <label class="switch-toggle" style="position: relative; display: inline-block; width: 60px; height: 32px;">
-              <input type="checkbox" id="db-switch-toggle" style="opacity: 0; width: 0; height: 0;">
+            <span style="font-family: var(--mono); font-size: 11px; font-weight: bold; color: var(--gold-3); cursor: pointer; user-select: none;" id="lbl-db-switch-prod">PROD</span>
+            <label class="switch-toggle" title="Toggle Database Environment">
+              <input type="checkbox" id="db-switch-toggle">
               <span class="slider-round" style="position: absolute; cursor: pointer; inset: 0; background-color: rgba(7, 6, 10, 0.8); border: 1px solid rgba(212, 166, 74, 0.4); transition: .4s; border-radius: 34px;"></span>
             </label>
-            <span style="font-family: var(--mono); font-size: 11px; font-weight: bold; color: var(--ink-dim);" id="lbl-db-switch-uat">UAT</span>
+            <span style="font-family: var(--mono); font-size: 11px; font-weight: bold; color: var(--ink-dim); cursor: pointer; user-select: none;" id="lbl-db-switch-uat">UAT</span>
           </div>
         </div>
 
@@ -2315,10 +2329,29 @@
     }
 
     // Wire up Switch Toggle changes
+    lblDbSwitchProd.addEventListener('click', () => {
+      if (dbSwitchToggle.disabled) return;
+      if (dbSwitchToggle.checked) {
+        dbSwitchToggle.checked = false;
+        dbSwitchToggle.dispatchEvent(new Event('change'));
+      }
+    });
+
+    lblDbSwitchUat.addEventListener('click', () => {
+      if (dbSwitchToggle.disabled) return;
+      if (!dbSwitchToggle.checked) {
+        dbSwitchToggle.checked = true;
+        dbSwitchToggle.dispatchEvent(new Event('change'));
+      }
+    });
+
     dbSwitchToggle.addEventListener('change', async (e) => {
-      const targetDb = e.target.checked ? 'uat' : 'prod';
+      if (dbSwitchToggle.disabled) return;
+      
+      const targetDb = dbSwitchToggle.checked ? 'uat' : 'prod';
       dbLoaderText.textContent = `Switching database connection to ${targetDb.toUpperCase()}...`;
       dbModalLoader.classList.add('is-active');
+      dbSwitchToggle.disabled = true;
       
       try {
         const response = await fetch('/api/db/switch', {
@@ -2342,7 +2375,9 @@
         showToast('Error switching database: ' + err.message, 'error');
         // revert check state on failure
         dbSwitchToggle.checked = !dbSwitchToggle.checked;
+        updateSliderLabels(dbSwitchToggle.checked);
       } finally {
+        dbSwitchToggle.disabled = false;
         dbModalLoader.classList.remove('is-active');
       }
     });
