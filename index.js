@@ -266,7 +266,8 @@ function buildDataFromJson(jsonList) {
 async function loadData() {
   try {
     // Try loading live data from API first
-    const resp = await fetch("/api/qna", { cache: "no-cache" });
+    const activeDb = localStorage.getItem('bhairava_active_db') || 'prod';
+    const resp = await fetch("/api/qna", { cache: "no-cache", headers: { "x-active-db": activeDb } });
     if (!resp.ok) throw new Error("HTTP Status " + resp.status);
     const json = await resp.json();
     if (json && json.error) throw new Error(json.error);

@@ -1614,10 +1614,25 @@
     const toast = document.getElementById('toast-notification');
     const toastMessage = document.getElementById('toast-message');
 
+    // Helper to get active database choice (persisted in localStorage for Vercel/stateless serverless support)
+    function getActiveDb() {
+      return localStorage.getItem('bhairava_active_db') || 'prod';
+    }
+
+    function apiFetch(url, options = {}) {
+      options.headers = options.headers || {};
+      if (options.headers instanceof Headers) {
+        options.headers.set('x-active-db', getActiveDb());
+      } else {
+        options.headers['x-active-db'] = getActiveDb();
+      }
+      return fetch(url, options);
+    }
+
     // Fetch initial data
     async function loadData() {
       try {
-        const response = await fetch('/api/qna');
+        const response = await apiFetch('/api/qna');
         if (!response.ok) throw new Error('Failed to load Q&A data');
         qnaData = await response.json();
         
@@ -2262,7 +2277,7 @@
     // Load Database status dynamically
     async function loadDbStatus() {
       try {
-        const response = await fetch('/api/db/status');
+        const response = await apiFetch('/api/db/status');
         if (!response.ok) throw new Error('Failed to load database status.');
         const data = await response.json();
         
@@ -2295,13 +2310,13 @@
           dbUatStatus.style.color = '#ff9999';
         }
         
-        // Update Slider Toggle active state
-        const isUat = data.active_db === 'uat';
+        // Update Slider Toggle active state (local preference or backend preference)
+        const isUat = getActiveDb() === 'uat';
         dbSwitchToggle.checked = isUat;
         updateSliderLabels(isUat);
         
         // Update Header Badge
-        headerDbBadge.textContent = `DB: ${data.active_db.toUpperCase()}`;
+        headerDbBadge.textContent = `DB: ${isUat ? 'UAT' : 'PROD'}`;
         if (isUat) {
           headerDbBadge.style.color = '#82aad4';
           headerDbBadge.style.borderColor = '#82aad4';
@@ -2349,12 +2364,14 @@
       if (dbSwitchToggle.disabled) return;
       
       const targetDb = dbSwitchToggle.checked ? 'uat' : 'prod';
+      localStorage.setItem('bhairava_active_db', targetDb);
+
       dbLoaderText.textContent = `Switching database connection to ${targetDb.toUpperCase()}...`;
       dbModalLoader.classList.add('is-active');
       dbSwitchToggle.disabled = true;
       
       try {
-        const response = await fetch('/api/db/switch', {
+        const response = await apiFetch('/api/db/switch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ db: targetDb })
@@ -2375,6 +2392,7 @@
         showToast('Error switching database: ' + err.message, 'error');
         // revert check state on failure
         dbSwitchToggle.checked = !dbSwitchToggle.checked;
+        localStorage.setItem('bhairava_active_db', dbSwitchToggle.checked ? 'uat' : 'prod');
         updateSliderLabels(dbSwitchToggle.checked);
       } finally {
         dbSwitchToggle.disabled = false;

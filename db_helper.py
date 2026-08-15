@@ -21,10 +21,13 @@ def load_env():
 
 load_env()
 
+import tempfile
+
 DB_CONFIG_PATH = os.path.join(ROOT_DIR, ".db_config.json")
+TMP_DB_CONFIG_PATH = os.path.join(tempfile.gettempdir(), ".db_config.json")
 CSV_PATH = os.path.join(ROOT_DIR, "qna.csv")
 
-def get_db_config():
+def get_db_config(active_db_override=None):
     load_env()
     prod_url = os.environ.get("TURSO_DB_URL") or "https://daqna-dynamo1933.aws-ap-south-1.turso.io"
     prod_token = os.environ.get("TURSO_AUTH_TOKEN") or ""
@@ -40,18 +43,23 @@ def get_db_config():
         "uat_token": uat_token
     }
     
-    if os.path.exists(DB_CONFIG_PATH):
-        try:
-            with open(DB_CONFIG_PATH, "r", encoding="utf-8") as f:
-                saved = json.load(f)
-                config["active_db"] = saved.get("active_db", "prod")
-                config["prod_url"] = saved.get("prod_url", prod_url)
-                config["prod_token"] = saved.get("prod_token", prod_token)
-                config["uat_url"] = saved.get("uat_url", uat_url)
-                config["uat_token"] = saved.get("uat_token", uat_token)
-        except Exception:
-            pass
+    for path in (TMP_DB_CONFIG_PATH, DB_CONFIG_PATH):
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    saved = json.load(f)
+                    config["active_db"] = saved.get("active_db", "prod")
+                    if saved.get("prod_url"): config["prod_url"] = saved["prod_url"]
+                    if saved.get("prod_token"): config["prod_token"] = saved["prod_token"]
+                    if saved.get("uat_url"): config["uat_url"] = saved["uat_url"]
+                    if saved.get("uat_token"): config["uat_token"] = saved["uat_token"]
+                break
+            except Exception:
+                pass
             
+    if active_db_override in ("prod", "uat"):
+        config["active_db"] = active_db_override
+
     # Clean urls starting with libsql:// to https://
     for key in ("prod_url", "uat_url"):
         if config[key] and config[key].startswith("libsql://"):
@@ -60,28 +68,30 @@ def get_db_config():
     return config
 
 def save_db_config(config):
-    try:
-        with open(DB_CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(config, f, indent=2)
-    except Exception as e:
-        print(f"Error saving database config: {e}", file=sys.stderr)
+    for path in (DB_CONFIG_PATH, TMP_DB_CONFIG_PATH):
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(config, f, indent=2)
+            break
+        except Exception as e:
+            print(f"Warning: Could not save db config to {path}: {e}", file=sys.stderr)
 
-def get_active_credentials():
-    cfg = get_db_config()
+def get_active_credentials(active_db=None):
+    cfg = get_db_config(active_db_override=active_db)
     if cfg["active_db"] == "uat":
         return cfg["uat_url"], cfg["uat_token"]
     return cfg["prod_url"], cfg["prod_token"]
 
-def is_turso_configured():
-    url, token = get_active_credentials()
+def is_turso_configured(active_db=None):
+    url, token = get_active_credentials(active_db=active_db)
     return bool(url and token)
 
-def execute_turso_statements(statements, db_url=None, auth_token=None):
+def execute_turso_statements(statements, db_url=None, auth_token=None, active_db=None):
     """
     Executes a list of statement dicts in a single pipeline.
     """
     if db_url is None or auth_token is None:
-        db_url, auth_token = get_active_credentials()
+        db_url, auth_token = get_active_credentials(active_db=active_db)
         
     if not db_url or not auth_token:
         raise Exception("Turso database credentials not configured.")
@@ -108,12 +118,12 @@ def execute_turso_statements(statements, db_url=None, auth_token=None):
             
     return results
 
-def get_all_qna():
+def get_all_qna(active_db=None):
     """
     Retrieves all Q&A entries.
     Falls back to CSV if Turso is not configured.
     """
-    if is_turso_configured():
+    if is_turso_configured(active_db=active_db):
         # Query Turso database
         sql = "SELECT num, category, asker, date, time, question, answer, rephrased, approved, followup FROM qna ORDER BY num;"
         stmt = {
@@ -123,7 +133,7 @@ def get_all_qna():
             }
         }
         try:
-            results = execute_turso_statements([stmt])
+            results = execute_turso_statements([stmt], active_db=active_db)
             execute_result = results[0]["response"]["result"]
             cols = [c["name"] for c in execute_result["cols"]]
             rows = execute_result["rows"]
@@ -143,7 +153,7 @@ def get_all_qna():
         except Exception as e:
             # Log error and fallback to CSV
             print(f"[-] Turso error in get_all_qna: {e}. Falling back to local CSV.", file=sys.stderr)
-    
+
     # CSV Fallback
     if not os.path.exists(CSV_PATH):
         raise FileNotFoundError(f"qna.csv not found at {CSV_PATH}")
@@ -178,12 +188,12 @@ def get_all_qna():
         entries.append(entry)
     return entries
 
-def update_qna_entry(num, rephrased_text=None, approved_val=None, category_val=None, question_val=None, answer_val=None, followup_val=None):
+def update_qna_entry(num, rephrased_text=None, approved_val=None, category_val=None, question_val=None, answer_val=None, followup_val=None, active_db=None):
     """
     Updates a single Q&A entry by num.
     Falls back to CSV if Turso is not configured.
     """
-    if is_turso_configured():
+    if is_turso_configured(active_db=active_db):
         sets = []
         args = []
         
@@ -220,7 +230,7 @@ def update_qna_entry(num, rephrased_text=None, approved_val=None, category_val=N
             }
         }
         try:
-            execute_turso_statements([stmt])
+            execute_turso_statements([stmt], active_db=active_db)
             return True
         except Exception as e:
             print(f"[-] Turso error in update_qna_entry: {e}. Falling back to CSV.", file=sys.stderr)

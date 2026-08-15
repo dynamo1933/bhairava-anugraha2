@@ -96,14 +96,16 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
 
     def handle_get_qna(self):
         try:
-            entries = get_all_qna()
+            active_db = self.headers.get('x-active-db') or self.headers.get('X-Active-DB')
+            entries = get_all_qna(active_db=active_db)
             self.send_json_response(entries)
         except Exception as e:
             self.send_json_error(500, str(e))
 
     def handle_get_db_status(self):
         try:
-            cfg = get_db_config()
+            active_db = self.headers.get('x-active-db') or self.headers.get('X-Active-DB')
+            cfg = get_db_config(active_db_override=active_db)
             
             prod_status = "Connected"
             prod_count = 0
@@ -150,7 +152,7 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             return
             
         try:
-            cfg = get_db_config()
+            cfg = get_db_config(active_db_override=target_db)
             cfg["active_db"] = target_db
             save_db_config(cfg)
             self.send_json_response({"success": True, "active_db": target_db, "message": f"Successfully switched database to {target_db}"})

@@ -14,7 +14,7 @@ class handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, x-active-db, X-Active-DB')
         self.end_headers()
 
     def do_POST(self):
@@ -41,13 +41,14 @@ class handler(BaseHTTPRequestHandler):
             return
             
         try:
-            cfg = get_db_config()
+            cfg = get_db_config(active_db_override=target_db)
             cfg["active_db"] = target_db
             save_db_config(cfg)
             res_payload = {"success": True, "active_db": target_db, "message": f"Successfully switched database to {target_db}"}
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type, x-active-db, X-Active-DB')
             self.end_headers()
             self.wfile.write(json.dumps(res_payload).encode('utf-8'))
         except Exception as e:

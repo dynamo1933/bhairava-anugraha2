@@ -15,10 +15,11 @@ class handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, x-active-db, X-Active-DB')
         self.end_headers()
 
     def do_POST(self):
+        active_db = self.headers.get('x-active-db') or self.headers.get('X-Active-DB')
         content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length)
         
@@ -56,7 +57,7 @@ class handler(BaseHTTPRequestHandler):
             return
 
         # If we are explicitly in Vercel environment but Turso is not configured, don't attempt to write to disk
-        if os.environ.get("VERCEL") and not is_turso_configured():
+        if os.environ.get("VERCEL") and not is_turso_configured(active_db=active_db):
             self.send_response(403)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -76,7 +77,8 @@ class handler(BaseHTTPRequestHandler):
             category_val=category_val,
             question_val=question_val,
             answer_val=answer_val,
-            followup_val=followup_val
+            followup_val=followup_val,
+            active_db=active_db
         )
 
         if success:
