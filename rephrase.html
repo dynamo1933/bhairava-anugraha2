@@ -967,6 +967,80 @@
       transition: .4s;
       border-radius: 50%;
     }
+
+    /* Main Navigation Tabs Bar */
+    .main-tabs-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding: 6px 8px;
+      background: rgba(15, 13, 22, 0.75);
+      border: 1px solid rgba(212, 166, 74, 0.22);
+      border-radius: 8px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    
+    .main-tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 22px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: var(--ink-dim);
+      font-family: var(--display);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .main-tab-btn:hover {
+      color: var(--paper);
+      background: rgba(212, 166, 74, 0.08);
+      border-color: rgba(212, 166, 74, 0.2);
+    }
+
+    .main-tab-btn.is-active {
+      color: var(--gold-3);
+      background: linear-gradient(180deg, rgba(212, 166, 74, 0.18) 0%, rgba(212, 166, 74, 0.04) 100%);
+      border: 1px solid var(--gold);
+      box-shadow: 0 0 14px rgba(212, 166, 74, 0.25);
+    }
+
+    .main-tab-btn .tab-badge {
+      font-family: var(--mono);
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(212, 166, 74, 0.15);
+      color: var(--gold);
+      border: 1px solid rgba(212, 166, 74, 0.3);
+    }
+
+    .main-tab-btn.is-active .tab-badge {
+      background: var(--gold);
+      color: #07060a;
+      font-weight: bold;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.is-active {
+      display: block;
+      animation: fadeInTab 0.3s ease-in-out;
+    }
+
+    @keyframes fadeInTab {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 
 </head>
@@ -1008,8 +1082,6 @@
       </nav>
       <div class="right" style="display: flex; gap: 14px; align-items: center;">
         <div id="header-db-badge" class="badge" style="background: rgba(212,166,74,0.1); border: 1px solid var(--gold); color: var(--gold); font-size: 9px; padding: 3px 8px; font-family: var(--mono); text-transform: uppercase;">DB: LOADING...</div>
-        <button id="btn-db-panel" class="btn-action" style="padding: 6px 12px; font-size: 9px;">⚙️ DB Panel</button>
-        <button id="btn-analytics-panel" class="btn-action" style="padding: 6px 12px; font-size: 9px; background: linear-gradient(180deg, #d4a64a 0%, #aa7c27 100%);">📊 Guest Analytics</button>
         <span class="mono" style="color: var(--gold); font-size: 10px; letter-spacing: 0.15em;">ADMIN PANEL</span>
       </div>
     </div>
@@ -1021,106 +1093,438 @@
     <div class="leaf-field"></div>
     <div class="grain"></div>
 
-    <div class="dashboard-header">
-      <h1>Q&A <em>Rephraser</em></h1>
-      <p>Translate and rephrase seeker questions into clean English and traditional Guru-Shishya dialogue style.</p>
+    <!-- ==================== MAIN TAB BAR NAVIGATION ==================== -->
+    <div class="main-tabs-bar">
+      <button class="main-tab-btn is-active" id="tab-btn-rephraser" onclick="switchMainTab('rephraser')">
+        <span>📜 Q&amp;A Rephraser</span>
+        <span class="tab-badge" id="tab-badge-rephraser">MAIN</span>
+      </button>
+      <button class="main-tab-btn" id="tab-btn-db-panel" onclick="switchMainTab('db-panel')">
+        <span>🗄️ DB Panel</span>
+        <span class="tab-badge" id="tab-badge-db-panel">CONTROLS</span>
+      </button>
+      <button class="main-tab-btn" id="tab-btn-analytics" onclick="switchMainTab('analytics')">
+        <span>📊 Guest Analytics</span>
+        <span class="tab-badge" id="tab-badge-analytics">TELEMETRY</span>
+      </button>
     </div>
 
-    <!-- STATS -->
-    <div class="stats-bar">
-      <div class="stat-card">
-        <div class="label">Total Questions</div>
-        <div class="value" id="stats-total">—</div>
-        <div class="decorator">ॐ</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Rephrased (Done)</div>
-        <div class="value" id="stats-rephrased" style="color: var(--gold);">—</div>
-        <div class="decorator">तत्व</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Pending Rephrase</div>
-        <div class="value" id="stats-pending" style="color: #ff9999;">—</div>
-        <div class="decorator">प्रश्न</div>
-      </div>
-    </div>
-
-    <!-- FILTERS -->
-    <div class="filters-row" style="align-items: flex-end;">
-      <div class="filter-group search-group">
-        <label for="search-input">Search Q&As</label>
-        <input type="text" id="search-input" class="filter-input" placeholder="Search by question text, asker, number..." />
+    <!-- ==================== TAB 1: Q&A REPHRASER ==================== -->
+    <div class="tab-pane is-active" id="tab-pane-rephraser">
+      <div class="dashboard-header">
+        <h1>Q&amp;A <em>Rephraser</em></h1>
+        <p>Translate and rephrase seeker questions into clean English and traditional Guru-Shishya dialogue style.</p>
       </div>
 
-      <div class="filter-group">
-        <label for="publish-filter">Publish Status</label>
-        <select id="publish-filter" class="filter-select">
-          <option value="all">All (Pub & Unpub)</option>
-          <option value="published">Published Only</option>
-          <option value="unpublished">Unpublished Only</option>
-        </select>
-      </div>
-      
-      <div class="filter-group">
-        <label for="category-filter">Folio / Category</label>
-        <select id="category-filter" class="filter-select">
-          <option value="all">All Folios</option>
-          <option value="Mantra & Japa">Folio I · Mantra & Japa</option>
-          <option value="Pūjā, Āratī & Rituals">Folio II · Pūjā & Rituals</option>
-          <option value="Maṇḍala & Anuṣṭhāna">Folio III · Maṇḍala & Anuṣṭhāna</option>
-          <option value="Experiences in Sādhanā">Folio IV · Experiences</option>
-          <option value="Advanced Topics">Folio V · Advanced Topics</option>
-          <option value="Women & Sādhanā">Folio VI · Women & Sādhanā</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
-        <label for="status-filter">Rephrasal Status</label>
-        <select id="status-filter" class="filter-select">
-          <option value="all">All Questions</option>
-          <option value="pending">Pending Rephrase</option>
-          <option value="completed">Rephrased</option>
-        </select>
-      </div>
-
-      <!-- UAT ONLY ADD ENTRY BUTTON -->
-      <div id="uat-add-entry-container" style="display: none; align-items: flex-end; margin-left: auto;">
-        <button id="btn-open-add-modal" class="btn-action" style="padding: 10px 18px; font-size: 11px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #ffffff; white-space: nowrap; box-shadow: 0 0 10px rgba(130,170,212,0.3);">
-          ➕ Add New Q&A (UAT)
-        </button>
-      </div>
-    </div>
-
-    <!-- DATA TABLE -->
-    <div class="table-container">
-      <table class="qna-table">
-        <thead>
-          <tr>
-            <th class="col-num">№</th>
-            <th class="col-cat">Folio</th>
-            <th class="col-asker">Seeker</th>
-            <th class="col-question" style="width: 22%;">Original Question</th>
-            <th class="col-rephrased" style="width: 22%;">Rephrased Question</th>
-            <th class="col-answer" style="width: 22%;">Answer</th>
-            <th class="col-approved">Published</th>
-            <th class="col-followup">Follow-up</th>
-            <th class="col-actions">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="table-body">
-          <tr>
-            <td colspan="8" class="empty-state">Loading Q&As from database...</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- PAGINATION -->
-      <div class="pagination-row">
-        <div class="pagination-info" id="pagination-info">Showing 0-0 of 0 entries</div>
-        <div class="pagination-buttons">
-          <button class="btn-action btn-secondary" id="btn-prev" disabled>Previous</button>
-          <button class="btn-action btn-secondary" id="btn-next" disabled>Next</button>
+      <!-- STATS -->
+      <div class="stats-bar">
+        <div class="stat-card">
+          <div class="label">Total Questions</div>
+          <div class="value" id="stats-total">—</div>
+          <div class="decorator">ॐ</div>
         </div>
+        <div class="stat-card">
+          <div class="label">Rephrased (Done)</div>
+          <div class="value" id="stats-rephrased" style="color: var(--gold);">—</div>
+          <div class="decorator">तत्व</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Pending Rephrase</div>
+          <div class="value" id="stats-pending" style="color: #ff9999;">—</div>
+          <div class="decorator">प्रश्न</div>
+        </div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="filters-row" style="align-items: flex-end;">
+        <div class="filter-group search-group">
+          <label for="search-input">Search Q&amp;As</label>
+          <input type="text" id="search-input" class="filter-input" placeholder="Search by question text, asker, number..." />
+        </div>
+
+        <div class="filter-group">
+          <label for="publish-filter">Publish Status</label>
+          <select id="publish-filter" class="filter-select">
+            <option value="all">All (Pub &amp; Unpub)</option>
+            <option value="published">Published Only</option>
+            <option value="unpublished">Unpublished Only</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="category-filter">Folio / Category</label>
+          <select id="category-filter" class="filter-select">
+            <option value="all">All Folios</option>
+            <option value="Mantra &amp; Japa">Folio I · Mantra &amp; Japa</option>
+            <option value="Pūjā, Āratī &amp; Rituals">Folio II · Pūjā &amp; Rituals</option>
+            <option value="Maṇḍala &amp; Anuṣṭhāna">Folio III · Maṇḍala &amp; Anuṣṭhāna</option>
+            <option value="Experiences in Sādhanā">Folio IV · Experiences</option>
+            <option value="Advanced Topics">Folio V · Advanced Topics</option>
+            <option value="Women &amp; Sādhanā">Folio VI · Women &amp; Sādhanā</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="status-filter">Rephrasal Status</label>
+          <select id="status-filter" class="filter-select">
+            <option value="all">All Questions</option>
+            <option value="pending">Pending Rephrase</option>
+            <option value="completed">Rephrased</option>
+          </select>
+        </div>
+
+        <!-- UAT ONLY ADD ENTRY BUTTON -->
+        <div id="uat-add-entry-container" style="display: none; align-items: flex-end; margin-left: auto;">
+          <button id="btn-open-add-modal" class="btn-action" style="padding: 10px 18px; font-size: 11px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #ffffff; white-space: nowrap; box-shadow: 0 0 10px rgba(130,170,212,0.3);">
+            ➕ Add New Q&amp;A (UAT)
+          </button>
+        </div>
+      </div>
+
+      <!-- DATA TABLE -->
+      <div class="table-container">
+        <table class="qna-table">
+          <thead>
+            <tr>
+              <th class="col-num">№</th>
+              <th class="col-cat">Folio</th>
+              <th class="col-asker">Seeker</th>
+              <th class="col-question" style="width: 22%;">Original Question</th>
+              <th class="col-rephrased" style="width: 22%;">Rephrased Question</th>
+              <th class="col-answer" style="width: 22%;">Answer</th>
+              <th class="col-approved">Published</th>
+              <th class="col-followup">Follow-up</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <tr>
+              <td colspan="8" class="empty-state">Loading Q&amp;As from database...</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- PAGINATION -->
+        <div class="pagination-row">
+          <div class="pagination-info" id="pagination-info">Showing 0-0 of 0 entries</div>
+          <div class="pagination-buttons">
+            <button class="btn-action btn-secondary" id="btn-prev" disabled>Previous</button>
+            <button class="btn-action btn-secondary" id="btn-next" disabled>Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 2: DB PANEL ==================== -->
+    <div class="tab-pane" id="tab-pane-db-panel">
+      <div class="dashboard-header" style="margin-bottom: 20px;">
+        <h1>🗄️ Database <em>Controls</em></h1>
+        <p>Manage Production &amp; Staging (UAT) Turso instances, inspect active connection states, and execute database operations.</p>
+      </div>
+
+      <div style="background: rgba(15, 13, 22, 0.7); border: 1px solid rgba(212, 166, 74, 0.2); border-radius: 8px; padding: 24px; backdrop-filter: blur(12px);">
+        
+        <!-- Active Webapp Connection Card -->
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.2); border-radius: 6px; padding: 18px 22px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <h4 style="margin: 0 0 4px 0; font-family: var(--display); color: var(--gold-3); font-size: 16px;">Active Webapp Connection</h4>
+            <p style="margin: 0; font-size: 12px; color: var(--ink-mute);">Switch between the Production and Staging (UAT) Turso instances.</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <span style="font-family: var(--mono); font-size: 12px; color: var(--gold-3); font-weight: bold;" id="lbl-db-switch-prod">PROD</span>
+            <label class="switch-toggle">
+              <input type="checkbox" id="db-switch-toggle">
+              <span class="slider-round"></span>
+            </label>
+            <span style="font-family: var(--mono); font-size: 12px; color: var(--ink-dim); font-weight: bold;" id="lbl-db-switch-uat">UAT</span>
+          </div>
+        </div>
+
+        <!-- Connection Cards Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+          <!-- Prod Database Card -->
+          <div class="stat-card" style="margin: 0; background: rgba(15, 13, 22, 0.8);">
+            <div class="label" style="font-size: 10px; color: var(--gold);">PRODUCTION DATABASE</div>
+            <div class="value" id="db-prod-count" style="font-size: 32px; color: var(--gold); margin: 6px 0;">— <span style="font-size: 14px; font-weight: normal;">entries</span></div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono); word-break: break-all;" id="db-prod-url">URL: Loading...</div>
+            <div style="margin-top: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px;">
+              <span id="db-prod-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555;"></span>
+              <span id="db-prod-status" style="color: var(--ink-mute);">Checking status...</span>
+            </div>
+            <div class="decorator">तत्व</div>
+          </div>
+
+          <!-- UAT Database Card -->
+          <div class="stat-card" style="margin: 0; background: rgba(15, 13, 22, 0.8);">
+            <div class="label" style="font-size: 10px; color: #82aad4;">UAT (STAGING) DATABASE</div>
+            <div class="value" id="db-uat-count" style="font-size: 32px; color: #82aad4; margin: 6px 0;">— <span style="font-size: 14px; font-weight: normal;">entries</span></div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono); word-break: break-all;" id="db-uat-url">URL: Loading...</div>
+            <div style="margin-top: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px;">
+              <span id="db-uat-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555;"></span>
+              <span id="db-uat-status" style="color: var(--ink-mute);">Checking status...</span>
+            </div>
+            <div class="decorator">प्रश्न</div>
+          </div>
+        </div>
+
+        <!-- Overwrite Warning -->
+        <div style="background: rgba(106, 16, 16, 0.15); border: 1px solid var(--crimson); border-radius: 4px; padding: 12px 16px; font-size: 13px; color: #ffbfbf; margin-bottom: 20px;">
+          <strong>⚠️ CAUTION:</strong> Actions below modify database content directly. Download backups before proceeding.
+        </div>
+
+        <!-- Operations Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <!-- Prod Controls -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 6px; font-weight: bold;">PROD OPERATIONS</div>
+            
+            <button class="btn-action btn-secondary" id="btn-sync-prod-from-uat" style="text-align: left; padding: 10px 14px; font-size: 11px; display: flex; justify-content: space-between; align-items: center;">
+              <span>🔄 Sync Prod from UAT</span>
+              <span style="font-size: 9px; opacity: 0.7;">OVERWRITES PROD</span>
+            </button>
+            
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <select id="select-download-prod" class="filter-select" style="padding: 6px 10px; font-size: 11px; flex: 1; height: auto;">
+                <option value="db">SQLite (.db)</option>
+                <option value="csv">CSV (.csv)</option>
+                <option value="json">JSON (.json)</option>
+              </select>
+              <button class="btn-action" id="btn-download-prod" style="padding: 8px 14px; font-size: 10px;">📥 Download Prod</button>
+            </div>
+            
+            <button class="btn-action btn-secondary" id="btn-trigger-upload-prod" style="text-align: left; padding: 10px 14px; font-size: 11px;">
+              📂 Upload &amp; Restore to Prod (.db/.csv/.json)
+            </button>
+            <input type="file" id="input-upload-prod" accept=".db,.csv,.json" style="display: none;">
+          </div>
+
+          <!-- UAT Controls -->
+          <div style="background: rgba(130, 170, 212, 0.04); border: 1px solid rgba(130, 170, 212, 0.3); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: #82aad4; border-bottom: 1px solid rgba(130, 170, 212, 0.2); padding-bottom: 6px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+              <span>UAT OPERATIONS</span>
+              <span style="font-size: 9px; background: rgba(130,170,212,0.15); padding: 2px 6px; border-radius: 3px; color: #b8d5f3;">STAGING ONLY</span>
+            </div>
+
+            <!-- UAT Append Mode Toggle -->
+            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(130, 170, 212, 0.08); padding: 8px 12px; border-radius: 4px; border: 1px solid rgba(130, 170, 212, 0.25);">
+              <span style="font-size: 11px; color: #b8d5f3; font-family: var(--mono);">Sync / Import Mode:</span>
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; color: #ffffff;">
+                <input type="checkbox" id="chk-uat-append-mode" checked style="accent-color: #82aad4; width: 15px; height: 15px;" />
+                <span><strong id="lbl-uat-mode-title">Append Mode</strong> <span style="font-size: 9px; color: #82aad4;" id="lbl-uat-mode-sub">(Preserves existing UAT data)</span></span>
+              </label>
+            </div>
+            
+            <button class="btn-action btn-secondary" id="btn-sync-uat-from-prod" style="text-align: left; padding: 10px 14px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; border-color: rgba(130,170,212,0.4);">
+              <span id="txt-sync-uat-btn">🔄 Sync &amp; Append UAT from Prod</span>
+              <span id="badge-sync-uat-btn" style="font-size: 9px; color: #82aad4; font-family: var(--mono);">PRESERVES UAT</span>
+            </button>
+            
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <select id="select-download-uat" class="filter-select" style="padding: 6px 10px; font-size: 11px; flex: 1; height: auto;">
+                <option value="db">SQLite (.db)</option>
+                <option value="csv">CSV (.csv)</option>
+                <option value="json">JSON (.json)</option>
+              </select>
+              <button class="btn-action" id="btn-download-uat" style="padding: 8px 14px; font-size: 10px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #fff;">📥 Download UAT</button>
+            </div>
+            
+            <button class="btn-action btn-secondary" id="btn-trigger-upload-uat" style="text-align: left; padding: 10px 14px; font-size: 11px; border-color: rgba(130,170,212,0.4);">
+              <span id="txt-upload-uat-btn">📂 Upload &amp; Append to UAT (.db/.csv/.json)</span>
+            </button>
+            <input type="file" id="input-upload-uat" accept=".db,.csv,.json" style="display: none;">
+
+            <button class="btn-action" id="btn-open-add-modal-db" style="text-align: left; padding: 10px 14px; font-size: 11px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #ffffff;">
+              ➕ Create New Entry in UAT Database
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 3: GUEST ANALYTICS ==================== -->
+    <div class="tab-pane" id="tab-pane-analytics">
+      <div class="dashboard-header" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <h1>📊 Guest <em>Analytics Intelligence</em></h1>
+          <p>Real-time telemetry, concurrent audience monitoring, latency stats &amp; usage insights.</p>
+        </div>
+        <button class="btn-action btn-secondary" id="btn-refresh-analytics" style="padding: 8px 16px; font-size: 11px;">🔄 Refresh Telemetry</button>
+      </div>
+
+      <div style="background: rgba(15, 13, 22, 0.7); border: 1px solid rgba(212, 166, 74, 0.2); border-radius: 8px; padding: 24px; backdrop-filter: blur(12px); display: flex; flex-direction: column; gap: 24px;">
+        
+        <!-- TOP KPI CARDS (6 Metrics) -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px;">
+          <!-- 1. Active Users -->
+          <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
+            <div class="label" style="font-size: 9px; color: #55ff55;">⚡ ACTIVE USERS (5M)</div>
+            <div class="value" id="an-active-users" style="font-size: 30px; color: #77ff77; margin: 4px 0;">—</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Live concurrent sessions</div>
+          </div>
+          <!-- 2. Daily Users -->
+          <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
+            <div class="label" style="font-size: 9px;">📅 DAILY USERS (DAU)</div>
+            <div class="value" id="an-daily-users" style="font-size: 30px; color: var(--gold); margin: 4px 0;">—</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Unique visitors in 24h</div>
+          </div>
+          <!-- 3. Monthly Users -->
+          <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
+            <div class="label" style="font-size: 9px;">🗓️ MONTHLY USERS (MAU)</div>
+            <div class="value" id="an-monthly-users" style="font-size: 30px; color: var(--paper); margin: 4px 0;">—</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Unique visitors in 30d</div>
+          </div>
+          <!-- 4. Avg Session Time -->
+          <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
+            <div class="label" style="font-size: 9px;">⏱️ AVG SESSION TIME</div>
+            <div class="value" id="an-avg-session-time" style="font-size: 30px; color: #82aad4; margin: 4px 0;">—</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Time per session</div>
+          </div>
+          <!-- 5. Error Rate -->
+          <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
+            <div class="label" style="font-size: 9px;">⚠️ ERROR RATE</div>
+            <div class="value" id="an-error-rate" style="font-size: 30px; color: #ff9999; margin: 4px 0;">—</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);" id="an-error-subtext">0 errors out of 0 requests</div>
+          </div>
+          <!-- 6. Avg Response Time -->
+          <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
+            <div class="label" style="font-size: 9px;">🚀 AVG RESPONSE TIME</div>
+            <div class="value" id="an-avg-response-time" style="font-size: 30px; color: #f7e2ad; margin: 4px 0;">—</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Average latency in ms</div>
+          </div>
+        </div>
+
+        <!-- SECTION 1: PAGES & SLOW APIS (2 Columns) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <!-- Most Visited Pages -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between;">
+              <span>📄 MOST VISITED PAGES</span>
+              <span style="color: var(--ink-dim); font-weight: normal;">URL &amp; PAGE VIEWS</span>
+            </div>
+            <div style="max-height: 220px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+                <thead>
+                  <tr style="color: var(--gold-3); font-family: var(--mono); border-bottom: 1px solid rgba(212,166,74,0.1);">
+                    <th style="padding: 6px;">Page Title / URL</th>
+                    <th style="padding: 6px; text-align: right;">Views</th>
+                    <th style="padding: 6px; text-align: right;">Avg Time</th>
+                  </tr>
+                </thead>
+                <tbody id="an-table-top-pages">
+                  <tr><td colspan="3" style="color: var(--ink-mute); text-align: center; padding: 16px;">No pageview data recorded yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Slow APIs -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between;">
+              <span>🐢 SLOW APIS &amp; ENDPOINTS</span>
+              <span style="color: var(--ink-dim); font-weight: normal;">LATENCY (MS)</span>
+            </div>
+            <div style="max-height: 220px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+                <thead>
+                  <tr style="color: var(--gold-3); font-family: var(--mono); border-bottom: 1px solid rgba(212,166,74,0.1);">
+                    <th style="padding: 6px;">API Endpoint</th>
+                    <th style="padding: 6px; text-align: center;">Calls</th>
+                    <th style="padding: 6px; text-align: right;">Avg Latency</th>
+                    <th style="padding: 6px; text-align: right;">Max</th>
+                  </tr>
+                </thead>
+                <tbody id="an-table-slow-apis">
+                  <tr><td colspan="4" style="color: var(--ink-mute); text-align: center; padding: 16px;">No API telemetry data recorded yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: BROWSER, OS & DEVICE BREAKDOWN (3 Columns) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+          <!-- Browser Usage -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🌐 BROWSER USAGE</div>
+            <div id="an-list-browsers" style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="color: var(--ink-mute); font-size: 12px;">No browser data recorded.</div>
+            </div>
+          </div>
+
+          <!-- OS Usage -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">💻 OS USAGE</div>
+            <div id="an-list-os" style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="color: var(--ink-mute); font-size: 12px;">No OS data recorded.</div>
+            </div>
+          </div>
+
+          <!-- Device Usage -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">📱 DEVICE USAGE</div>
+            <div id="an-list-devices" style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="color: var(--ink-mute); font-size: 12px;">No device data recorded.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: TOP SEARCHES, DOWNLOADS & RPM (3 Columns) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+          <!-- Top Searches -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🔍 TOP SEARCHES</div>
+            <div id="an-list-searches" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
+              <div style="color: var(--ink-mute); font-size: 12px;">No search queries recorded.</div>
+            </div>
+          </div>
+
+          <!-- Top Downloads -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">📥 TOP DOWNLOADS</div>
+            <div id="an-list-downloads" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
+              <div style="color: var(--ink-mute); font-size: 12px;">No download events recorded.</div>
+            </div>
+          </div>
+
+          <!-- Requests Per Minute (RPM) -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">📈 REQUESTS PER MINUTE (RPM)</div>
+            <div id="an-list-rpm" style="display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto;">
+              <div style="color: var(--ink-mute); font-size: 12px;">No traffic RPM trend recorded.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: HEATMAP & GEOGRAPHIC DISTRIBUTION (2 Columns) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <!-- Heat Map of User Activity -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🗺️ HEAT MAP OF USER ACTIVITY (7 DAYS X 24 HOURS)</div>
+            <div id="an-heatmap-container" style="display: flex; flex-direction: column; gap: 4px; overflow-x: auto; padding: 6px 0;">
+              <!-- 24-hour visual heat grid generated dynamically -->
+            </div>
+          </div>
+
+          <!-- Traffic by Country & City -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🌍 TRAFFIC BY COUNTRY &amp; CITY</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div>
+                <div style="font-family: var(--mono); font-size: 10px; color: var(--gold-3); margin-bottom: 6px;">COUNTRIES</div>
+                <div id="an-list-countries" style="display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto;">
+                  <div style="color: var(--ink-mute); font-size: 11px;">No country data yet.</div>
+                </div>
+              </div>
+              <div>
+                <div style="font-family: var(--mono); font-size: 10px; color: var(--gold-3); margin-bottom: 6px;">CITIES</div>
+                <div id="an-list-cities" style="display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto;">
+                  <div style="color: var(--ink-mute); font-size: 11px;">No city data yet.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1652,6 +2056,27 @@
 
   <!-- ==================== DASHBOARD LOGIC ==================== -->
     <script>
+    // Main Navigation Tabs Switching Logic
+    function switchMainTab(tabKey) {
+      document.querySelectorAll('.main-tab-btn').forEach(btn => btn.classList.remove('is-active'));
+      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('is-active'));
+
+      const btn = document.getElementById(`tab-btn-${tabKey}`);
+      const pane = document.getElementById(`tab-pane-${tabKey}`);
+
+      if (btn && pane) {
+        btn.classList.add('is-active');
+        pane.classList.add('is-active');
+        sessionStorage.setItem('bhairava_active_main_tab', tabKey);
+
+        if (tabKey === 'db-panel') {
+          if (typeof loadDbStatus === 'function') loadDbStatus();
+        } else if (tabKey === 'analytics') {
+          if (typeof loadGuestAnalytics === 'function') loadGuestAnalytics();
+        }
+      }
+    }
+
     let qnaData = [];
     let filteredData = [];
     let currentPage = 1;
@@ -2376,9 +2801,11 @@
     const inputUploadUat = document.getElementById('input-upload-uat');
 
     // Open/Close Modal
-    btnDbPanel.addEventListener('click', () => {
-      openDbModal();
-    });
+    if (btnDbPanel) {
+      btnDbPanel.addEventListener('click', () => {
+        openDbModal();
+      });
+    }
     
     dbModalCloseBtn.addEventListener('click', closeDbModal);
     dbModalCloseFooter.addEventListener('click', closeDbModal);
@@ -2864,10 +3291,10 @@
     const analyticsModalCloseFooter = document.getElementById('analytics-modal-close-footer');
     const btnRefreshAnalytics = document.getElementById('btn-refresh-analytics');
 
-    btnAnalyticsPanel.addEventListener('click', openAnalyticsModal);
-    analyticsModalCloseBtn.addEventListener('click', closeAnalyticsModal);
-    analyticsModalCloseFooter.addEventListener('click', closeAnalyticsModal);
-    btnRefreshAnalytics.addEventListener('click', loadGuestAnalytics);
+    if (btnAnalyticsPanel) btnAnalyticsPanel.addEventListener('click', openAnalyticsModal);
+    if (analyticsModalCloseBtn) analyticsModalCloseBtn.addEventListener('click', closeAnalyticsModal);
+    if (analyticsModalCloseFooter) analyticsModalCloseFooter.addEventListener('click', closeAnalyticsModal);
+    if (btnRefreshAnalytics) btnRefreshAnalytics.addEventListener('click', loadGuestAnalytics);
 
     analyticsModal.addEventListener('click', e => {
       if (e.target === analyticsModal) closeAnalyticsModal();
@@ -3096,6 +3523,7 @@
     // Bootstrap
     loadData();
     loadDbStatus();
+    switchMainTab(sessionStorage.getItem('bhairava_active_main_tab') || 'rephraser');
   </script>
 </body>
 </html>
