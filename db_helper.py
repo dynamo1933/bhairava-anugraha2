@@ -29,10 +29,10 @@ CSV_PATH = os.path.join(ROOT_DIR, "qna.csv")
 
 def get_db_config(active_db_override=None):
     load_env()
-    prod_url = os.environ.get("TURSO_DB_URL") or "https://daqna-dynamo1933.aws-ap-south-1.turso.io"
+    prod_url = os.environ.get("TURSO_DB_URL") or ""
     prod_token = os.environ.get("TURSO_AUTH_TOKEN") or ""
     
-    uat_url = os.environ.get("TURSO_UAT_DB_URL") or "https://daqnauat-dynamo1933.aws-ap-south-1.turso.io"
+    uat_url = os.environ.get("TURSO_UAT_DB_URL") or ""
     uat_token = os.environ.get("TURSO_UAT_AUTH_TOKEN") or ""
     
     config = {

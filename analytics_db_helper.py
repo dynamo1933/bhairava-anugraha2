@@ -22,7 +22,7 @@ load_env()
 
 def get_analytics_db_config():
     load_env()
-    url = os.environ.get("TURSO_ANALYSIS_DB_URL") or "https://qnauseranalysis-dynamo1933.aws-ap-south-1.turso.io"
+    url = os.environ.get("TURSO_ANALYSIS_DB_URL") or ""
     token = os.environ.get("TURSO_ANALYSIS_AUTH_TOKEN") or ""
     return {
         "url": url.strip(),

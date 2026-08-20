@@ -16,7 +16,8 @@ from db_helper import load_env
 load_env()
 
 # Configuration
-DB_URL = (os.environ.get("TURSO_DB_URL") or "https://daqna-dynamo1933.aws-ap-south-1.turso.io").rstrip('/') + "/v2/pipeline"
+raw_url = (os.environ.get("TURSO_DB_URL") or "").rstrip('/')
+DB_URL = f"{raw_url}/v2/pipeline" if raw_url else ""
 AUTH_TOKEN = os.environ.get("TURSO_AUTH_TOKEN") or ""
 CSV_PATH = os.path.join(DIRECTORY, "qna.csv")
 
