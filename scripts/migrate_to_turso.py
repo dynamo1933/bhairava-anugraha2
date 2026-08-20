@@ -9,8 +9,8 @@ import requests
 import sys
 
 # Configuration
-DB_URL = "https://daqna-dynamo1933.aws-ap-south-1.turso.io/v2/pipeline"
-AUTH_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODM3NDY3NDMsImlkIjoiMDE5ZjRmOTctMWUwMS03OGI0LTgxYjUtZDM0YzQyMTMxZTY0Iiwia2lkIjoiU3FmUWRuTTltd05Obm9FdTNCbEF3MWctUmk4ZnpVd2dZM2dYZzhlUjVUZyIsInJpZCI6IjA1MzgzMTZhLTE3OGItNDY4YS04NzlmLTRjZjQ3YTEyMjg0NiJ9._HCWILmpd_dvzt9AFXibb8T4lJIN2zZDmjDaD9q4VYH9f_ZnsmwfGCP1dS0v-33hBsd8hCcvQ7E_b34ArjtdBg"
+DB_URL = os.environ.get("TURSO_DB_URL", "https://daqna-dynamo1933.aws-ap-south-1.turso.io/v2/pipeline")
+AUTH_TOKEN = os.environ.get("TURSO_AUTH_TOKEN", "")
 
 DIRECTORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CSV_PATH = os.path.join(DIRECTORY, "qna.csv")
