@@ -8,11 +8,16 @@ import os
 import requests
 import sys
 
-# Configuration
-DB_URL = os.environ.get("TURSO_DB_URL", "https://daqna-dynamo1933.aws-ap-south-1.turso.io/v2/pipeline")
-AUTH_TOKEN = os.environ.get("TURSO_AUTH_TOKEN", "")
-
 DIRECTORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if DIRECTORY not in sys.path:
+    sys.path.insert(0, DIRECTORY)
+
+from db_helper import load_env
+load_env()
+
+# Configuration
+DB_URL = (os.environ.get("TURSO_DB_URL") or "https://daqna-dynamo1933.aws-ap-south-1.turso.io").rstrip('/') + "/v2/pipeline"
+AUTH_TOKEN = os.environ.get("TURSO_AUTH_TOKEN") or ""
 CSV_PATH = os.path.join(DIRECTORY, "qna.csv")
 
 def execute_statements(statements):

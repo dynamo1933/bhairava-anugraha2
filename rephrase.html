@@ -1,12 +1,15 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Bhairava Anugraha · Rephrase Codex</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Tiro+Devanagari+Sanskrit:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Tiro+Devanagari+Sanskrit:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="index.css" />
   <style>
     /* Custom styles for the Rephrase admin dashboard */
@@ -14,7 +17,7 @@
       background: var(--void);
       position: relative;
     }
-    
+
     .dashboard-container {
       max-width: 1400px;
       margin: 40px auto;
@@ -22,13 +25,13 @@
       position: relative;
       z-index: 2;
     }
-    
+
     .dashboard-header {
       margin-bottom: 32px;
       border-bottom: 1px solid var(--gold-deep);
       padding-bottom: 24px;
     }
-    
+
     .dashboard-header h1 {
       font-family: var(--display);
       font-size: 42px;
@@ -36,13 +39,13 @@
       margin: 0 0 8px 0;
       letter-spacing: 0.02em;
     }
-    
+
     .dashboard-header h1 em {
       font-family: var(--display);
       font-style: italic;
       color: var(--gold);
     }
-    
+
     .dashboard-header p {
       color: var(--ink-mute);
       margin: 0;
@@ -56,21 +59,21 @@
       gap: 20px;
       margin-bottom: 32px;
     }
-    
+
     .stat-card {
       background: var(--warm);
-      border: 1px solid rgba(212,166,74,0.15);
+      border: 1px solid rgba(212, 166, 74, 0.15);
       border-radius: 4px;
       padding: 20px;
       position: relative;
       overflow: hidden;
       transition: border-color 0.3s ease;
     }
-    
+
     .stat-card:hover {
       border-color: var(--gold);
     }
-    
+
     .stat-card .label {
       font-family: var(--mono);
       font-size: 10px;
@@ -78,14 +81,14 @@
       color: var(--gold);
       margin-bottom: 8px;
     }
-    
+
     .stat-card .value {
       font-family: var(--display);
       font-size: 32px;
       color: var(--paper);
       font-weight: 600;
     }
-    
+
     .stat-card .decorator {
       position: absolute;
       right: 16px;
@@ -105,32 +108,33 @@
       background: var(--warm-2);
       padding: 20px;
       border-radius: 4px;
-      border: 1px solid rgba(212,166,74,0.1);
+      border: 1px solid rgba(212, 166, 74, 0.1);
       margin-bottom: 24px;
       align-items: center;
     }
-    
+
     .filter-group {
       display: flex;
       flex-direction: column;
       gap: 6px;
       flex-grow: 1;
     }
-    
+
     .filter-group.search-group {
       flex-grow: 3;
     }
-    
+
     .filter-group label {
       font-family: var(--mono);
       font-size: 9px;
       letter-spacing: 0.1em;
       color: var(--gold-3);
     }
-    
-    .filter-input, .filter-select {
+
+    .filter-input,
+    .filter-select {
       background: var(--void);
-      border: 1px solid rgba(212,166,74,0.3);
+      border: 1px solid rgba(212, 166, 74, 0.3);
       color: var(--paper);
       padding: 10px 14px;
       font-family: var(--serif);
@@ -139,8 +143,9 @@
       outline: none;
       transition: all 0.3s ease;
     }
-    
-    .filter-input:focus, .filter-select:focus {
+
+    .filter-input:focus,
+    .filter-select:focus {
       border-color: var(--gold);
       box-shadow: 0 0 8px rgba(212, 166, 74, 0.25);
     }
@@ -148,12 +153,12 @@
     /* Table styling */
     .table-container {
       background: var(--warm);
-      border: 1px solid rgba(212,166,74,0.2);
+      border: 1px solid rgba(212, 166, 74, 0.2);
       border-radius: 4px;
       overflow-x: auto;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
-    
+
     .qna-table {
       width: 100%;
       border-collapse: collapse;
@@ -161,10 +166,10 @@
       font-family: var(--serif);
       font-size: 15.5px;
     }
-    
+
     .qna-table th {
-      background: rgba(212,166,74,0.06);
-      border-bottom: 1px solid rgba(212,166,74,0.3);
+      background: rgba(212, 166, 74, 0.06);
+      border-bottom: 1px solid rgba(212, 166, 74, 0.3);
       font-family: var(--mono);
       font-size: 11px;
       letter-spacing: 0.1em;
@@ -172,59 +177,59 @@
       padding: 16px 20px;
       text-transform: uppercase;
     }
-    
+
     .qna-table td {
       padding: 16px 20px;
-      border-bottom: 1px solid rgba(212,166,74,0.08);
+      border-bottom: 1px solid rgba(212, 166, 74, 0.08);
       vertical-align: top;
       line-height: 1.5;
     }
-    
+
     .qna-table tr {
       transition: background-color 0.2s ease;
     }
-    
+
     .qna-table tr:hover {
-      background-color: rgba(212,166,74,0.02);
+      background-color: rgba(212, 166, 74, 0.02);
     }
-    
+
     .qna-table tr.has-rephrased {
       border-left: 2px solid var(--gold-2);
     }
-    
+
     .qna-table tr.pending-rephrase {
       border-left: 2px solid var(--crimson);
     }
-    
+
     .col-num {
       width: 60px;
       font-family: var(--mono);
       color: var(--gold-3);
     }
-    
+
     .col-cat {
       width: 150px;
       font-family: var(--display);
       font-style: italic;
       color: var(--paper-2);
     }
-    
+
     .col-asker {
       width: 120px;
       font-weight: 500;
       color: var(--gold-3);
     }
-    
+
     .col-question {
       max-width: 350px;
     }
-    
+
     .col-rephrased {
       max-width: 350px;
       font-style: italic;
       color: var(--paper-2);
     }
-    
+
     .col-actions {
       width: 120px;
       text-align: right;
@@ -241,7 +246,7 @@
       width: 16px;
       height: 16px;
     }
-    
+
     .badge {
       display: inline-block;
       font-family: var(--mono);
@@ -251,19 +256,19 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
-    
+
     .badge.badge-pending {
       background: rgba(106, 16, 16, 0.2);
       border: 1px solid var(--crimson);
       color: #ff9999;
     }
-    
+
     .badge.badge-done {
       background: rgba(212, 166, 74, 0.1);
       border: 1px solid var(--gold);
       color: var(--gold-3);
     }
-    
+
     .btn-action {
       background: linear-gradient(180deg, var(--gold) 0%, var(--gold-2) 100%);
       color: var(--void);
@@ -277,27 +282,27 @@
       border-radius: 3px;
       cursor: pointer;
       transition: all 0.2s ease;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
-    
+
     .btn-action:hover {
       background: linear-gradient(180deg, var(--gold-3) 0%, var(--gold) 100%);
       transform: translateY(-1px);
       box-shadow: 0 4px 10px rgba(212, 166, 74, 0.4);
     }
-    
+
     .btn-action.btn-secondary {
       background: rgba(233, 223, 200, 0.08);
       border: 1px solid var(--ink-dim);
       color: var(--paper);
     }
-    
+
     .btn-action.btn-secondary:hover {
       background: rgba(233, 223, 200, 0.15);
       border-color: var(--paper);
       box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
     }
-    
+
     .btn-action:disabled {
       background: var(--leather) !important;
       color: var(--ink-dim) !important;
@@ -313,17 +318,17 @@
       justify-content: space-between;
       align-items: center;
       padding: 16px 20px;
-      background: rgba(7,6,10,0.4);
-      border-top: 1px solid rgba(212,166,74,0.15);
+      background: rgba(7, 6, 10, 0.4);
+      border-top: 1px solid rgba(212, 166, 74, 0.15);
     }
-    
+
     .pagination-info {
       font-family: var(--mono);
       font-size: 10px;
       color: var(--ink-mute);
       letter-spacing: 0.05em;
     }
-    
+
     .pagination-buttons {
       display: flex;
       gap: 10px;
@@ -343,12 +348,12 @@
       transition: opacity 0.3s ease;
       padding: 20px;
     }
-    
+
     .rephrase-modal.is-open {
       display: flex;
       opacity: 1;
     }
-    
+
     .modal-card {
       background: var(--ink);
       border: 1px solid var(--gold);
@@ -363,27 +368,27 @@
       transition: transform 0.3s ease;
       position: relative;
     }
-    
+
     .rephrase-modal.is-open .modal-card {
       transform: translateY(0);
     }
-    
+
     .modal-header {
       padding: 20px 24px;
-      border-bottom: 1px solid rgba(212,166,74,0.2);
+      border-bottom: 1px solid rgba(212, 166, 74, 0.2);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(212,166,74,0.03);
+      background: rgba(212, 166, 74, 0.03);
     }
-    
+
     .modal-header h3 {
       margin: 0;
       font-family: var(--display);
       font-size: 24px;
       color: var(--gold-3);
     }
-    
+
     .modal-close {
       color: var(--ink-dim);
       font-size: 28px;
@@ -391,11 +396,11 @@
       line-height: 1;
       transition: color 0.2s ease;
     }
-    
+
     .modal-close:hover {
       color: var(--gold);
     }
-    
+
     .modal-body {
       padding: 24px;
       display: grid;
@@ -404,49 +409,50 @@
       max-height: 70vh;
       overflow-y: auto;
     }
-    
+
     @media (max-width: 768px) {
       .modal-body {
         grid-template-columns: 1fr;
       }
     }
-    
-    .panel-original, .panel-rephrased {
+
+    .panel-original,
+    .panel-rephrased {
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
-    
+
     .panel-label {
       font-family: var(--mono);
       font-size: 10px;
       letter-spacing: 0.12em;
       color: var(--gold);
-      border-bottom: 1px solid rgba(212,166,74,0.15);
+      border-bottom: 1px solid rgba(212, 166, 74, 0.15);
       padding-bottom: 6px;
     }
-    
+
     .panel-content {
-      background: rgba(7,6,10,0.4);
-      border: 1px solid rgba(233,223,200,0.08);
+      background: rgba(7, 6, 10, 0.4);
+      border: 1px solid rgba(233, 223, 200, 0.08);
       border-radius: 4px;
       padding: 16px;
       min-height: 200px;
       font-size: 16px;
       line-height: 1.6;
     }
-    
+
     .panel-content blockquote {
       margin: 0;
       font-style: italic;
       color: var(--paper-2);
     }
-    
+
     .panel-rephrased textarea {
       width: 100%;
       min-height: 200px;
       background: var(--void);
-      border: 1px solid rgba(212,166,74,0.3);
+      border: 1px solid rgba(212, 166, 74, 0.3);
       color: var(--paper);
       padding: 16px;
       font-family: var(--serif);
@@ -457,19 +463,19 @@
       outline: none;
       transition: border-color 0.3s ease;
     }
-    
+
     .panel-rephrased textarea:focus {
       border-color: var(--gold);
       box-shadow: 0 0 8px rgba(212, 166, 74, 0.2);
     }
-    
+
     .modal-footer {
       padding: 20px 24px;
-      border-top: 1px solid rgba(212,166,74,0.2);
+      border-top: 1px solid rgba(212, 166, 74, 0.2);
       display: flex;
       justify-content: flex-end;
       gap: 12px;
-      background: rgba(212,166,74,0.03);
+      background: rgba(212, 166, 74, 0.03);
     }
 
     /* Loading Overlay inside Modal */
@@ -487,12 +493,12 @@
       pointer-events: none;
       transition: opacity 0.3s ease;
     }
-    
+
     .modal-loader.is-active {
       opacity: 1;
       pointer-events: auto;
     }
-    
+
     /* Elegant Gold Spinner */
     .spinner-ring {
       width: 50px;
@@ -502,14 +508,14 @@
       border-radius: 50%;
       animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
     }
-    
+
     .loader-text {
       font-family: var(--display);
       font-style: italic;
       font-size: 20px;
       color: var(--gold-3);
     }
-    
+
     .loader-subtext {
       font-family: var(--mono);
       font-size: 9px;
@@ -518,8 +524,13 @@
     }
 
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
 
     /* Toasts/Alerts */
@@ -534,7 +545,7 @@
       color: var(--paper);
       font-family: var(--serif);
       font-size: 15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
       display: flex;
       align-items: center;
       gap: 12px;
@@ -543,33 +554,33 @@
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 2000;
     }
-    
+
     .toast.show {
       transform: translateY(0);
       opacity: 1;
     }
-    
+
     .toast.success {
       border-left: 4px solid var(--gold);
     }
-    
+
     .toast.error {
       border-left: 4px solid var(--crimson);
       border-color: var(--crimson);
     }
-    
+
     .toast .icon {
       font-family: var(--skt);
       color: var(--gold);
       font-size: 20px;
     }
-    
+
     .toast.error .icon {
       color: #ff9999;
       font-family: var(--serif);
       font-weight: bold;
     }
-    
+
     .empty-state {
       padding: 40px;
       text-align: center;
@@ -621,7 +632,7 @@
       outline: none;
       transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
     }
-    
+
     .col-question textarea:focus,
     .col-rephrased textarea:focus,
     .col-answer textarea:focus {
@@ -638,7 +649,7 @@
       width: 100vw;
       height: 100vh;
       background: radial-gradient(circle at center, rgba(15, 12, 22, 0.85) 0%, rgba(5, 3, 8, 0.98) 100%),
-                  url('images/login_bg.jpg') no-repeat center center;
+        url('images/login_bg.jpg') no-repeat center center;
       background-size: cover;
       display: flex;
       align-items: center;
@@ -647,7 +658,7 @@
       opacity: 1;
       visibility: visible;
       transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1),
-                  visibility 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        visibility 0.6s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     #login-wall.fade-out {
@@ -665,7 +676,7 @@
       border: 1px solid rgba(212, 166, 74, 0.15);
       border-radius: 12px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
       text-align: center;
       position: relative;
       overflow: hidden;
@@ -787,8 +798,18 @@
 
     /* Animations */
     @keyframes pulseOm {
-      0%, 100% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.1); opacity: 1; text-shadow: 0 0 15px rgba(212, 166, 74, 0.5); }
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 0.8;
+      }
+
+      50% {
+        transform: scale(1.1);
+        opacity: 1;
+        text-shadow: 0 0 15px rgba(212, 166, 74, 0.5);
+      }
     }
 
     .login-card.shake {
@@ -796,141 +817,302 @@
     }
 
     @keyframes shakeCard {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-8px); }
-      40%, 80% { transform: translateX(8px); }
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20%,
+      60% {
+        transform: translateX(-8px);
+      }
+
+      40%,
+      80% {
+        transform: translateX(8px);
+      }
     }
 
     /* ======= FOLLOWUP COLUMN ======= */
-    .col-followup { width: 80px; text-align: center; }
-    .followup-cell {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    .col-followup {
+      width: 80px;
+      text-align: center;
     }
-    .followup-parent-badge, .followup-child-badge {
-      display: inline-block; font-size: 10px; font-weight: 700;
-      padding: 2px 7px; border-radius: 12px; white-space: nowrap;
+
+    .followup-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .followup-parent-badge,
+    .followup-child-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 12px;
+      white-space: nowrap;
       cursor: default;
     }
+
     .followup-parent-badge {
-      background: rgba(212,166,74,0.15); color: #d4a64a;
-      border: 1px solid rgba(212,166,74,0.4);
+      background: rgba(212, 166, 74, 0.15);
+      color: #d4a64a;
+      border: 1px solid rgba(212, 166, 74, 0.4);
     }
+
     .followup-child-badge {
-      background: rgba(130,170,212,0.12); color: #82aad4;
-      border: 1px solid rgba(130,170,212,0.35);
+      background: rgba(130, 170, 212, 0.12);
+      color: #82aad4;
+      border: 1px solid rgba(130, 170, 212, 0.35);
     }
-    .followup-none { color: #555; font-size: 12px; }
+
+    .followup-none {
+      color: #555;
+      font-size: 12px;
+    }
+
     .btn-link-followup {
-      background: none; border: 1px solid rgba(212,166,74,0.25);
-      color: #d4a64a; border-radius: 4px; cursor: pointer;
-      padding: 2px 6px; font-size: 13px;
+      background: none;
+      border: 1px solid rgba(212, 166, 74, 0.25);
+      color: #d4a64a;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 2px 6px;
+      font-size: 13px;
       transition: background 0.2s;
     }
-    .btn-link-followup:hover { background: rgba(212,166,74,0.15); }
+
+    .btn-link-followup:hover {
+      background: rgba(212, 166, 74, 0.15);
+    }
 
     /* ======= LINK MANAGEMENT MODAL ======= */
     .link-modal {
-      display: none; position: fixed; inset: 0; z-index: 9000;
-      background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
-      align-items: center; justify-content: center; padding: 24px;
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
     }
-    .link-modal.is-open { display: flex; }
+
+    .link-modal.is-open {
+      display: flex;
+    }
+
     .link-modal-card {
-      width: 100%; max-width: 620px;
+      width: 100%;
+      max-width: 620px;
       background: linear-gradient(160deg, #1a1a2e 0%, #0f0f1a 100%);
-      border: 1px solid rgba(212,166,74,0.3);
-      border-radius: 12px; overflow: hidden;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(212,166,74,0.1);
-      display: flex; flex-direction: column; max-height: 85vh;
+      border: 1px solid rgba(212, 166, 74, 0.3);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(212, 166, 74, 0.1);
+      display: flex;
+      flex-direction: column;
+      max-height: 85vh;
     }
+
     .link-modal-header {
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 20px 24px 16px;
-      border-bottom: 1px solid rgba(212,166,74,0.15);
+      border-bottom: 1px solid rgba(212, 166, 74, 0.15);
     }
+
     .link-modal-header h3 {
-      margin: 0; font-size: 16px; color: #d4a64a;
-      font-family: 'Cinzel Decorative', serif; letter-spacing: 0.04em;
+      margin: 0;
+      font-size: 16px;
+      color: #d4a64a;
+      font-family: 'Cinzel Decorative', serif;
+      letter-spacing: 0.04em;
     }
+
     .link-modal-close {
-      background: none; border: none; color: #888; font-size: 22px;
-      cursor: pointer; line-height: 1; padding: 0 4px;
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 4px;
       transition: color 0.2s;
     }
-    .link-modal-close:hover { color: #d4a64a; }
+
+    .link-modal-close:hover {
+      color: #d4a64a;
+    }
+
     .link-modal-body {
-      flex: 1; overflow-y: auto; padding: 20px 24px;
-      display: flex; flex-direction: column; gap: 20px;
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
+
     .link-section-label {
-      font-size: 10px; letter-spacing: 0.2em; color: #d4a64a;
-      font-weight: 700; text-transform: uppercase; margin-bottom: 8px;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: #d4a64a;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 8px;
     }
+
     .link-parent-preview p {
-      margin: 0; font-size: 13px; color: #ccc; font-style: italic;
+      margin: 0;
+      font-size: 13px;
+      color: #ccc;
+      font-style: italic;
       line-height: 1.5;
-      padding: 10px 14px; background: rgba(255,255,255,0.04);
-      border-left: 3px solid rgba(212,166,74,0.4); border-radius: 3px;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border-left: 3px solid rgba(212, 166, 74, 0.4);
+      border-radius: 3px;
     }
+
     .link-list {
-      list-style: none; margin: 0; padding: 0;
-      display: flex; flex-direction: column; gap: 6px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
+
     .link-list li {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 12px; background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(212,166,74,0.12); border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(212, 166, 74, 0.12);
+      border-radius: 6px;
     }
+
     .link-list .link-empty {
-      color: #555; font-style: italic; font-size: 13px;
-      border: none; background: none; padding: 4px 0;
+      color: #555;
+      font-style: italic;
+      font-size: 13px;
+      border: none;
+      background: none;
+      padding: 4px 0;
     }
+
     .link-num {
-      font-family: monospace; color: #d4a64a; font-size: 12px;
-      font-weight: 700; flex-shrink: 0;
+      font-family: monospace;
+      color: #d4a64a;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
     }
+
     .link-preview {
-      flex: 1; font-size: 12px; color: #aaa; overflow: hidden;
-      text-overflow: ellipsis; white-space: nowrap;
+      flex: 1;
+      font-size: 12px;
+      color: #aaa;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
+
     .btn-remove-link {
-      background: none; border: 1px solid rgba(220,80,80,0.3);
-      color: #e06060; padding: 2px 7px; border-radius: 4px;
-      font-size: 11px; cursor: pointer; flex-shrink: 0;
+      background: none;
+      border: 1px solid rgba(220, 80, 80, 0.3);
+      color: #e06060;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      flex-shrink: 0;
       transition: background 0.2s;
     }
-    .btn-remove-link:hover { background: rgba(220,80,80,0.15); }
+
+    .btn-remove-link:hover {
+      background: rgba(220, 80, 80, 0.15);
+    }
+
     .link-search-box {
-      width: 100%; box-sizing: border-box;
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(212,166,74,0.25);
-      color: #ddd; padding: 10px 14px; border-radius: 6px; font-size: 13px;
-      outline: none; transition: border-color 0.2s;
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(212, 166, 74, 0.25);
+      color: #ddd;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
     }
-    .link-search-box:focus { border-color: rgba(212,166,74,0.6); }
+
+    .link-search-box:focus {
+      border-color: rgba(212, 166, 74, 0.6);
+    }
+
     .link-search-results {
-      margin-top: 8px; display: flex; flex-direction: column; gap: 5px;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
+
     .link-result-row {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 12px; background: rgba(212,166,74,0.05);
-      border: 1px solid rgba(212,166,74,0.15); border-radius: 6px;
-      cursor: pointer; transition: background 0.2s;
-    }
-    .link-result-row:hover { background: rgba(212,166,74,0.12); }
-    .btn-add-link {
-      flex-shrink: 0; background: rgba(212,166,74,0.15);
-      border: 1px solid rgba(212,166,74,0.35); color: #d4a64a;
-      font-size: 11px; padding: 3px 10px; border-radius: 4px; cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: rgba(212, 166, 74, 0.05);
+      border: 1px solid rgba(212, 166, 74, 0.15);
+      border-radius: 6px;
+      cursor: pointer;
       transition: background 0.2s;
     }
-    .btn-add-link:hover { background: rgba(212,166,74,0.3); }
-    .link-no-results { font-size: 12px; color: #666; font-style: italic; padding: 6px 0; }
+
+    .link-result-row:hover {
+      background: rgba(212, 166, 74, 0.12);
+    }
+
+    .btn-add-link {
+      flex-shrink: 0;
+      background: rgba(212, 166, 74, 0.15);
+      border: 1px solid rgba(212, 166, 74, 0.35);
+      color: #d4a64a;
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-add-link:hover {
+      background: rgba(212, 166, 74, 0.3);
+    }
+
+    .link-no-results {
+      font-size: 12px;
+      color: #666;
+      font-style: italic;
+      padding: 6px 0;
+    }
+
     .link-modal-footer {
       padding: 16px 24px;
-      border-top: 1px solid rgba(212,166,74,0.12);
-      display: flex; justify-content: flex-end; gap: 10px;
+      border-top: 1px solid rgba(212, 166, 74, 0.12);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
     }
-    
+
     /* Switch toggle styles */
     .switch-toggle {
       position: relative;
@@ -939,6 +1121,7 @@
       height: 32px;
       cursor: pointer;
     }
+
     .switch-toggle input {
       position: absolute;
       opacity: 0;
@@ -946,16 +1129,17 @@
       height: 0;
       pointer-events: none;
     }
-    .switch-toggle input:checked + .slider-round {
+
+    .switch-toggle input:checked+.slider-round {
       background-color: rgba(130, 170, 212, 0.25) !important;
       border-color: #82aad4 !important;
     }
-    
-    .switch-toggle input:checked + .slider-round:before {
+
+    .switch-toggle input:checked+.slider-round:before {
       transform: translateX(26px);
       background-color: #82aad4;
     }
-    
+
     .slider-round:before {
       position: absolute;
       content: "";
@@ -981,7 +1165,7 @@
       backdrop-filter: blur(12px);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
-    
+
     .main-tab-btn {
       display: flex;
       align-items: center;
@@ -1038,12 +1222,20 @@
     }
 
     @keyframes fadeInTab {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   </style>
 
 </head>
+
 <body>
 
   <!-- ==================== LOGIN WALL OVERLAY ==================== -->
@@ -1052,15 +1244,17 @@
       <div class="om-logo">ॐ</div>
       <h2>Bhairava <em>Codex</em></h2>
       <p>Enter the administrator credentials to access the translation and rephrase portal.</p>
-      
+
       <form id="login-form" onsubmit="handleLoginSubmit(event)">
         <div class="login-group">
           <label for="login-username">Username</label>
-          <input type="text" id="login-username" class="login-input" placeholder="e.g. admin" required autocomplete="username" />
+          <input type="text" id="login-username" class="login-input" placeholder="e.g. admin" required
+            autocomplete="username" />
         </div>
         <div class="login-group">
           <label for="login-password">Password</label>
-          <input type="password" id="login-password" class="login-input" placeholder="••••••••" required autocomplete="current-password" />
+          <input type="password" id="login-password" class="login-input" placeholder="••••••••" required
+            autocomplete="current-password" />
         </div>
         <button type="submit" class="login-btn">Enter Portal</button>
         <div class="login-error" id="login-error-msg">Invalid credentials. Access denied.</div>
@@ -1081,7 +1275,9 @@
         <a class="is-active" href="#">Rephrase Tool</a>
       </nav>
       <div class="right" style="display: flex; gap: 14px; align-items: center;">
-        <div id="header-db-badge" class="badge" style="background: rgba(212,166,74,0.1); border: 1px solid var(--gold); color: var(--gold); font-size: 9px; padding: 3px 8px; font-family: var(--mono); text-transform: uppercase;">DB: LOADING...</div>
+        <div id="header-db-badge" class="badge"
+          style="background: rgba(212,166,74,0.1); border: 1px solid var(--gold); color: var(--gold); font-size: 9px; padding: 3px 8px; font-family: var(--mono); text-transform: uppercase;">
+          DB: LOADING...</div>
         <span class="mono" style="color: var(--gold); font-size: 10px; letter-spacing: 0.15em;">ADMIN PANEL</span>
       </div>
     </div>
@@ -1089,7 +1285,7 @@
 
   <!-- ==================== DASHBOARD CONTAINER ==================== -->
   <div class="dashboard-container">
-    
+
     <div class="leaf-field"></div>
     <div class="grain"></div>
 
@@ -1112,7 +1308,6 @@
     <!-- ==================== TAB 1: Q&A REPHRASER ==================== -->
     <div class="tab-pane is-active" id="tab-pane-rephraser">
       <div class="dashboard-header">
-        <h1>Q&amp;A <em>Rephraser</em></h1>
         <p>Translate and rephrase seeker questions into clean English and traditional Guru-Shishya dialogue style.</p>
       </div>
 
@@ -1139,7 +1334,8 @@
       <div class="filters-row" style="align-items: flex-end;">
         <div class="filter-group search-group">
           <label for="search-input">Search Q&amp;As</label>
-          <input type="text" id="search-input" class="filter-input" placeholder="Search by question text, asker, number..." />
+          <input type="text" id="search-input" class="filter-input"
+            placeholder="Search by question text, asker, number..." />
         </div>
 
         <div class="filter-group">
@@ -1150,7 +1346,7 @@
             <option value="unpublished">Unpublished Only</option>
           </select>
         </div>
-        
+
         <div class="filter-group">
           <label for="category-filter">Folio / Category</label>
           <select id="category-filter" class="filter-select">
@@ -1175,7 +1371,8 @@
 
         <!-- UAT ONLY ADD ENTRY BUTTON -->
         <div id="uat-add-entry-container" style="display: none; align-items: flex-end; margin-left: auto;">
-          <button id="btn-open-add-modal" class="btn-action" style="padding: 10px 18px; font-size: 11px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #ffffff; white-space: nowrap; box-shadow: 0 0 10px rgba(130,170,212,0.3);">
+          <button id="btn-open-add-modal" class="btn-action"
+            style="padding: 10px 18px; font-size: 11px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #ffffff; white-space: nowrap; box-shadow: 0 0 10px rgba(130,170,212,0.3);">
             ➕ Add New Q&amp;A (UAT)
           </button>
         </div>
@@ -1218,25 +1415,31 @@
     <!-- ==================== TAB 2: DB PANEL ==================== -->
     <div class="tab-pane" id="tab-pane-db-panel">
       <div class="dashboard-header" style="margin-bottom: 20px;">
-        <h1>🗄️ Database <em>Controls</em></h1>
-        <p>Manage Production &amp; Staging (UAT) Turso instances, inspect active connection states, and execute database operations.</p>
+        <p>Manage Production &amp; Staging (UAT) Turso instances, inspect active connection states, and execute database
+          operations.</p>
       </div>
 
-      <div style="background: rgba(15, 13, 22, 0.7); border: 1px solid rgba(212, 166, 74, 0.2); border-radius: 8px; padding: 24px; backdrop-filter: blur(12px);">
-        
+      <div
+        style="background: rgba(15, 13, 22, 0.7); border: 1px solid rgba(212, 166, 74, 0.2); border-radius: 8px; padding: 24px; backdrop-filter: blur(12px);">
+
         <!-- Active Webapp Connection Card -->
-        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.2); border-radius: 6px; padding: 18px 22px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+        <div
+          style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.2); border-radius: 6px; padding: 18px 22px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
           <div>
-            <h4 style="margin: 0 0 4px 0; font-family: var(--display); color: var(--gold-3); font-size: 16px;">Active Webapp Connection</h4>
-            <p style="margin: 0; font-size: 12px; color: var(--ink-mute);">Switch between the Production and Staging (UAT) Turso instances.</p>
+            <h4 style="margin: 0 0 4px 0; font-family: var(--display); color: var(--gold-3); font-size: 16px;">Active
+              Webapp Connection</h4>
+            <p style="margin: 0; font-size: 12px; color: var(--ink-mute);">Switch between the Production and Staging
+              (UAT) Turso instances.</p>
           </div>
           <div style="display: flex; align-items: center; gap: 14px;">
-            <span style="font-family: var(--mono); font-size: 12px; color: var(--gold-3); font-weight: bold;" id="lbl-db-switch-prod">PROD</span>
+            <span style="font-family: var(--mono); font-size: 12px; color: var(--gold-3); font-weight: bold;"
+              id="lbl-db-switch-prod">PROD</span>
             <label class="switch-toggle">
               <input type="checkbox" id="db-switch-toggle">
               <span class="slider-round"></span>
             </label>
-            <span style="font-family: var(--mono); font-size: 12px; color: var(--ink-dim); font-weight: bold;" id="lbl-db-switch-uat">UAT</span>
+            <span style="font-family: var(--mono); font-size: 12px; color: var(--ink-dim); font-weight: bold;"
+              id="lbl-db-switch-uat">UAT</span>
           </div>
         </div>
 
@@ -1245,10 +1448,14 @@
           <!-- Prod Database Card -->
           <div class="stat-card" style="margin: 0; background: rgba(15, 13, 22, 0.8);">
             <div class="label" style="font-size: 10px; color: var(--gold);">PRODUCTION DATABASE</div>
-            <div class="value" id="db-prod-count" style="font-size: 32px; color: var(--gold); margin: 6px 0;">— <span style="font-size: 14px; font-weight: normal;">entries</span></div>
-            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono); word-break: break-all;" id="db-prod-url">URL: Loading...</div>
-            <div style="margin-top: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px;">
-              <span id="db-prod-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555;"></span>
+            <div class="value" id="db-prod-count" style="font-size: 32px; color: var(--gold); margin: 6px 0;">— <span
+                style="font-size: 14px; font-weight: normal;">entries</span></div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono); word-break: break-all;"
+              id="db-prod-url">URL: Loading...</div>
+            <div
+              style="margin-top: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px;">
+              <span id="db-prod-dot"
+                style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555;"></span>
               <span id="db-prod-status" style="color: var(--ink-mute);">Checking status...</span>
             </div>
             <div class="decorator">तत्व</div>
@@ -1257,10 +1464,14 @@
           <!-- UAT Database Card -->
           <div class="stat-card" style="margin: 0; background: rgba(15, 13, 22, 0.8);">
             <div class="label" style="font-size: 10px; color: #82aad4;">UAT (STAGING) DATABASE</div>
-            <div class="value" id="db-uat-count" style="font-size: 32px; color: #82aad4; margin: 6px 0;">— <span style="font-size: 14px; font-weight: normal;">entries</span></div>
-            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono); word-break: break-all;" id="db-uat-url">URL: Loading...</div>
-            <div style="margin-top: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px;">
-              <span id="db-uat-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555;"></span>
+            <div class="value" id="db-uat-count" style="font-size: 32px; color: #82aad4; margin: 6px 0;">— <span
+                style="font-size: 14px; font-weight: normal;">entries</span></div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono); word-break: break-all;"
+              id="db-uat-url">URL: Loading...</div>
+            <div
+              style="margin-top: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px;">
+              <span id="db-uat-dot"
+                style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555;"></span>
               <span id="db-uat-status" style="color: var(--ink-mute);">Checking status...</span>
             </div>
             <div class="decorator">प्रश्न</div>
@@ -1268,72 +1479,96 @@
         </div>
 
         <!-- Overwrite Warning -->
-        <div style="background: rgba(106, 16, 16, 0.15); border: 1px solid var(--crimson); border-radius: 4px; padding: 12px 16px; font-size: 13px; color: #ffbfbf; margin-bottom: 20px;">
-          <strong>⚠️ CAUTION:</strong> Actions below modify database content directly. Download backups before proceeding.
+        <div
+          style="background: rgba(106, 16, 16, 0.15); border: 1px solid var(--crimson); border-radius: 4px; padding: 12px 16px; font-size: 13px; color: #ffbfbf; margin-bottom: 20px;">
+          <strong>⚠️ CAUTION:</strong> Actions below modify database content directly. Download backups before
+          proceeding.
         </div>
 
         <!-- Operations Grid -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
           <!-- Prod Controls -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 6px; font-weight: bold;">PROD OPERATIONS</div>
-            
-            <button class="btn-action btn-secondary" id="btn-sync-prod-from-uat" style="text-align: left; padding: 10px 14px; font-size: 11px; display: flex; justify-content: space-between; align-items: center;">
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 6px; font-weight: bold;">
+              PROD OPERATIONS</div>
+
+            <button class="btn-action btn-secondary" id="btn-sync-prod-from-uat"
+              style="text-align: left; padding: 10px 14px; font-size: 11px; display: flex; justify-content: space-between; align-items: center;">
               <span>🔄 Sync Prod from UAT</span>
               <span style="font-size: 9px; opacity: 0.7;">OVERWRITES PROD</span>
             </button>
-            
+
             <div style="display: flex; gap: 10px; align-items: center;">
-              <select id="select-download-prod" class="filter-select" style="padding: 6px 10px; font-size: 11px; flex: 1; height: auto;">
+              <select id="select-download-prod" class="filter-select"
+                style="padding: 6px 10px; font-size: 11px; flex: 1; height: auto;">
                 <option value="db">SQLite (.db)</option>
                 <option value="csv">CSV (.csv)</option>
                 <option value="json">JSON (.json)</option>
               </select>
-              <button class="btn-action" id="btn-download-prod" style="padding: 8px 14px; font-size: 10px;">📥 Download Prod</button>
+              <button class="btn-action" id="btn-download-prod" style="padding: 8px 14px; font-size: 10px;">📥 Download
+                Prod</button>
             </div>
-            
-            <button class="btn-action btn-secondary" id="btn-trigger-upload-prod" style="text-align: left; padding: 10px 14px; font-size: 11px;">
+
+            <button class="btn-action btn-secondary" id="btn-trigger-upload-prod"
+              style="text-align: left; padding: 10px 14px; font-size: 11px;">
               📂 Upload &amp; Restore to Prod (.db/.csv/.json)
             </button>
             <input type="file" id="input-upload-prod" accept=".db,.csv,.json" style="display: none;">
           </div>
 
           <!-- UAT Controls -->
-          <div style="background: rgba(130, 170, 212, 0.04); border: 1px solid rgba(130, 170, 212, 0.3); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: #82aad4; border-bottom: 1px solid rgba(130, 170, 212, 0.2); padding-bottom: 6px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+          <div
+            style="background: rgba(130, 170, 212, 0.04); border: 1px solid rgba(130, 170, 212, 0.3); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: #82aad4; border-bottom: 1px solid rgba(130, 170, 212, 0.2); padding-bottom: 6px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
               <span>UAT OPERATIONS</span>
-              <span style="font-size: 9px; background: rgba(130,170,212,0.15); padding: 2px 6px; border-radius: 3px; color: #b8d5f3;">STAGING ONLY</span>
+              <span
+                style="font-size: 9px; background: rgba(130,170,212,0.15); padding: 2px 6px; border-radius: 3px; color: #b8d5f3;">STAGING
+                ONLY</span>
             </div>
 
             <!-- UAT Append Mode Toggle -->
-            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(130, 170, 212, 0.08); padding: 8px 12px; border-radius: 4px; border: 1px solid rgba(130, 170, 212, 0.25);">
+            <div
+              style="display: flex; align-items: center; justify-content: space-between; background: rgba(130, 170, 212, 0.08); padding: 8px 12px; border-radius: 4px; border: 1px solid rgba(130, 170, 212, 0.25);">
               <span style="font-size: 11px; color: #b8d5f3; font-family: var(--mono);">Sync / Import Mode:</span>
-              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; color: #ffffff;">
-                <input type="checkbox" id="chk-uat-append-mode" checked style="accent-color: #82aad4; width: 15px; height: 15px;" />
-                <span><strong id="lbl-uat-mode-title">Append Mode</strong> <span style="font-size: 9px; color: #82aad4;" id="lbl-uat-mode-sub">(Preserves existing UAT data)</span></span>
+              <label
+                style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; color: #ffffff;">
+                <input type="checkbox" id="chk-uat-append-mode" checked
+                  style="accent-color: #82aad4; width: 15px; height: 15px;" />
+                <span><strong id="lbl-uat-mode-title">Append Mode</strong> <span style="font-size: 9px; color: #82aad4;"
+                    id="lbl-uat-mode-sub">(Preserves existing UAT data)</span></span>
               </label>
             </div>
-            
-            <button class="btn-action btn-secondary" id="btn-sync-uat-from-prod" style="text-align: left; padding: 10px 14px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; border-color: rgba(130,170,212,0.4);">
+
+            <button class="btn-action btn-secondary" id="btn-sync-uat-from-prod"
+              style="text-align: left; padding: 10px 14px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; border-color: rgba(130,170,212,0.4);">
               <span id="txt-sync-uat-btn">🔄 Sync &amp; Append UAT from Prod</span>
-              <span id="badge-sync-uat-btn" style="font-size: 9px; color: #82aad4; font-family: var(--mono);">PRESERVES UAT</span>
+              <span id="badge-sync-uat-btn" style="font-size: 9px; color: #82aad4; font-family: var(--mono);">PRESERVES
+                UAT</span>
             </button>
-            
+
             <div style="display: flex; gap: 10px; align-items: center;">
-              <select id="select-download-uat" class="filter-select" style="padding: 6px 10px; font-size: 11px; flex: 1; height: auto;">
+              <select id="select-download-uat" class="filter-select"
+                style="padding: 6px 10px; font-size: 11px; flex: 1; height: auto;">
                 <option value="db">SQLite (.db)</option>
                 <option value="csv">CSV (.csv)</option>
                 <option value="json">JSON (.json)</option>
               </select>
-              <button class="btn-action" id="btn-download-uat" style="padding: 8px 14px; font-size: 10px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #fff;">📥 Download UAT</button>
+              <button class="btn-action" id="btn-download-uat"
+                style="padding: 8px 14px; font-size: 10px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #fff;">📥
+                Download UAT</button>
             </div>
-            
-            <button class="btn-action btn-secondary" id="btn-trigger-upload-uat" style="text-align: left; padding: 10px 14px; font-size: 11px; border-color: rgba(130,170,212,0.4);">
+
+            <button class="btn-action btn-secondary" id="btn-trigger-upload-uat"
+              style="text-align: left; padding: 10px 14px; font-size: 11px; border-color: rgba(130,170,212,0.4);">
               <span id="txt-upload-uat-btn">📂 Upload &amp; Append to UAT (.db/.csv/.json)</span>
             </button>
             <input type="file" id="input-upload-uat" accept=".db,.csv,.json" style="display: none;">
 
-            <button class="btn-action" id="btn-open-add-modal-db" style="text-align: left; padding: 10px 14px; font-size: 11px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #ffffff;">
+            <button class="btn-action" id="btn-open-add-modal-db"
+              style="text-align: left; padding: 10px 14px; font-size: 11px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #ffffff;">
               ➕ Create New Entry in UAT Database
             </button>
           </div>
@@ -1343,23 +1578,26 @@
 
     <!-- ==================== TAB 3: GUEST ANALYTICS ==================== -->
     <div class="tab-pane" id="tab-pane-analytics">
-      <div class="dashboard-header" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+      <div class="dashboard-header"
+        style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
         <div>
-          <h1>📊 Guest <em>Analytics Intelligence</em></h1>
           <p>Real-time telemetry, concurrent audience monitoring, latency stats &amp; usage insights.</p>
         </div>
-        <button class="btn-action btn-secondary" id="btn-refresh-analytics" style="padding: 8px 16px; font-size: 11px;">🔄 Refresh Telemetry</button>
+        <button class="btn-action btn-secondary" id="btn-refresh-analytics"
+          style="padding: 8px 16px; font-size: 11px;">🔄 Refresh Telemetry</button>
       </div>
 
-      <div style="background: rgba(15, 13, 22, 0.7); border: 1px solid rgba(212, 166, 74, 0.2); border-radius: 8px; padding: 24px; backdrop-filter: blur(12px); display: flex; flex-direction: column; gap: 24px;">
-        
+      <div
+        style="background: rgba(15, 13, 22, 0.7); border: 1px solid rgba(212, 166, 74, 0.2); border-radius: 8px; padding: 24px; backdrop-filter: blur(12px); display: flex; flex-direction: column; gap: 24px;">
+
         <!-- TOP KPI CARDS (6 Metrics) -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px;">
           <!-- 1. Active Users -->
           <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
             <div class="label" style="font-size: 9px; color: #55ff55;">⚡ ACTIVE USERS (5M)</div>
             <div class="value" id="an-active-users" style="font-size: 30px; color: #77ff77; margin: 4px 0;">—</div>
-            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Live concurrent sessions</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Live concurrent sessions
+            </div>
           </div>
           <!-- 2. Daily Users -->
           <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
@@ -1370,7 +1608,8 @@
           <!-- 3. Monthly Users -->
           <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
             <div class="label" style="font-size: 9px;">🗓️ MONTHLY USERS (MAU)</div>
-            <div class="value" id="an-monthly-users" style="font-size: 30px; color: var(--paper); margin: 4px 0;">—</div>
+            <div class="value" id="an-monthly-users" style="font-size: 30px; color: var(--paper); margin: 4px 0;">—
+            </div>
             <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Unique visitors in 30d</div>
           </div>
           <!-- 4. Avg Session Time -->
@@ -1383,7 +1622,8 @@
           <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
             <div class="label" style="font-size: 9px;">⚠️ ERROR RATE</div>
             <div class="value" id="an-error-rate" style="font-size: 30px; color: #ff9999; margin: 4px 0;">—</div>
-            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);" id="an-error-subtext">0 errors out of 0 requests</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);" id="an-error-subtext">0
+              errors out of 0 requests</div>
           </div>
           <!-- 6. Avg Response Time -->
           <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
@@ -1396,37 +1636,46 @@
         <!-- SECTION 1: PAGES & SLOW APIS (2 Columns) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
           <!-- Most Visited Pages -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between;">
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between;">
               <span>📄 MOST VISITED PAGES</span>
               <span style="color: var(--ink-dim); font-weight: normal;">URL &amp; PAGE VIEWS</span>
             </div>
             <div style="max-height: 220px; overflow-y: auto;">
               <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
                 <thead>
-                  <tr style="color: var(--gold-3); font-family: var(--mono); border-bottom: 1px solid rgba(212,166,74,0.1);">
+                  <tr
+                    style="color: var(--gold-3); font-family: var(--mono); border-bottom: 1px solid rgba(212,166,74,0.1);">
                     <th style="padding: 6px;">Page Title / URL</th>
                     <th style="padding: 6px; text-align: right;">Views</th>
                     <th style="padding: 6px; text-align: right;">Avg Time</th>
                   </tr>
                 </thead>
                 <tbody id="an-table-top-pages">
-                  <tr><td colspan="3" style="color: var(--ink-mute); text-align: center; padding: 16px;">No pageview data recorded yet.</td></tr>
+                  <tr>
+                    <td colspan="3" style="color: var(--ink-mute); text-align: center; padding: 16px;">No pageview data
+                      recorded yet.</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
           </div>
 
           <!-- Slow APIs -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between;">
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between;">
               <span>🐢 SLOW APIS &amp; ENDPOINTS</span>
               <span style="color: var(--ink-dim); font-weight: normal;">LATENCY (MS)</span>
             </div>
             <div style="max-height: 220px; overflow-y: auto;">
               <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
                 <thead>
-                  <tr style="color: var(--gold-3); font-family: var(--mono); border-bottom: 1px solid rgba(212,166,74,0.1);">
+                  <tr
+                    style="color: var(--gold-3); font-family: var(--mono); border-bottom: 1px solid rgba(212,166,74,0.1);">
                     <th style="padding: 6px;">API Endpoint</th>
                     <th style="padding: 6px; text-align: center;">Calls</th>
                     <th style="padding: 6px; text-align: right;">Avg Latency</th>
@@ -1434,7 +1683,10 @@
                   </tr>
                 </thead>
                 <tbody id="an-table-slow-apis">
-                  <tr><td colspan="4" style="color: var(--ink-mute); text-align: center; padding: 16px;">No API telemetry data recorded yet.</td></tr>
+                  <tr>
+                    <td colspan="4" style="color: var(--ink-mute); text-align: center; padding: 16px;">No API telemetry
+                      data recorded yet.</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -1444,24 +1696,33 @@
         <!-- SECTION 2: BROWSER, OS & DEVICE BREAKDOWN (3 Columns) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
           <!-- Browser Usage -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🌐 BROWSER USAGE</div>
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              🌐 BROWSER USAGE</div>
             <div id="an-list-browsers" style="display: flex; flex-direction: column; gap: 10px;">
               <div style="color: var(--ink-mute); font-size: 12px;">No browser data recorded.</div>
             </div>
           </div>
 
           <!-- OS Usage -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">💻 OS USAGE</div>
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              💻 OS USAGE</div>
             <div id="an-list-os" style="display: flex; flex-direction: column; gap: 10px;">
               <div style="color: var(--ink-mute); font-size: 12px;">No OS data recorded.</div>
             </div>
           </div>
 
           <!-- Device Usage -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">📱 DEVICE USAGE</div>
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              📱 DEVICE USAGE</div>
             <div id="an-list-devices" style="display: flex; flex-direction: column; gap: 10px;">
               <div style="color: var(--ink-mute); font-size: 12px;">No device data recorded.</div>
             </div>
@@ -1471,25 +1732,37 @@
         <!-- SECTION 3: TOP SEARCHES, DOWNLOADS & RPM (3 Columns) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
           <!-- Top Searches -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🔍 TOP SEARCHES</div>
-            <div id="an-list-searches" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              🔍 TOP SEARCHES</div>
+            <div id="an-list-searches"
+              style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
               <div style="color: var(--ink-mute); font-size: 12px;">No search queries recorded.</div>
             </div>
           </div>
 
           <!-- Top Downloads -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">📥 TOP DOWNLOADS</div>
-            <div id="an-list-downloads" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              📥 TOP DOWNLOADS</div>
+            <div id="an-list-downloads"
+              style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
               <div style="color: var(--ink-mute); font-size: 12px;">No download events recorded.</div>
             </div>
           </div>
 
           <!-- Requests Per Minute (RPM) -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">📈 REQUESTS PER MINUTE (RPM)</div>
-            <div id="an-list-rpm" style="display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto;">
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              📈 REQUESTS PER MINUTE (RPM)</div>
+            <div id="an-list-rpm"
+              style="display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto;">
               <div style="color: var(--ink-mute); font-size: 12px;">No traffic RPM trend recorded.</div>
             </div>
           </div>
@@ -1498,26 +1771,37 @@
         <!-- SECTION 4: HEATMAP & GEOGRAPHIC DISTRIBUTION (2 Columns) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
           <!-- Heat Map of User Activity -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🗺️ HEAT MAP OF USER ACTIVITY (7 DAYS X 24 HOURS)</div>
-            <div id="an-heatmap-container" style="display: flex; flex-direction: column; gap: 4px; overflow-x: auto; padding: 6px 0;">
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              🗺️ HEAT MAP OF USER ACTIVITY (7 DAYS X 24 HOURS)</div>
+            <div id="an-heatmap-container"
+              style="display: flex; flex-direction: column; gap: 4px; overflow-x: auto; padding: 6px 0;">
               <!-- 24-hour visual heat grid generated dynamically -->
             </div>
           </div>
 
           <!-- Traffic by Country & City -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🌍 TRAFFIC BY COUNTRY &amp; CITY</div>
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              🌍 TRAFFIC BY COUNTRY &amp; CITY</div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
               <div>
-                <div style="font-family: var(--mono); font-size: 10px; color: var(--gold-3); margin-bottom: 6px;">COUNTRIES</div>
-                <div id="an-list-countries" style="display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto;">
+                <div style="font-family: var(--mono); font-size: 10px; color: var(--gold-3); margin-bottom: 6px;">
+                  COUNTRIES</div>
+                <div id="an-list-countries"
+                  style="display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto;">
                   <div style="color: var(--ink-mute); font-size: 11px;">No country data yet.</div>
                 </div>
               </div>
               <div>
-                <div style="font-family: var(--mono); font-size: 10px; color: var(--gold-3); margin-bottom: 6px;">CITIES</div>
-                <div id="an-list-cities" style="display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto;">
+                <div style="font-family: var(--mono); font-size: 10px; color: var(--gold-3); margin-bottom: 6px;">CITIES
+                </div>
+                <div id="an-list-cities"
+                  style="display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto;">
                   <div style="color: var(--ink-mute); font-size: 11px;">No city data yet.</div>
                 </div>
               </div>
@@ -1533,19 +1817,19 @@
   <!-- ==================== REPHRASE MODAL ==================== -->
   <div class="rephrase-modal" id="rephrase-modal">
     <div class="modal-card">
-      
+
       <!-- Loading overlay -->
       <div class="modal-loader" id="modal-loader">
         <div class="spinner-ring"></div>
         <div class="loader-text">Consulting the Rephrase Agent...</div>
         <div class="loader-subtext">TRANSLATING & ADAPTING DIALOGUE</div>
       </div>
-      
+
       <div class="modal-header">
         <h3 id="modal-title">Rephrase Question № —</h3>
         <span class="modal-close" id="modal-close-btn">&times;</span>
       </div>
-      
+
       <div class="modal-body">
         <div class="panel-original">
           <div class="panel-label">Original Seeker Question</div>
@@ -1553,13 +1837,14 @@
             <blockquote id="modal-original-text">Original question text will appear here.</blockquote>
           </div>
         </div>
-        
+
         <div class="panel-rephrased">
           <div class="panel-label">Agent Output (Editable)</div>
-          <textarea id="modal-rephrased-textarea" placeholder="Agent rephrased output will appear here. You can edit this directly before saving."></textarea>
+          <textarea id="modal-rephrased-textarea"
+            placeholder="Agent rephrased output will appear here. You can edit this directly before saving."></textarea>
         </div>
       </div>
-      
+
       <div class="modal-footer">
         <button class="btn-action btn-secondary" id="modal-cancel-btn">Discard</button>
         <button class="btn-action" id="modal-save-btn">Keep &amp; Save</button>
@@ -1570,35 +1855,43 @@
   <!-- ==================== DATABASE PANEL MODAL ==================== -->
   <div class="rephrase-modal" id="db-modal">
     <div class="modal-card" style="max-width: 800px;">
-      
+
       <!-- Database modal loader -->
       <div class="modal-loader" id="db-modal-loader">
         <div class="spinner-ring"></div>
         <div class="loader-text" id="db-loader-text">Performing operations...</div>
         <div class="loader-subtext">PLEASE DO NOT CLOSE THIS DIALOG</div>
       </div>
-      
+
       <div class="modal-header">
         <h3>Bhairava Codex · Database Controls</h3>
         <span class="modal-close" id="db-modal-close-btn">&times;</span>
       </div>
-      
+
       <div class="modal-body" style="grid-template-columns: 1fr; gap: 20px; padding: 24px;">
-        
+
         <!-- Toggle Switch Row -->
-        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(212, 166, 74, 0.05); padding: 16px 20px; border-radius: 6px; border: 1px dashed rgba(212, 166, 74, 0.3);">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; background: rgba(212, 166, 74, 0.05); padding: 16px 20px; border-radius: 6px; border: 1px dashed rgba(212, 166, 74, 0.3);">
           <div>
-            <div style="font-family: var(--display); font-size: 18px; color: var(--gold-3); margin-bottom: 2px;">Active Webapp Connection</div>
-            <div style="font-size: 12px; color: var(--ink-mute);">Switch between the Production and Staging (UAT) Turso instances.</div>
+            <div style="font-family: var(--display); font-size: 18px; color: var(--gold-3); margin-bottom: 2px;">Active
+              Webapp Connection</div>
+            <div style="font-size: 12px; color: var(--ink-mute);">Switch between the Production and Staging (UAT) Turso
+              instances.</div>
           </div>
           <!-- Custom Slider Toggle Switch -->
           <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="font-family: var(--mono); font-size: 11px; font-weight: bold; color: var(--gold-3); cursor: pointer; user-select: none;" id="lbl-db-switch-prod">PROD</span>
+            <span
+              style="font-family: var(--mono); font-size: 11px; font-weight: bold; color: var(--gold-3); cursor: pointer; user-select: none;"
+              id="lbl-db-switch-prod">PROD</span>
             <label class="switch-toggle" title="Toggle Database Environment">
               <input type="checkbox" id="db-switch-toggle">
-              <span class="slider-round" style="position: absolute; cursor: pointer; inset: 0; background-color: rgba(7, 6, 10, 0.8); border: 1px solid rgba(212, 166, 74, 0.4); transition: .4s; border-radius: 34px;"></span>
+              <span class="slider-round"
+                style="position: absolute; cursor: pointer; inset: 0; background-color: rgba(7, 6, 10, 0.8); border: 1px solid rgba(212, 166, 74, 0.4); transition: .4s; border-radius: 34px;"></span>
             </label>
-            <span style="font-family: var(--mono); font-size: 11px; font-weight: bold; color: var(--ink-dim); cursor: pointer; user-select: none;" id="lbl-db-switch-uat">UAT</span>
+            <span
+              style="font-family: var(--mono); font-size: 11px; font-weight: bold; color: var(--ink-dim); cursor: pointer; user-select: none;"
+              id="lbl-db-switch-uat">UAT</span>
           </div>
         </div>
 
@@ -1607,22 +1900,34 @@
           <!-- Prod Database Details Card -->
           <div class="stat-card" style="margin-bottom: 0;">
             <div class="label" style="font-size: 9px;">PRODUCTION DATABASE</div>
-            <div class="value" id="db-prod-count" style="font-size: 28px; margin: 4px 0;">— <span style="font-size: 14px; font-family: var(--serif); font-weight: normal; color: var(--paper-2);">entries</span></div>
-            <div style="font-size: 11px; color: var(--ink-mute); font-family: var(--mono); margin-top: 6px; word-break: break-all;" id="db-prod-url">URL: Loading...</div>
-            <div style="margin-top: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px;">
-              <span id="db-prod-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555;"></span>
+            <div class="value" id="db-prod-count" style="font-size: 28px; margin: 4px 0;">— <span
+                style="font-size: 14px; font-family: var(--serif); font-weight: normal; color: var(--paper-2);">entries</span>
+            </div>
+            <div
+              style="font-size: 11px; color: var(--ink-mute); font-family: var(--mono); margin-top: 6px; word-break: break-all;"
+              id="db-prod-url">URL: Loading...</div>
+            <div
+              style="margin-top: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px;">
+              <span id="db-prod-dot"
+                style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555;"></span>
               <span id="db-prod-status" style="color: var(--ink-mute);">Checking status...</span>
             </div>
             <div class="decorator">तत्व</div>
           </div>
-          
+
           <!-- UAT Database Details Card -->
           <div class="stat-card" style="margin-bottom: 0;">
             <div class="label" style="font-size: 9px;">UAT (STAGING) DATABASE</div>
-            <div class="value" id="db-uat-count" style="font-size: 28px; margin: 4px 0;">— <span style="font-size: 14px; font-family: var(--serif); font-weight: normal; color: var(--paper-2);">entries</span></div>
-            <div style="font-size: 11px; color: var(--ink-mute); font-family: var(--mono); margin-top: 6px; word-break: break-all;" id="db-uat-url">URL: Loading...</div>
-            <div style="margin-top: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px;">
-              <span id="db-uat-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555;"></span>
+            <div class="value" id="db-uat-count" style="font-size: 28px; margin: 4px 0;">— <span
+                style="font-size: 14px; font-family: var(--serif); font-weight: normal; color: var(--paper-2);">entries</span>
+            </div>
+            <div
+              style="font-size: 11px; color: var(--ink-mute); font-family: var(--mono); margin-top: 6px; word-break: break-all;"
+              id="db-uat-url">URL: Loading...</div>
+            <div
+              style="margin-top: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px;">
+              <span id="db-uat-dot"
+                style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555;"></span>
               <span id="db-uat-status" style="color: var(--ink-mute);">Checking status...</span>
             </div>
             <div class="decorator">प्रश्न</div>
@@ -1630,79 +1935,103 @@
         </div>
 
         <!-- Overwrite Warning -->
-        <div style="background: rgba(106, 16, 16, 0.15); border: 1px solid var(--crimson); border-radius: 4px; padding: 12px 16px; font-size: 13px; color: #ffbfbf;">
-          <strong>⚠️ CAUTION:</strong> Actions below modify database content directly. Download backups before proceeding.
+        <div
+          style="background: rgba(106, 16, 16, 0.15); border: 1px solid var(--crimson); border-radius: 4px; padding: 12px 16px; font-size: 13px; color: #ffbfbf;">
+          <strong>⚠️ CAUTION:</strong> Actions below modify database content directly. Download backups before
+          proceeding.
         </div>
 
         <!-- Database Actions Grids -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
           <!-- Prod Database Controls -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 6px; font-weight: bold;">PROD OPERATIONS</div>
-            
-            <button class="btn-action btn-secondary" id="btn-sync-prod-from-uat" style="text-align: left; padding: 10px 14px; font-size: 11px; display: flex; justify-content: space-between; align-items: center;">
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 6px; font-weight: bold;">
+              PROD OPERATIONS</div>
+
+            <button class="btn-action btn-secondary" id="btn-sync-prod-from-uat"
+              style="text-align: left; padding: 10px 14px; font-size: 11px; display: flex; justify-content: space-between; align-items: center;">
               <span>🔄 Sync Prod from UAT</span>
               <span style="font-size: 9px; opacity: 0.7;">OVERWRITES PROD</span>
             </button>
-            
+
             <div style="display: flex; gap: 10px; align-items: center;">
-              <select id="select-download-prod" class="filter-select" style="padding: 6px 10px; font-size: 11px; flex: 1; height: auto;">
+              <select id="select-download-prod" class="filter-select"
+                style="padding: 6px 10px; font-size: 11px; flex: 1; height: auto;">
                 <option value="db">SQLite (.db)</option>
                 <option value="csv">CSV (.csv)</option>
                 <option value="json">JSON (.json)</option>
               </select>
-              <button class="btn-action" id="btn-download-prod" style="padding: 8px 14px; font-size: 10px;">📥 Download Prod</button>
+              <button class="btn-action" id="btn-download-prod" style="padding: 8px 14px; font-size: 10px;">📥 Download
+                Prod</button>
             </div>
-            
-            <button class="btn-action btn-secondary" id="btn-trigger-upload-prod" style="text-align: left; padding: 10px 14px; font-size: 11px;">
+
+            <button class="btn-action btn-secondary" id="btn-trigger-upload-prod"
+              style="text-align: left; padding: 10px 14px; font-size: 11px;">
               📂 Upload &amp; Restore to Prod (.db/.csv/.json)
             </button>
             <input type="file" id="input-upload-prod" accept=".db,.csv,.json" style="display: none;">
           </div>
-          
+
           <!-- UAT Database Controls -->
-          <div style="background: rgba(130, 170, 212, 0.04); border: 1px solid rgba(130, 170, 212, 0.3); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: #82aad4; border-bottom: 1px solid rgba(130, 170, 212, 0.2); padding-bottom: 6px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+          <div
+            style="background: rgba(130, 170, 212, 0.04); border: 1px solid rgba(130, 170, 212, 0.3); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: #82aad4; border-bottom: 1px solid rgba(130, 170, 212, 0.2); padding-bottom: 6px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
               <span>UAT OPERATIONS</span>
-              <span style="font-size: 9px; background: rgba(130,170,212,0.15); padding: 2px 6px; border-radius: 3px; color: #b8d5f3;">STAGING ONLY</span>
+              <span
+                style="font-size: 9px; background: rgba(130,170,212,0.15); padding: 2px 6px; border-radius: 3px; color: #b8d5f3;">STAGING
+                ONLY</span>
             </div>
 
             <!-- UAT Append Mode Toggle -->
-            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(130, 170, 212, 0.08); padding: 8px 12px; border-radius: 4px; border: 1px solid rgba(130, 170, 212, 0.25);">
+            <div
+              style="display: flex; align-items: center; justify-content: space-between; background: rgba(130, 170, 212, 0.08); padding: 8px 12px; border-radius: 4px; border: 1px solid rgba(130, 170, 212, 0.25);">
               <span style="font-size: 11px; color: #b8d5f3; font-family: var(--mono);">Sync / Import Mode:</span>
-              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; color: #ffffff;">
-                <input type="checkbox" id="chk-uat-append-mode" checked style="accent-color: #82aad4; width: 15px; height: 15px;" />
-                <span><strong id="lbl-uat-mode-title">Append Mode</strong> <span style="font-size: 9px; color: #82aad4;" id="lbl-uat-mode-sub">(Preserves existing UAT data)</span></span>
+              <label
+                style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; color: #ffffff;">
+                <input type="checkbox" id="chk-uat-append-mode" checked
+                  style="accent-color: #82aad4; width: 15px; height: 15px;" />
+                <span><strong id="lbl-uat-mode-title">Append Mode</strong> <span style="font-size: 9px; color: #82aad4;"
+                    id="lbl-uat-mode-sub">(Preserves existing UAT data)</span></span>
               </label>
             </div>
-            
-            <button class="btn-action btn-secondary" id="btn-sync-uat-from-prod" style="text-align: left; padding: 10px 14px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; border-color: rgba(130,170,212,0.4);">
+
+            <button class="btn-action btn-secondary" id="btn-sync-uat-from-prod"
+              style="text-align: left; padding: 10px 14px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; border-color: rgba(130,170,212,0.4);">
               <span id="txt-sync-uat-btn">🔄 Sync &amp; Append UAT from Prod</span>
-              <span id="badge-sync-uat-btn" style="font-size: 9px; color: #82aad4; font-family: var(--mono);">PRESERVES UAT</span>
+              <span id="badge-sync-uat-btn" style="font-size: 9px; color: #82aad4; font-family: var(--mono);">PRESERVES
+                UAT</span>
             </button>
-            
+
             <div style="display: flex; gap: 10px; align-items: center;">
-              <select id="select-download-uat" class="filter-select" style="padding: 6px 10px; font-size: 11px; flex: 1; height: auto;">
+              <select id="select-download-uat" class="filter-select"
+                style="padding: 6px 10px; font-size: 11px; flex: 1; height: auto;">
                 <option value="db">SQLite (.db)</option>
                 <option value="csv">CSV (.csv)</option>
                 <option value="json">JSON (.json)</option>
               </select>
-              <button class="btn-action" id="btn-download-uat" style="padding: 8px 14px; font-size: 10px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #fff;">📥 Download UAT</button>
+              <button class="btn-action" id="btn-download-uat"
+                style="padding: 8px 14px; font-size: 10px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #fff;">📥
+                Download UAT</button>
             </div>
-            
-            <button class="btn-action btn-secondary" id="btn-trigger-upload-uat" style="text-align: left; padding: 10px 14px; font-size: 11px; border-color: rgba(130,170,212,0.4);">
+
+            <button class="btn-action btn-secondary" id="btn-trigger-upload-uat"
+              style="text-align: left; padding: 10px 14px; font-size: 11px; border-color: rgba(130,170,212,0.4);">
               <span id="txt-upload-uat-btn">📂 Upload &amp; Append to UAT (.db/.csv/.json)</span>
             </button>
             <input type="file" id="input-upload-uat" accept=".db,.csv,.json" style="display: none;">
 
-            <button class="btn-action" id="btn-open-add-modal-db" style="text-align: left; padding: 10px 14px; font-size: 11px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #ffffff;">
+            <button class="btn-action" id="btn-open-add-modal-db"
+              style="text-align: left; padding: 10px 14px; font-size: 11px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #ffffff;">
               ➕ Create New Entry in UAT Database
             </button>
           </div>
         </div>
 
       </div>
-      
+
       <div class="modal-footer">
         <button class="btn-action btn-secondary" id="db-modal-close-footer">Close</button>
       </div>
@@ -1712,31 +2041,39 @@
   <!-- ==================== ADD NEW ENTRY MODAL (UAT ONLY) ==================== -->
   <div class="rephrase-modal" id="add-modal">
     <div class="modal-card" style="max-width: 750px;">
-      
+
       <!-- Loader overlay -->
       <div class="modal-loader" id="add-modal-loader">
         <div class="spinner-ring"></div>
         <div class="loader-text" id="add-loader-text">Saving new entry to UAT Database...</div>
         <div class="loader-subtext">PLEASE DO NOT CLOSE THIS DIALOG</div>
       </div>
-      
+
       <div class="modal-header">
-        <h3>➕ Add New Q&amp;A Entry <span style="font-size: 11px; color: #82aad4; font-family: var(--mono); margin-left: 8px;">(UAT STAGING ONLY)</span></h3>
+        <h3>➕ Add New Q&amp;A Entry <span
+            style="font-size: 11px; color: #82aad4; font-family: var(--mono); margin-left: 8px;">(UAT STAGING
+            ONLY)</span></h3>
         <span class="modal-close" id="add-modal-close-btn">&times;</span>
       </div>
-      
-      <div class="modal-body" style="grid-template-columns: 1fr; gap: 16px; padding: 20px 24px; max-height: 75vh; overflow-y: auto;">
-        <div style="background: rgba(130, 170, 212, 0.1); border: 1px solid rgba(130, 170, 212, 0.3); border-radius: 4px; padding: 10px 14px; font-size: 12px; color: #b8d5f3;">
+
+      <div class="modal-body"
+        style="grid-template-columns: 1fr; gap: 16px; padding: 20px 24px; max-height: 75vh; overflow-y: auto;">
+        <div
+          style="background: rgba(130, 170, 212, 0.1); border: 1px solid rgba(130, 170, 212, 0.3); border-radius: 4px; padding: 10px 14px; font-size: 12px; color: #b8d5f3;">
           ℹ️ This form creates a new question-answer record directly in the <strong>UAT Staging Database</strong>.
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 2fr 1.5fr; gap: 12px;">
           <div>
-            <label style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Entry №</label>
+            <label
+              style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Entry
+              №</label>
             <input type="text" id="add-num" class="filter-input" placeholder="Auto" style="font-family: var(--mono);" />
           </div>
           <div>
-            <label style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Category / Folio *</label>
+            <label
+              style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Category
+              / Folio *</label>
             <select id="add-category-select" class="filter-select" style="height: 38px;">
               <option value="Mantra & Japa">Folio I · Mantra & Japa</option>
               <option value="Pūjā, Āratī & Rituals">Folio II · Pūjā & Rituals</option>
@@ -1746,25 +2083,32 @@
               <option value="Women & Sādhanā">Folio VI · Women & Sādhanā</option>
               <option value="__other__">+ Custom Category...</option>
             </select>
-            <input type="text" id="add-category-custom" class="filter-input" placeholder="Enter custom category" style="display: none; margin-top: 6px;" />
+            <input type="text" id="add-category-custom" class="filter-input" placeholder="Enter custom category"
+              style="display: none; margin-top: 6px;" />
           </div>
           <div>
-            <label style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Asker Name</label>
+            <label
+              style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Asker
+              Name</label>
             <input type="text" id="add-asker" class="filter-input" placeholder="e.g. Seeker" value="UAT Contributor" />
           </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
           <div>
-            <label style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Date</label>
+            <label
+              style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Date</label>
             <input type="text" id="add-date" class="filter-input" placeholder="DD.MM.YYYY" />
           </div>
           <div>
-            <label style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Time</label>
+            <label
+              style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Time</label>
             <input type="text" id="add-time" class="filter-input" placeholder="HH:MM" />
           </div>
           <div>
-            <label style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Publish Status</label>
+            <label
+              style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Publish
+              Status</label>
             <select id="add-approved" class="filter-select" style="height: 38px;">
               <option value="true">Published (true)</option>
               <option value="false" selected>Unpublished (false)</option>
@@ -1773,29 +2117,42 @@
         </div>
 
         <div>
-          <label style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Original Question *</label>
-          <textarea id="add-question" class="modal-textarea" rows="3" placeholder="Enter original seeker question text..." required></textarea>
+          <label
+            style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Original
+            Question *</label>
+          <textarea id="add-question" class="modal-textarea" rows="3"
+            placeholder="Enter original seeker question text..." required></textarea>
         </div>
 
         <div>
-          <label style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Answer Text</label>
+          <label
+            style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Answer
+            Text</label>
           <textarea id="add-answer" class="modal-textarea" rows="3" placeholder="Enter answer response..."></textarea>
         </div>
 
         <div>
-          <label style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Rephrased Question</label>
-          <textarea id="add-rephrased" class="modal-textarea" rows="2" placeholder="Enter rephrased English question..."></textarea>
+          <label
+            style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Rephrased
+            Question</label>
+          <textarea id="add-rephrased" class="modal-textarea" rows="2"
+            placeholder="Enter rephrased English question..."></textarea>
         </div>
 
         <div>
-          <label style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Follow-up Links (Optional)</label>
-          <input type="text" id="add-followup" class="filter-input" placeholder="Comma-separated entry numbers (e.g. 12, 45)" />
+          <label
+            style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Follow-up
+            Links (Optional)</label>
+          <input type="text" id="add-followup" class="filter-input"
+            placeholder="Comma-separated entry numbers (e.g. 12, 45)" />
         </div>
       </div>
 
       <div class="modal-footer" style="padding: 16px 24px; display: flex; justify-content: flex-end; gap: 10px;">
         <button class="btn-action btn-secondary" id="add-modal-cancel-btn">Cancel</button>
-        <button class="btn-action" id="add-modal-save-btn" style="background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #ffffff;">Save Entry to UAT DB</button>
+        <button class="btn-action" id="add-modal-save-btn"
+          style="background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #ffffff;">Save
+          Entry to UAT DB</button>
       </div>
     </div>
   </div>
@@ -1803,34 +2160,40 @@
   <!-- ==================== GUEST ANALYTICS PANEL MODAL ==================== -->
   <div class="rephrase-modal" id="analytics-modal">
     <div class="modal-card" style="max-width: 1200px; width: 95vw;">
-      
+
       <!-- Analytics modal loader -->
       <div class="modal-loader" id="analytics-modal-loader">
         <div class="spinner-ring"></div>
         <div class="loader-text">Fetching Telemetry &amp; Analytics...</div>
         <div class="loader-subtext">QUERYING TURSO USER ANALYSIS DB</div>
       </div>
-      
-      <div class="modal-header" style="background: linear-gradient(90deg, rgba(212,166,74,0.08) 0%, rgba(7,6,10,0.8) 100%);">
+
+      <div class="modal-header"
+        style="background: linear-gradient(90deg, rgba(212,166,74,0.08) 0%, rgba(7,6,10,0.8) 100%);">
         <div>
-          <h3 style="margin: 0; font-family: var(--display); font-size: 24px; color: var(--gold-3);">📊 Bhairava Codex · Guest Analytics Intelligence</h3>
-          <div style="font-size: 11px; color: var(--ink-mute); font-family: var(--mono); margin-top: 4px;">Real-time Telemetry &amp; Audience Insights from Turso Database</div>
+          <h3 style="margin: 0; font-family: var(--display); font-size: 24px; color: var(--gold-3);">📊 Bhairava Codex ·
+            Guest Analytics Intelligence</h3>
+          <div style="font-size: 11px; color: var(--ink-mute); font-family: var(--mono); margin-top: 4px;">Real-time
+            Telemetry &amp; Audience Insights from Turso Database</div>
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
-          <button class="btn-action btn-secondary" id="btn-refresh-analytics" style="padding: 6px 12px; font-size: 10px;">🔄 Refresh Data</button>
+          <button class="btn-action btn-secondary" id="btn-refresh-analytics"
+            style="padding: 6px 12px; font-size: 10px;">🔄 Refresh Data</button>
           <span class="modal-close" id="analytics-modal-close-btn">&times;</span>
         </div>
       </div>
-      
-      <div class="modal-body" style="grid-template-columns: 1fr; gap: 24px; padding: 24px; max-height: 80vh; overflow-y: auto;">
-        
+
+      <div class="modal-body"
+        style="grid-template-columns: 1fr; gap: 24px; padding: 24px; max-height: 80vh; overflow-y: auto;">
+
         <!-- TOP KPI CARDS (6 Metrics) -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px;">
           <!-- 1. Active Users -->
           <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
             <div class="label" style="font-size: 9px; color: #55ff55;">⚡ ACTIVE USERS (5M)</div>
             <div class="value" id="an-active-users" style="font-size: 30px; color: #77ff77; margin: 4px 0;">—</div>
-            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Live concurrent sessions</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Live concurrent sessions
+            </div>
           </div>
           <!-- 2. Daily Users -->
           <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
@@ -1841,7 +2204,8 @@
           <!-- 3. Monthly Users -->
           <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
             <div class="label" style="font-size: 9px;">🗓️ MONTHLY USERS (MAU)</div>
-            <div class="value" id="an-monthly-users" style="font-size: 30px; color: var(--paper); margin: 4px 0;">—</div>
+            <div class="value" id="an-monthly-users" style="font-size: 30px; color: var(--paper); margin: 4px 0;">—
+            </div>
             <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);">Unique visitors in 30d</div>
           </div>
           <!-- 4. Avg Session Time -->
@@ -1854,7 +2218,8 @@
           <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
             <div class="label" style="font-size: 9px;">⚠️ ERROR RATE</div>
             <div class="value" id="an-error-rate" style="font-size: 30px; color: #ff9999; margin: 4px 0;">—</div>
-            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);" id="an-error-subtext">0 errors out of 0 requests</div>
+            <div style="font-size: 10px; color: var(--ink-mute); font-family: var(--mono);" id="an-error-subtext">0
+              errors out of 0 requests</div>
           </div>
           <!-- 6. Avg Response Time -->
           <div class="stat-card" style="margin:0; background: rgba(15, 13, 22, 0.8);">
@@ -1867,37 +2232,46 @@
         <!-- SECTION 1: PAGES & SLOW APIS (2 Columns) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
           <!-- Most Visited Pages -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between;">
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between;">
               <span>📄 MOST VISITED PAGES</span>
               <span style="color: var(--ink-dim); font-weight: normal;">URL &amp; PAGE VIEWS</span>
             </div>
             <div style="max-height: 220px; overflow-y: auto;">
               <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
                 <thead>
-                  <tr style="color: var(--gold-3); font-family: var(--mono); border-bottom: 1px solid rgba(212,166,74,0.1);">
+                  <tr
+                    style="color: var(--gold-3); font-family: var(--mono); border-bottom: 1px solid rgba(212,166,74,0.1);">
                     <th style="padding: 6px;">Page Title / URL</th>
                     <th style="padding: 6px; text-align: right;">Views</th>
                     <th style="padding: 6px; text-align: right;">Avg Time</th>
                   </tr>
                 </thead>
                 <tbody id="an-table-top-pages">
-                  <tr><td colspan="3" style="color: var(--ink-mute); text-align: center; padding: 16px;">No pageview data recorded yet.</td></tr>
+                  <tr>
+                    <td colspan="3" style="color: var(--ink-mute); text-align: center; padding: 16px;">No pageview data
+                      recorded yet.</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
           </div>
 
           <!-- Slow APIs -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between;">
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between;">
               <span>🐢 SLOW APIS &amp; ENDPOINTS</span>
               <span style="color: var(--ink-dim); font-weight: normal;">LATENCY (MS)</span>
             </div>
             <div style="max-height: 220px; overflow-y: auto;">
               <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
                 <thead>
-                  <tr style="color: var(--gold-3); font-family: var(--mono); border-bottom: 1px solid rgba(212,166,74,0.1);">
+                  <tr
+                    style="color: var(--gold-3); font-family: var(--mono); border-bottom: 1px solid rgba(212,166,74,0.1);">
                     <th style="padding: 6px;">API Endpoint</th>
                     <th style="padding: 6px; text-align: center;">Calls</th>
                     <th style="padding: 6px; text-align: right;">Avg Latency</th>
@@ -1905,7 +2279,10 @@
                   </tr>
                 </thead>
                 <tbody id="an-table-slow-apis">
-                  <tr><td colspan="4" style="color: var(--ink-mute); text-align: center; padding: 16px;">No API telemetry data recorded yet.</td></tr>
+                  <tr>
+                    <td colspan="4" style="color: var(--ink-mute); text-align: center; padding: 16px;">No API telemetry
+                      data recorded yet.</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -1915,24 +2292,33 @@
         <!-- SECTION 2: BROWSER, OS & DEVICE BREAKDOWN (3 Columns) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
           <!-- Browser Usage -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🌐 BROWSER USAGE</div>
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              🌐 BROWSER USAGE</div>
             <div id="an-list-browsers" style="display: flex; flex-direction: column; gap: 10px;">
               <div style="color: var(--ink-mute); font-size: 12px;">No browser data recorded.</div>
             </div>
           </div>
 
           <!-- OS Usage -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">💻 OS USAGE</div>
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              💻 OS USAGE</div>
             <div id="an-list-os" style="display: flex; flex-direction: column; gap: 10px;">
               <div style="color: var(--ink-mute); font-size: 12px;">No OS data recorded.</div>
             </div>
           </div>
 
           <!-- Device Usage -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">📱 DEVICE USAGE</div>
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              📱 DEVICE USAGE</div>
             <div id="an-list-devices" style="display: flex; flex-direction: column; gap: 10px;">
               <div style="color: var(--ink-mute); font-size: 12px;">No device data recorded.</div>
             </div>
@@ -1942,25 +2328,37 @@
         <!-- SECTION 3: TOP SEARCHES, DOWNLOADS & RPM (3 Columns) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
           <!-- Top Searches -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🔍 TOP SEARCHES</div>
-            <div id="an-list-searches" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              🔍 TOP SEARCHES</div>
+            <div id="an-list-searches"
+              style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
               <div style="color: var(--ink-mute); font-size: 12px;">No search queries recorded.</div>
             </div>
           </div>
 
           <!-- Top Downloads -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">📥 TOP DOWNLOADS</div>
-            <div id="an-list-downloads" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              📥 TOP DOWNLOADS</div>
+            <div id="an-list-downloads"
+              style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
               <div style="color: var(--ink-mute); font-size: 12px;">No download events recorded.</div>
             </div>
           </div>
 
           <!-- Requests Per Minute (RPM) -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">📈 REQUESTS PER MINUTE (RPM)</div>
-            <div id="an-list-rpm" style="display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto;">
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              📈 REQUESTS PER MINUTE (RPM)</div>
+            <div id="an-list-rpm"
+              style="display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto;">
               <div style="color: var(--ink-mute); font-size: 12px;">No traffic RPM trend recorded.</div>
             </div>
           </div>
@@ -1969,26 +2367,37 @@
         <!-- SECTION 4: HEATMAP & GEOGRAPHIC DISTRIBUTION (2 Columns) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
           <!-- Heat Map of User Activity -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🗺️ HEAT MAP OF USER ACTIVITY (7 DAYS X 24 HOURS)</div>
-            <div id="an-heatmap-container" style="display: flex; flex-direction: column; gap: 4px; overflow-x: auto; padding: 6px 0;">
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              🗺️ HEAT MAP OF USER ACTIVITY (7 DAYS X 24 HOURS)</div>
+            <div id="an-heatmap-container"
+              style="display: flex; flex-direction: column; gap: 4px; overflow-x: auto; padding: 6px 0;">
               <!-- 24-hour visual heat grid generated dynamically -->
             </div>
           </div>
 
           <!-- Traffic by Country & City -->
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">🌍 TRAFFIC BY COUNTRY &amp; CITY</div>
+          <div
+            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 166, 74, 0.15); border-radius: 6px; padding: 16px;">
+            <div
+              style="font-family: var(--mono); font-size: 11px; color: var(--gold); border-bottom: 1px solid rgba(212, 166, 74, 0.15); padding-bottom: 8px; font-weight: bold; margin-bottom: 12px;">
+              🌍 TRAFFIC BY COUNTRY &amp; CITY</div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
               <div>
-                <div style="font-family: var(--mono); font-size: 10px; color: var(--gold-3); margin-bottom: 6px;">COUNTRIES</div>
-                <div id="an-list-countries" style="display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto;">
+                <div style="font-family: var(--mono); font-size: 10px; color: var(--gold-3); margin-bottom: 6px;">
+                  COUNTRIES</div>
+                <div id="an-list-countries"
+                  style="display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto;">
                   <div style="color: var(--ink-mute); font-size: 11px;">No country data yet.</div>
                 </div>
               </div>
               <div>
-                <div style="font-family: var(--mono); font-size: 10px; color: var(--gold-3); margin-bottom: 6px;">CITIES</div>
-                <div id="an-list-cities" style="display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto;">
+                <div style="font-family: var(--mono); font-size: 10px; color: var(--gold-3); margin-bottom: 6px;">CITIES
+                </div>
+                <div id="an-list-cities"
+                  style="display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto;">
                   <div style="color: var(--ink-mute); font-size: 11px;">No city data yet.</div>
                 </div>
               </div>
@@ -1997,7 +2406,7 @@
         </div>
 
       </div>
-      
+
       <div class="modal-footer">
         <button class="btn-action btn-secondary" id="analytics-modal-close-footer">Close Panel</button>
       </div>
@@ -2036,13 +2445,8 @@
         <!-- Search to add -->
         <div class="link-search-section">
           <div class="link-section-label">Search &amp; Add Follow-up</div>
-          <input
-            type="text"
-            id="link-search-input"
-            class="link-search-box"
-            placeholder="Type a question number or keywords…"
-            oninput="renderLinkSearchResults(this.value)"
-          />
+          <input type="text" id="link-search-input" class="link-search-box"
+            placeholder="Type a question number or keywords…" oninput="renderLinkSearchResults(this.value)" />
           <div id="link-search-results" class="link-search-results"></div>
         </div>
       </div>
@@ -2055,7 +2459,7 @@
   </div>
 
   <!-- ==================== DASHBOARD LOGIC ==================== -->
-    <script>
+  <script>
     // Main Navigation Tabs Switching Logic
     function switchMainTab(tabKey) {
       document.querySelectorAll('.main-tab-btn').forEach(btn => btn.classList.remove('is-active'));
@@ -2097,7 +2501,7 @@
 
     function handleLoginSubmit(event) {
       event.preventDefault();
-      
+
       const username = usernameInput.value.trim();
       const password = passwordInput.value;
 
@@ -2114,11 +2518,11 @@
         void loginCard.offsetWidth; // Trigger reflow to restart animation
         loginCard.classList.add('shake');
         loginErrorMsg.classList.add('show');
-        
+
         // Focus password input and clear it
         passwordInput.value = '';
         passwordInput.focus();
-        
+
         // Remove shake class after animation finishes
         setTimeout(() => {
           loginCard.classList.remove('shake');
@@ -2138,7 +2542,7 @@
     const paginationInfo = document.getElementById('pagination-info');
     const btnPrev = document.getElementById('btn-prev');
     const btnNext = document.getElementById('btn-next');
-    
+
     // Modal Elements
     const rephraseModal = document.getElementById('rephrase-modal');
     const modalTitle = document.getElementById('modal-title');
@@ -2148,7 +2552,7 @@
     const modalCloseBtn = document.getElementById('modal-close-btn');
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
     const modalSaveBtn = document.getElementById('modal-save-btn');
-    
+
     // Toast Element
     const toast = document.getElementById('toast-notification');
     const toastMessage = document.getElementById('toast-message');
@@ -2183,10 +2587,10 @@
         const response = await apiFetch('/api/qna');
         if (!response.ok) throw new Error('Failed to load Q&A data');
         qnaData = await response.json();
-        
+
         // Sort entries by number descending
         qnaData.sort((a, b) => parseInt(b.num) - parseInt(a.num));
-        
+
         updateStats();
         applyFilters();
       } catch (err) {
@@ -2201,7 +2605,7 @@
       const total = qnaData.length;
       const rephrased = qnaData.filter(d => d.rephrased && d.rephrased.trim() !== '').length;
       const pending = total - rephrased;
-      
+
       statsTotal.textContent = total;
       statsRephrased.textContent = rephrased;
       statsPending.textContent = pending;
@@ -2216,7 +2620,7 @@
 
       filteredData = qnaData.filter(d => {
         // Search filter
-        const matchesSearch = !searchVal || 
+        const matchesSearch = !searchVal ||
           d.num.toString().includes(searchVal) ||
           d.question.toLowerCase().includes(searchVal) ||
           (d.rephrased && d.rephrased.toLowerCase().includes(searchVal)) ||
@@ -2347,11 +2751,11 @@
       modalTitle.textContent = `Rephrase Question № ${selectedEntry.num}`;
       modalOriginalText.textContent = selectedEntry.question;
       modalRephrasedTextarea.value = selectedEntry.rephrased || '';
-      
+
       // Open modal & activate loader
       rephraseModal.classList.add('is-open');
       modalLoader.classList.add('is-active');
-      
+
       try {
         const response = await fetch('/api/rephrase', {
           method: 'POST',
@@ -2360,13 +2764,13 @@
           },
           body: JSON.stringify({ question: selectedEntry.question })
         });
-        
+
         const data = await response.json();
-        
+
         if (!response.ok) {
           throw new Error(data.error || 'Server error during rephrasing');
         }
-        
+
         // Populate and disable loader
         modalRephrasedTextarea.value = data.rephrased;
         modalLoader.classList.remove('is-active');
@@ -2384,7 +2788,7 @@
     // Save rephrased question to CSV disk database
     async function saveRephrase() {
       if (!selectedEntry) return;
-      
+
       const newText = modalRephrasedTextarea.value.trim();
       if (!newText) {
         showToast('Rephrased question cannot be empty', 'error');
@@ -2405,18 +2809,18 @@
             rephrased: newText
           })
         });
-        
+
         const data = await response.json();
-        
+
         if (!response.ok) {
           throw new Error(data.error || 'Failed to save rephrased question');
         }
-        
+
         // Update local object & refresh UI
         selectedEntry.rephrased = newText;
         updateStats();
         renderTable();
-        
+
         // Close modal
         const savedNum = selectedEntry.num;
         closeModal();
@@ -2519,9 +2923,9 @@
         // Update local state
         entry.category = selectedVal;
         selectEl.setAttribute('data-prev', selectedVal);
-        
+
         showToast(`Category updated successfully to "${selectedVal}"!`, 'success');
-        
+
         // Re-render table to rebuild dynamic categories dropdown options
         renderTable();
       } catch (err) {
@@ -2582,7 +2986,7 @@
 
     // HTML Escaper
     function escapeHTML(str) {
-      return str.replace(/[&<>'"]/g, 
+      return str.replace(/[&<>'"]/g,
         tag => ({
           '&': '&amp;',
           '<': '&lt;',
@@ -2711,7 +3115,7 @@
       toastMessage.textContent = message;
       toast.className = `toast show ${type}`;
       toast.querySelector('.icon').textContent = type === 'success' ? 'ॐ' : '⚠';
-      
+
       setTimeout(() => {
         toast.classList.remove('show');
       }, 4000);
@@ -2722,14 +3126,14 @@
     publishFilter.addEventListener('change', applyFilters);
     categoryFilter.addEventListener('change', applyFilters);
     statusFilter.addEventListener('change', applyFilters);
-    
+
     btnPrev.addEventListener('click', () => {
       if (currentPage > 1) {
         currentPage--;
         renderTable();
       }
     });
-    
+
     btnNext.addEventListener('click', () => {
       const maxPages = Math.ceil(filteredData.length / pageSize);
       if (currentPage < maxPages) {
@@ -2741,7 +3145,7 @@
     modalCloseBtn.addEventListener('click', closeModal);
     modalCancelBtn.addEventListener('click', closeModal);
     modalSaveBtn.addEventListener('click', saveRephrase);
-    
+
     rephraseModal.addEventListener('click', e => {
       if (e.target === rephraseModal) closeModal();
     });
@@ -2770,23 +3174,23 @@
     const dbModalCloseFooter = document.getElementById('db-modal-close-footer');
     const dbModalLoader = document.getElementById('db-modal-loader');
     const dbLoaderText = document.getElementById('db-loader-text');
-    
+
     const dbSwitchToggle = document.getElementById('db-switch-toggle');
     const lblDbSwitchProd = document.getElementById('lbl-db-switch-prod');
     const lblDbSwitchUat = document.getElementById('lbl-db-switch-uat');
     const headerDbBadge = document.getElementById('header-db-badge');
-    
+
     // Status elements
     const dbProdCount = document.getElementById('db-prod-count');
     const dbProdUrl = document.getElementById('db-prod-url');
     const dbProdDot = document.getElementById('db-prod-dot');
     const dbProdStatus = document.getElementById('db-prod-status');
-    
+
     const dbUatCount = document.getElementById('db-uat-count');
     const dbUatUrl = document.getElementById('db-uat-url');
     const dbUatDot = document.getElementById('db-uat-dot');
     const dbUatStatus = document.getElementById('db-uat-status');
-    
+
     // Action Buttons
     const btnSyncProdFromUat = document.getElementById('btn-sync-prod-from-uat');
     const btnSyncUatFromProd = document.getElementById('btn-sync-uat-from-prod');
@@ -2794,7 +3198,7 @@
     const btnDownloadUat = document.getElementById('btn-download-uat');
     const selectDownloadProd = document.getElementById('select-download-prod');
     const selectDownloadUat = document.getElementById('select-download-uat');
-    
+
     const btnTriggerUploadProd = document.getElementById('btn-trigger-upload-prod');
     const inputUploadProd = document.getElementById('input-upload-prod');
     const btnTriggerUploadUat = document.getElementById('btn-trigger-upload-uat');
@@ -2806,19 +3210,19 @@
         openDbModal();
       });
     }
-    
+
     dbModalCloseBtn.addEventListener('click', closeDbModal);
     dbModalCloseFooter.addEventListener('click', closeDbModal);
-    
+
     dbModal.addEventListener('click', e => {
       if (e.target === dbModal) closeDbModal();
     });
-    
+
     function openDbModal() {
       dbModal.classList.add('is-open');
       loadDbStatus();
     }
-    
+
     function closeDbModal() {
       dbModal.classList.remove('is-open');
       dbModalLoader.classList.remove('is-active');
@@ -2830,15 +3234,15 @@
         const response = await apiFetch('/api/db/status');
         if (!response.ok) throw new Error('Failed to load database status.');
         const data = await response.json();
-        
+
         // Update URL texts
         dbProdUrl.textContent = `URL: ${data.prod_url || 'Not configured'}`;
         dbUatUrl.textContent = `URL: ${data.uat_url || 'Not configured'}`;
-        
+
         // Update Count values
         dbProdCount.innerHTML = `${data.prod_count} <span style="font-size: 14px; font-family: var(--serif); font-weight: normal; color: var(--paper-2);">entries</span>`;
         dbUatCount.innerHTML = `${data.uat_count} <span style="font-size: 14px; font-family: var(--serif); font-weight: normal; color: var(--paper-2);">entries</span>`;
-        
+
         // Update status indicators (dots & label)
         if (data.prod_status === 'Connected') {
           dbProdDot.style.background = '#d4a64a'; // gold
@@ -2849,7 +3253,7 @@
           dbProdStatus.textContent = data.prod_status;
           dbProdStatus.style.color = '#ff9999';
         }
-        
+
         if (data.uat_status === 'Connected') {
           dbUatDot.style.background = '#82aad4'; // slate-blue / cyan
           dbUatStatus.textContent = 'Connected';
@@ -2859,12 +3263,12 @@
           dbUatStatus.textContent = data.uat_status;
           dbUatStatus.style.color = '#ff9999';
         }
-        
+
         // Update Slider Toggle active state (local preference or backend preference)
         const isUat = getActiveDb() === 'uat';
         dbSwitchToggle.checked = isUat;
         updateSliderLabels(isUat);
-        
+
         // Update Header Badge
         headerDbBadge.textContent = `DB: ${isUat ? 'UAT' : 'PROD'}`;
         if (isUat) {
@@ -2876,13 +3280,13 @@
           headerDbBadge.style.borderColor = 'var(--gold)';
           headerDbBadge.style.background = 'rgba(212,166,74,0.1)';
         }
-        
+
       } catch (err) {
         console.error(err);
         showToast('Error retrieving database status: ' + err.message, 'error');
       }
     }
-    
+
     function updateSliderLabels(isUat) {
       if (isUat) {
         lblDbSwitchUat.style.color = '#82aad4';
@@ -2912,32 +3316,32 @@
 
     dbSwitchToggle.addEventListener('change', async (e) => {
       if (dbSwitchToggle.disabled) return;
-      
+
       const targetDb = dbSwitchToggle.checked ? 'uat' : 'prod';
       localStorage.setItem('bhairava_active_db', targetDb);
 
       dbLoaderText.textContent = `Switching database connection to ${targetDb.toUpperCase()}...`;
       dbModalLoader.classList.add('is-active');
       dbSwitchToggle.disabled = true;
-      
+
       try {
         const response = await apiFetch('/api/db/switch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ db: targetDb })
         });
-        
+
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Switch failed.');
-        
+
         showToast(`Successfully switched database to ${targetDb.toUpperCase()}`, 'success');
         updateSliderLabels(targetDb === 'uat');
-        
+
         // Reload all data list from backend based on the new database
         await loadData();
         await loadDbStatus();
         updateUatUIState();
-        
+
       } catch (err) {
         console.error(err);
         showToast('Error switching database: ' + err.message, 'error');
@@ -2998,13 +3402,13 @@
         showToast('Adding entries is only supported in UAT mode. Please switch to UAT first.', 'error');
         return;
       }
-      
+
       // Calculate next recommended entry num
       const nums = qnaData.map(d => parseInt(d.num)).filter(n => !isNaN(n));
       const nextNum = nums.length > 0 ? (Math.max(...nums) + 1) : 1;
-      
+
       document.getElementById('add-num').value = nextNum;
-      
+
       // Auto-fill date & time defaults
       const now = new Date();
       const dd = String(now.getDate()).padStart(2, '0');
@@ -3012,17 +3416,17 @@
       const yyyy = now.getFullYear();
       const hh = String(now.getHours()).padStart(2, '0');
       const min = String(now.getMinutes()).padStart(2, '0');
-      
+
       document.getElementById('add-date').value = `${dd}.${mm}.${yyyy}`;
       document.getElementById('add-time').value = `${hh}:${min}`;
-      
+
       document.getElementById('add-asker').value = 'UAT Contributor';
       document.getElementById('add-question').value = '';
       document.getElementById('add-answer').value = '';
       document.getElementById('add-rephrased').value = '';
       document.getElementById('add-followup').value = '';
       document.getElementById('add-approved').value = 'false';
-      
+
       addCategorySelect.value = 'Mantra & Japa';
       addCategoryCustom.style.display = 'none';
       addCategoryCustom.value = '';
@@ -3141,30 +3545,30 @@
     async function triggerDbSync(sourceDb, targetDb) {
       const isUat = targetDb === 'uat';
       const isAppend = isUat && chkUatAppendMode && chkUatAppendMode.checked;
-      
-      const actionText = isAppend 
-        ? `append entries from ${sourceDb.toUpperCase()} into ${targetDb.toUpperCase()} without wiping existing data` 
+
+      const actionText = isAppend
+        ? `append entries from ${sourceDb.toUpperCase()} into ${targetDb.toUpperCase()} without wiping existing data`
         : `completely erase all current Q&A entries in ${targetDb.toUpperCase()} and overwrite them with a copy of ${sourceDb.toUpperCase()} database`;
 
       const confirmed = confirm(`⚠️ Confirm Database Sync:\n\nAre you sure you want to ${actionText}?`);
       if (!confirmed) return;
-      
+
       const modeVal = isAppend ? 'append' : 'overwrite';
       dbLoaderText.textContent = `${isAppend ? 'Appending' : 'Syncing'} ${targetDb.toUpperCase()} database from ${sourceDb.toUpperCase()}...`;
       dbModalLoader.classList.add('is-active');
-      
+
       try {
         const response = await fetch('/api/db/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ source: sourceDb, target: targetDb, mode: modeVal })
         });
-        
+
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Sync failed.');
-        
+
         showToast(data.message, 'success');
-        
+
         // Reload statistics and entries list
         await loadData();
         await loadDbStatus();
@@ -3202,12 +3606,12 @@
     function handleFileUpload(inputEl, dbChoice) {
       const file = inputEl.files[0];
       if (!file) return;
-      
+
       const isUat = dbChoice === 'uat';
       const isAppend = isUat && chkUatAppendMode && chkUatAppendMode.checked;
-      
-      const actionText = isAppend 
-        ? `upload "${file.name}" and append its entries into ${dbChoice.toUpperCase()} (preserving existing data)` 
+
+      const actionText = isAppend
+        ? `upload "${file.name}" and append its entries into ${dbChoice.toUpperCase()} (preserving existing data)`
         : `upload "${file.name}" to ${dbChoice.toUpperCase()} database (this will completely OVERWRITE existing data)`;
 
       const confirmed = confirm(`⚠️ Confirm File Upload:\n\nAre you sure you want to ${actionText}?`);
@@ -3215,14 +3619,14 @@
         inputEl.value = '';
         return;
       }
-      
+
       const modeVal = isAppend ? 'append' : 'overwrite';
       dbLoaderText.textContent = `${isAppend ? 'Uploading and appending' : 'Uploading and restoring'} database for ${dbChoice.toUpperCase()}...`;
       dbModalLoader.classList.add('is-active');
-      
+
       const reader = new FileReader();
       const ext = file.name.split('.').pop().toLowerCase();
-      
+
       reader.onload = async (e) => {
         let content = '';
         if (ext === 'db') {
@@ -3236,7 +3640,7 @@
         } else {
           content = e.target.result;
         }
-        
+
         try {
           const response = await fetch('/api/db/upload', {
             method: 'POST',
@@ -3248,13 +3652,13 @@
               mode: modeVal
             })
           });
-          
+
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || 'Upload restoration failed.');
-          
+
           showToast(data.message, 'success');
           inputEl.value = '';
-          
+
           await loadData();
           await loadDbStatus();
         } catch (err) {
@@ -3265,7 +3669,7 @@
           dbModalLoader.classList.remove('is-active');
         }
       };
-      
+
       if (ext === 'db') {
         reader.readAsArrayBuffer(file);
       } else {
@@ -3526,4 +3930,5 @@
     switchMainTab(sessionStorage.getItem('bhairava_active_main_tab') || 'rephraser');
   </script>
 </body>
+
 </html>

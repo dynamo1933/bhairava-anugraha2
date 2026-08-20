@@ -49,10 +49,8 @@ def get_db_config(active_db_override=None):
                 with open(path, "r", encoding="utf-8") as f:
                     saved = json.load(f)
                     config["active_db"] = saved.get("active_db", "prod")
-                    if saved.get("prod_url"): config["prod_url"] = saved["prod_url"]
-                    if saved.get("prod_token"): config["prod_token"] = saved["prod_token"]
-                    if saved.get("uat_url"): config["uat_url"] = saved["uat_url"]
-                    if saved.get("uat_token"): config["uat_token"] = saved["uat_token"]
+                    if saved.get("prod_url") and not os.environ.get("TURSO_DB_URL"): config["prod_url"] = saved["prod_url"]
+                    if saved.get("uat_url") and not os.environ.get("TURSO_UAT_DB_URL"): config["uat_url"] = saved["uat_url"]
                 break
             except Exception:
                 pass
@@ -68,10 +66,13 @@ def get_db_config(active_db_override=None):
     return config
 
 def save_db_config(config):
+    clean_cfg = {
+        "active_db": config.get("active_db", "prod")
+    }
     for path in (DB_CONFIG_PATH, TMP_DB_CONFIG_PATH):
         try:
             with open(path, "w", encoding="utf-8") as f:
-                json.dump(config, f, indent=2)
+                json.dump(clean_cfg, f, indent=2)
             break
         except Exception as e:
             print(f"Warning: Could not save db config to {path}: {e}", file=sys.stderr)

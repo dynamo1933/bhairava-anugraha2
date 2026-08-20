@@ -4,6 +4,24 @@ import os
 import sys
 import requests
 
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+ENV_PATH = os.path.join(ROOT_DIR, ".env")
+
+def load_env():
+    if os.path.exists(ENV_PATH):
+        try:
+            with open(ENV_PATH, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        k, v = line.split('=', 1)
+                        v = v.strip().strip("'").strip('"')
+                        os.environ[k.strip()] = v
+        except Exception:
+            pass
+
+load_env()
+
 rephrase_prompt = PromptTemplate(
     input_variables=["question"],
     template="""You are a spiritual assistant specialized in traditional Indian scriptures, Hinduism, and Guru-Shishya dialogue.
