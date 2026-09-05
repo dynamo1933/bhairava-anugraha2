@@ -119,6 +119,25 @@ def execute_turso_statements(statements, db_url=None, auth_token=None, active_db
             
     return results
 
+def ensure_schema_columns(db_url=None, auth_token=None, active_db=None):
+    """
+    Ensures that 'tags' and 'links' columns exist in the qna table.
+    """
+    try:
+        stmt = [{"type": "execute", "stmt": {"sql": "PRAGMA table_info(qna);"}} ]
+        res = execute_turso_statements(stmt, db_url=db_url, auth_token=auth_token, active_db=active_db)
+        if res and res[0].get("type") == "ok":
+            cols = [r[1].get("value") for r in res[0]["response"]["result"]["rows"] if len(r) > 1]
+            stmts = []
+            if "tags" not in cols:
+                stmts.append({"type": "execute", "stmt": {"sql": "ALTER TABLE qna ADD COLUMN tags TEXT;"}})
+            if "links" not in cols:
+                stmts.append({"type": "execute", "stmt": {"sql": "ALTER TABLE qna ADD COLUMN links TEXT;"}})
+            if stmts:
+                execute_turso_statements(stmts, db_url=db_url, auth_token=auth_token, active_db=active_db)
+    except Exception as e:
+        print(f"Warning: Could not ensure schema columns: {e}", file=sys.stderr)
+
 def get_all_qna(active_db=None):
     """
     Retrieves all Q&A entries.
@@ -126,7 +145,7 @@ def get_all_qna(active_db=None):
     """
     if is_turso_configured(active_db=active_db):
         # Query Turso database
-        sql = "SELECT num, category, asker, date, time, question, answer, rephrased, approved, followup FROM qna ORDER BY num;"
+        sql = "SELECT num, category, asker, date, time, tags, question, answer, rephrased, approved, followup, links FROM qna ORDER BY num;"
         stmt = {
             "type": "execute",
             "stmt": {
@@ -189,7 +208,7 @@ def get_all_qna(active_db=None):
         entries.append(entry)
     return entries
 
-def update_qna_entry(num, rephrased_text=None, approved_val=None, category_val=None, question_val=None, answer_val=None, followup_val=None, active_db=None):
+def update_qna_entry(num, rephrased_text=None, approved_val=None, category_val=None, question_val=None, answer_val=None, followup_val=None, tags_val=None, links_val=None, active_db=None):
     """
     Updates a single Q&A entry by num.
     Falls back to CSV if Turso is not configured.
@@ -216,6 +235,12 @@ def update_qna_entry(num, rephrased_text=None, approved_val=None, category_val=N
         if followup_val is not None:
             sets.append("followup = ?")
             args.append({"type": "text", "value": str(followup_val).strip()})
+        if tags_val is not None:
+            sets.append("tags = ?")
+            args.append({"type": "text", "value": str(tags_val).strip()})
+        if links_val is not None:
+            sets.append("links = ?")
+            args.append({"type": "text", "value": str(links_val).strip()})
             
         if not sets:
             return True
@@ -332,16 +357,18 @@ def add_qna_entry(entry_data, active_db=None):
     now = datetime.datetime.now()
     date_str = str(entry_data.get('date', '')).strip() or now.strftime("%d.%m.%Y")
     time_str = str(entry_data.get('time', '')).strip() or now.strftime("%H:%M")
+    tags = str(entry_data.get('tags', '')).strip()
     question = str(entry_data.get('question', '')).strip()
     answer = str(entry_data.get('answer', '')).strip()
     rephrased = str(entry_data.get('rephrased', '')).strip()
     approved = str(entry_data.get('approved', 'false')).strip().lower()
     followup = str(entry_data.get('followup', '')).strip()
+    links = str(entry_data.get('links', '')).strip()
     
     if is_turso_configured(active_db=active_db):
         insert_sql = """
-        INSERT OR REPLACE INTO qna (num, category, asker, date, time, question, answer, rephrased, approved, followup)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        INSERT OR REPLACE INTO qna (num, category, asker, date, time, tags, question, answer, rephrased, approved, followup, links)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """
         args = [
             {"type": "integer", "value": num},
@@ -349,11 +376,13 @@ def add_qna_entry(entry_data, active_db=None):
             {"type": "text", "value": asker},
             {"type": "text", "value": date_str},
             {"type": "text", "value": time_str},
+            {"type": "text", "value": tags},
             {"type": "text", "value": question},
             {"type": "text", "value": answer},
             {"type": "text", "value": rephrased},
             {"type": "text", "value": approved},
-            {"type": "text", "value": followup}
+            {"type": "text", "value": followup},
+            {"type": "text", "value": links}
         ]
         
         stmt = {
@@ -394,7 +423,7 @@ def add_qna_entry(entry_data, active_db=None):
     return {"success": True, "num": num}
 
 def get_all_qna_from_db(db_url, auth_token):
-    sql = "SELECT num, category, asker, date, time, question, answer, rephrased, approved, followup FROM qna ORDER BY num;"
+    sql = "SELECT num, category, asker, date, time, tags, question, answer, rephrased, approved, followup, links FROM qna ORDER BY num;"
     stmt = {
         "type": "execute",
         "stmt": {
@@ -443,19 +472,21 @@ def sync_databases(source_db_name, target_db_name, mode="overwrite"):
         asker TEXT,
         date TEXT,
         time TEXT,
+        tags TEXT,
         question TEXT,
         answer TEXT,
         rephrased TEXT,
         approved TEXT,
-        followup TEXT
+        followup TEXT,
+        links TEXT
     );
     """
     execute_turso_statements([{"type": "execute", "stmt": {"sql": create_table_sql}}], db_url=tgt_url, auth_token=tgt_token)
     
     insert_sql = """
     INSERT OR REPLACE INTO qna (
-        num, category, asker, date, time, question, answer, rephrased, approved, followup
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        num, category, asker, date, time, tags, question, answer, rephrased, approved, followup, links
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """
     statements = []
 
@@ -467,8 +498,8 @@ def sync_databases(source_db_name, target_db_name, mode="overwrite"):
 
         for d in entries:
             try:
-                num_val = int(d["num"])
-            except ValueError:
+                num_val = int(float(str(d["num"]).strip()))
+            except (ValueError, TypeError):
                 continue
 
             if num_val in existing_nums:
@@ -483,11 +514,13 @@ def sync_databases(source_db_name, target_db_name, mode="overwrite"):
                 {"type": "text", "value": d.get("asker", "")},
                 {"type": "text", "value": d.get("date", "")},
                 {"type": "text", "value": d.get("time", "")},
+                {"type": "text", "value": d.get("tags", "")},
                 {"type": "text", "value": d.get("question", "")},
                 {"type": "text", "value": d.get("answer", "")},
                 {"type": "text", "value": d.get("rephrased", "")},
                 {"type": "text", "value": d.get("approved", "")},
-                {"type": "text", "value": d.get("followup", "")}
+                {"type": "text", "value": d.get("followup", "")},
+                {"type": "text", "value": d.get("links", "")}
             ]
             statements.append({
                 "type": "execute",
@@ -502,8 +535,8 @@ def sync_databases(source_db_name, target_db_name, mode="overwrite"):
 
         for d in entries:
             try:
-                num_val = int(d["num"])
-            except ValueError:
+                num_val = int(float(str(d["num"]).strip()))
+            except (ValueError, TypeError):
                 continue
 
             args = [
@@ -512,11 +545,13 @@ def sync_databases(source_db_name, target_db_name, mode="overwrite"):
                 {"type": "text", "value": d.get("asker", "")},
                 {"type": "text", "value": d.get("date", "")},
                 {"type": "text", "value": d.get("time", "")},
+                {"type": "text", "value": d.get("tags", "")},
                 {"type": "text", "value": d.get("question", "")},
                 {"type": "text", "value": d.get("answer", "")},
                 {"type": "text", "value": d.get("rephrased", "")},
                 {"type": "text", "value": d.get("approved", "")},
-                {"type": "text", "value": d.get("followup", "")}
+                {"type": "text", "value": d.get("followup", "")},
+                {"type": "text", "value": d.get("links", "")}
             ]
             statements.append({
                 "type": "execute",

@@ -84,23 +84,114 @@ function firstSentence(s, maxLen) {
   if (out.length > maxLen) {
     out = out.slice(0, maxLen).replace(/\s+\S*$/, "").replace(/[,;:\- ]+$/, "") + "…";
   }
+  // Clean dangling unclosed markdown tokens from truncated titles
+  if ((out.match(/\*\*/g) || []).length % 2 !== 0) {
+    out = out.replace(/\*\*([^*]*)$/, (m, g1) => g1);
+  }
+  if ((out.match(/##/g) || []).length % 2 !== 0) {
+    out = out.replace(/##([^#]*)$/, (m, g1) => g1);
+  }
+  out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)(?!.*(?:&lt;|<)\/u(?:&gt;|>))/gi, "");
   return out;
 }
+// ---------- Rich Text Formatter (Frontend formatting rules) ----------
+// 1. Bold: **text** -> <strong>text</strong>
+// 2. Italics: ##text## -> <em>text</em>
+// 3. Bold + Italics: **##Text##** -> <strong><em>Text</em></strong>
+// 4. Single Inverted Commas: 'text' (straight quotes) -> No markdown code (plain text)
+// 5. Bold + Single Inverted Commas: ‘text’ (curly quotes) -> <strong>‘text’</strong>
+// 6. Bold + Italics + Single Inverted Commas: ##'text'## -> <strong><em>'text'</em></strong>
+// 7. Double Inverted Commas: "text" (straight quotes) -> No markdown code (plain text)
+// 8. Bold + Double Inverted Commas: “text” (curly quotes) -> <strong>“text”</strong>
+// 9. Bold + Italics + Double Inverted Commas: ##“text”## -> <strong><em>“text”</em></strong>
+// 10. Underline: <u>text</u> -> <u>text</u>
+// 11. Bold + Underline: **<u>text</u>** -> <strong><u>text</u></strong>
+// 12. Italic + Underline: *<u>text</u>* -> <em><u>text</u></em>
+// 13. Bold + Italic + Underline: ***<u>text</u>*** -> <strong><em><u>text</u></em></strong>
+function formatRichText(s) {
+  if (!s) return "";
+  let out = String(s);
+
+  // 1. Bold + Italic + Underline
+  // ***<u>text</u>***, **##<u>text</u>##**, ##**<u>text</u>##**, <u>***text***</u>, <u>**##text##**</u>
+  out = out.replace(/\*\*\*(?:&lt;|<)u\b[^>]*?(?:&gt;|>)([\s\S]+?)(?:&lt;|<)\/u(?:&gt;|>)\*\*\*/gi, "<strong><em><u>$1</u></em></strong>");
+  out = out.replace(/\*\*##(?:&lt;|<)u\b[^>]*?(?:&gt;|>)([\s\S]+?)(?:&lt;|<)\/u(?:&gt;|>)(?:##\*\*|\*\*)*/gi, "<strong><em><u>$1</u></em></strong>");
+  out = out.replace(/##\*\*(?:&lt;|<)u\b[^>]*?(?:&gt;|>)([\s\S]+?)(?:&lt;|<)\/u(?:&gt;|>)(?:\*\*##|##)*/gi, "<strong><em><u>$1</u></em></strong>");
+  out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)\*\*\*([\s\S]+?)\*\*\*(?:&lt;|<)\/u(?:&gt;|>)/gi, "<strong><em><u>$1</u></em></strong>");
+  out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)\*\*##([\s\S]+?)##\*\*(?:&lt;|<)\/u(?:&gt;|>)/gi, "<strong><em><u>$1</u></em></strong>");
+  out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)##\*\*([\s\S]+?)\*\*##(?:&lt;|<)\/u(?:&gt;|>)/gi, "<strong><em><u>$1</u></em></strong>");
+
+  // 2. Bold + Underline
+  // **<u>text</u>**, <u>**text**</u>
+  out = out.replace(/\*\*(?:&lt;|<)u\b[^>]*?(?:&gt;|>)([\s\S]+?)(?:&lt;|<)\/u(?:&gt;|>)\*\*/gi, "<strong><u>$1</u></strong>");
+  out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)\*\*([\s\S]+?)\*\*(?:&lt;|<)\/u(?:&gt;|>)/gi, "<strong><u>$1</u></strong>");
+
+  // 3. Italic + Underline
+  // *<u>text</u>*, ##<u>text</u>##, <u>*text*</u>, <u>##text##</u>
+  out = out.replace(/\*(?:&lt;|<)u\b[^>]*?(?:&gt;|>)([\s\S]+?)(?:&lt;|<)\/u(?:&gt;|>)\*/gi, "<em><u>$1</u></em>");
+  out = out.replace(/##(?:&lt;|<)u\b[^>]*?(?:&gt;|>)([\s\S]+?)(?:&lt;|<)\/u(?:&gt;|>)(?:##)*/gi, "<em><u>$1</u></em>");
+  out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)\*([\s\S]+?)\*(?:&lt;|<)\/u(?:&gt;|>)/gi, "<em><u>$1</u></em>");
+  out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)##([\s\S]+?)##(?:&lt;|<)\/u(?:&gt;|>)/gi, "<em><u>$1</u></em>");
+
+  // 4. Plain Underline
+  // <u>text</u>
+  out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)([\s\S]+?)(?:&lt;|<)\/u(?:&gt;|>)/gi, "<u>$1</u>");
+
+  // 5. Bold + Italics + Double Inverted Commas
+  // ##“text”##, ##"text"##, **##“text”##**, “##text##”, "##text##"
+  out = out.replace(/(?:\*\*##|##\*\*)“([^”\n]+)”(?:##\*\*|\*\*)*/g, "<strong><em>“$1”</em></strong>");
+  out = out.replace(/(?:\*\*##|##\*\*)(?:"|&quot;)([^"\n]+)(?:"|&quot;)(?:##\*\*|\*\*)*/g, "<strong><em>\"$1\"</em></strong>");
+  out = out.replace(/##“([^”\n]+)”##/g, "<strong><em>“$1”</em></strong>");
+  out = out.replace(/##(?:"|&quot;)([^"\n]+)(?:"|&quot;)##/g, "<strong><em>\"$1\"</em></strong>");
+  out = out.replace(/“##([^#\n]+)##”/g, "<strong><em>“$1”</em></strong>");
+  out = out.replace(/(?:"|&quot;)##([^#\n]+)##(?:"|&quot;)/g, "<strong><em>\"$1\"</em></strong>");
+
+  // 6. Bold + Italics + Single Inverted Commas
+  // ##'text'##, ##‘text’##, '##text##', ‘##text##’
+  out = out.replace(/(?:\*\*##|##\*\*)(?:'|&#39;|&#x27;)([^'\n]+)(?:'|&#39;|&#x27;)(?:##\*\*|\*\*)*/g, "<strong><em>'$1'</em></strong>");
+  out = out.replace(/(?:\*\*##|##\*\*)‘((?:[a-zA-Z]’[a-zA-Z]|[^’\n])+)’(?:##\*\*|\*\*)*/g, "<strong><em>‘$1’</em></strong>");
+  out = out.replace(/##(?:'|&#39;|&#x27;)([^'\n]+)(?:'|&#39;|&#x27;)##/g, "<strong><em>'$1'</em></strong>");
+  out = out.replace(/##‘((?:[a-zA-Z]’[a-zA-Z]|[^’\n])+)’##/g, "<strong><em>‘$1’</em></strong>");
+  out = out.replace(/(?:'|&#39;|&#x27;)##([^#\n]+)##(?:'|&#39;|&#x27;)/g, "<strong><em>'$1'</em></strong>");
+  out = out.replace(/‘##([^#\n]+)##’/g, "<strong><em>‘$1’</em></strong>");
+
+  // 7. Bold + Italics general
+  // **##text##**, ##**text**##, ***text***
+  out = out.replace(/\*\*##([^#\n]+?)##\*\*/g, "<strong><em>$1</em></strong>");
+  out = out.replace(/##\*\*([^*\n]+?)\*\*##/g, "<strong><em>$1</em></strong>");
+  out = out.replace(/\*\*\*([^*\n]+?)\*\*\*/g, "<strong><em>$1</em></strong>");
+
+  // 8. Bold + Double Inverted Commas
+  // “text”
+  out = out.replace(/(?<!<strong>(?:<em>)?)“([^”\n]+)”(?!(?:<\/em>)?<\/strong>)/g, "<strong>“$1”</strong>");
+
+  // 9. Bold + Single Inverted Commas
+  // ‘text’ (curly quotes, not contractions like it’s)
+  out = out.replace(/(?<!<strong>(?:<em>)?)‘((?:[a-zA-Z]’[a-zA-Z]|[^’\n])+)’(?!(?:<\/em>)?<\/strong>)/g, "<strong>‘$1’</strong>");
+
+  // 10. Bold: **text**
+  out = out.replace(/\*\*([^*\n]+?)\*\*/g, "<strong>$1</strong>");
+
+  // 11. Italics: ##text##
+  out = out.replace(/##([^#\n]+?)##/g, "<em>$1</em>");
+
+  // 12. Standard markdown italics fallback: *text*
+  out = out.replace(/(?<!\*)\*([^*\n\s][^*\n]*?[^*\n\s]|[^*\n\s])\*(?!\*)/g, "<em>$1</em>");
+
+  return out;
+}
+
 function paragraphsToHtml(s) {
   if (!s) return "";
   const escape = t => t.replace(/&(?!#?\w+;)/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const inline = t => t
-    .replace(/\*\*\*([^*\n]+?)\*\*\*/g, "<strong><em>$1</em></strong>")
-    .replace(/\*\*([^*\n]+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/(?<!\*)\*([^*\n\s][^*\n]*?[^*\n\s]|[^*\n\s])\*(?!\*)/g, "<em>$1</em>");
   return s.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).map(para => {
     const lines = para.split("\n").map(l => l.trim()).filter(Boolean);
     const isList = lines.length > 0 && lines.every(l => /^-\s+/.test(l));
     if (isList) {
-      const items = lines.map(l => inline(escape(l.replace(/^-\s+/, "")))).map(i => "<li>" + i + "</li>").join("");
+      const items = lines.map(l => formatRichText(escape(l.replace(/^-\s+/, "")))).map(i => "<li>" + i + "</li>").join("");
       return "<ul>" + items + "</ul>";
     }
-    return "<p>" + inline(escape(para)) + "</p>";
+    return "<p>" + formatRichText(escape(para)) + "</p>";
   }).join("");
 }
 
@@ -145,6 +236,10 @@ function buildData(csvText) {
 
     const date = (r[col("date")] || "").trim();
     const time = (r[col("time")] || "").trim();
+    const tagsCol = col("tags");
+    const tags = tagsCol !== -1 ? (r[tagsCol] || "").trim() : "";
+    const linksCol = col("links");
+    const links = linksCol !== -1 ? (r[linksCol] || "").trim() : "";
     entries.push({
       num: parseInt(r[col("num")], 10) || 0,
       asker: (r[col("asker")] || "Anonymous").trim() || "Anonymous",
@@ -158,6 +253,8 @@ function buildData(csvText) {
       rephrased: rephrased.replace(/\n+/g, " "),
       answer: paragraphsToHtml(answer),
       followupNums,          // array of followup entry nums
+      tags,
+      links,
     });
   }
   // Sort newest first (by iso desc, fallback to num desc)
@@ -229,6 +326,8 @@ function buildDataFromJson(jsonList) {
 
     const date = (item.date || "").trim();
     const time = (item.time || "").trim();
+    const tags = (item.tags || "").trim();
+    const links = (item.links || "").trim();
     entries.push({
       num: parseInt(item.num, 10) || 0,
       asker: (item.asker || "Anonymous").trim() || "Anonymous",
@@ -242,6 +341,8 @@ function buildDataFromJson(jsonList) {
       rephrased: rephrased.replace(/\n+/g, " "),
       answer: paragraphsToHtml(answer),
       followupNums,
+      tags,
+      links,
     });
   }
   // Sort newest first (by iso desc, fallback to num desc)
@@ -396,7 +497,7 @@ function renderRecent() {
       <div class="row" data-id="${e.num}" data-cat-key="${e.category_key}">
         <div class="num">№ ${e.num}</div>
         <div class="skt">${escapeHtml(skt)}</div>
-        <div class="q">${escapeHtml(asciiTitle(e.title))}</div>
+        <div class="q">${formatRichText(escapeHtml(asciiTitle(e.title)))}</div>
         <div class="meta">
           <div class="meta-cat">${escapeHtml(catLabel)}</div>
           <div class="date">${escapeHtml(dateShort)}</div>
@@ -427,8 +528,8 @@ function renderFeatured() {
   host.innerHTML = `
     <div class="feat-text" style="grid-column: 1 / -1;">
       <div class="lab mono">${escapeHtml(labelBits)}</div>
-      <h2>${escapeHtml(asciiTitle(e.title))}</h2>
-      <p class="qbody">"${escapeHtml(e.question)}"</p>
+      <h2>${formatRichText(escapeHtml(asciiTitle(e.title)))}</h2>
+      <p class="qbody">"${formatRichText(escapeHtml(e.question))}"</p>
       <div class="answer">${previewHtml}</div>
       <div class="meta-row">
         <div class="item"><div class="k">ASKED BY</div><div class="v">${escapeHtml(e.asker)}</div></div>
@@ -488,7 +589,7 @@ function _buildSingleEntryHtml(e) {
       <span class="sep">/</span>
       <span>ENTRY ${escapeHtml(inFolioRoman || String(e.num))}</span>
     </div>
-    <h1>${escapeHtml(asciiTitle(e.title))}</h1>
+    <h1>${formatRichText(escapeHtml(asciiTitle(e.title)))}</h1>
     <div class="meta-row">
       ${e.asker ? `<span>SEEKER <span class="v">${escapeHtml(e.asker)}</span></span>` : ""}
       ${e.date ? `<span><span class="v">${escapeHtml(e.date)}</span></span>` : ""}
@@ -499,7 +600,7 @@ function _buildSingleEntryHtml(e) {
         <div class="head">
           <span>QUESTION</span>
         </div>
-        <div class="body"><p><em>"${escapeHtml(e.question)}"</em></p></div>
+        <div class="body"><p>"${formatRichText(escapeHtml(e.question))}"</p></div>
       </aside>
       <div class="answer">
         ${answerHtml}
@@ -550,7 +651,7 @@ function _buildThreadHtml(chain, activeNum) {
         <div class="layout">
           <aside class="original">
             <div class="head"><span>${isFollowup ? "FOLLOW-UP QUESTION" : "QUESTION"}</span></div>
-            <div class="body"><p><em>"${escapeHtml(e.question)}"</em></p></div>
+            <div class="body"><p>"${formatRichText(escapeHtml(e.question))}"</p></div>
           </aside>
           <div class="answer">
             ${answerHtml}
@@ -572,7 +673,7 @@ function _buildThreadHtml(chain, activeNum) {
       <span class="sep">/</span>
       <span>THREAD · ${chain.length} ENTRIES</span>
     </div>
-    <h1 class="thread-title">${escapeHtml(asciiTitle(firstEntry.title))}</h1>
+    <h1 class="thread-title">${formatRichText(escapeHtml(asciiTitle(firstEntry.title)))}</h1>
     <div class="thread-meta">
       <span class="thread-badge">🔗 ${chain.length}-PART THREAD</span>
     </div>
@@ -701,7 +802,7 @@ function renderFolioPage(catKey) {
       <div class="row" data-id="${e.num}" data-cat-key="${e.category_key}">
         <div class="num">№ ${e.num}</div>
         <div class="skt">${escapeHtml(sktFirst)}</div>
-        <div class="q">${escapeHtml(asciiTitle(e.title))}</div>
+        <div class="q">${formatRichText(escapeHtml(asciiTitle(e.title)))}</div>
         <div class="meta">
           <div class="meta-cat">${escapeHtml(e.asker || "—")}</div>
           <div class="date">${escapeHtml(dateShort)}</div>
@@ -750,7 +851,7 @@ function renderAllPage() {
       <div class="row" data-id="${e.num}" data-cat-key="${e.category_key}">
         <div class="num">№ ${e.num}</div>
         <div class="skt">${escapeHtml(skt)}</div>
-        <div class="q">${escapeHtml(asciiTitle(e.title))}</div>
+        <div class="q">${formatRichText(escapeHtml(asciiTitle(e.title)))}</div>
         <div class="meta">
           <div class="meta-cat">${escapeHtml(cat ? cat.name.toUpperCase() : "")}</div>
           <div class="date">${escapeHtml(dateShort)}</div>
@@ -786,7 +887,7 @@ function buildSearchIndex() {
       kind: `№ ${e.num}`,
       skt: cat ? cat.skt.split(" ")[0] : "",
       titleHTML: e.title,
-      titleText: e.title + " " + (e.question || "") + " " + (e.original || ""),
+      titleText: e.title + " " + (e.question || "") + " " + (e.original || "") + (e.tags ? " " + e.tags : ""),
       desc: (cat ? cat.name : "") + (e.asker ? " — " + e.asker : ""),
       type: "entry",
       entryId: String(e.num),
@@ -920,7 +1021,7 @@ document.getElementById("folio-back-link").addEventListener("click", e => {
           role="option" aria-selected="${i === 0}" data-i="${i}">
         <span class="kind">${escapeHtml(item.kind)}</span>
         <span class="skt">${escapeHtml(item.skt)}</span>
-        <span class="title">${escapeHtml(item.titleHTML)}</span>
+        <span class="title">${formatRichText(escapeHtml(item.titleHTML))}</span>
         <span class="meta">${escapeHtml(item.desc).slice(0, 32)}${item.desc.length > 32 ? "…" : ""}</span>
       </li>
     `).join("");

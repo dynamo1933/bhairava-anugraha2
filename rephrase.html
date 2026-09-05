@@ -1506,6 +1506,7 @@
                 <option value="db">SQLite (.db)</option>
                 <option value="csv">CSV (.csv)</option>
                 <option value="json">JSON (.json)</option>
+                <option value="xlsx">Excel (.xlsx)</option>
               </select>
               <button class="btn-action" id="btn-download-prod" style="padding: 8px 14px; font-size: 10px;">📥 Download
                 Prod</button>
@@ -1513,9 +1514,9 @@
 
             <button class="btn-action btn-secondary" id="btn-trigger-upload-prod"
               style="text-align: left; padding: 10px 14px; font-size: 11px;">
-              📂 Upload &amp; Restore to Prod (.db/.csv/.json)
+              📂 Upload &amp; Restore to Prod (.db/.csv/.json/.xlsx)
             </button>
-            <input type="file" id="input-upload-prod" accept=".db,.csv,.json" style="display: none;">
+            <input type="file" id="input-upload-prod" accept=".db,.csv,.json,.xlsx,.xls" style="display: none;">
           </div>
 
           <!-- UAT Controls -->
@@ -1555,6 +1556,7 @@
                 <option value="db">SQLite (.db)</option>
                 <option value="csv">CSV (.csv)</option>
                 <option value="json">JSON (.json)</option>
+                <option value="xlsx">Excel (.xlsx)</option>
               </select>
               <button class="btn-action" id="btn-download-uat"
                 style="padding: 8px 14px; font-size: 10px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #fff;">📥
@@ -1563,9 +1565,9 @@
 
             <button class="btn-action btn-secondary" id="btn-trigger-upload-uat"
               style="text-align: left; padding: 10px 14px; font-size: 11px; border-color: rgba(130,170,212,0.4);">
-              <span id="txt-upload-uat-btn">📂 Upload &amp; Append to UAT (.db/.csv/.json)</span>
+              <span id="txt-upload-uat-btn">📂 Upload &amp; Append to UAT (.db/.csv/.json/.xlsx)</span>
             </button>
-            <input type="file" id="input-upload-uat" accept=".db,.csv,.json" style="display: none;">
+            <input type="file" id="input-upload-uat" accept=".db,.csv,.json,.xlsx,.xls" style="display: none;">
 
             <button class="btn-action" id="btn-open-add-modal-db"
               style="text-align: left; padding: 10px 14px; font-size: 11px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #ffffff;">
@@ -1962,6 +1964,7 @@
                 <option value="db">SQLite (.db)</option>
                 <option value="csv">CSV (.csv)</option>
                 <option value="json">JSON (.json)</option>
+                <option value="xlsx">Excel (.xlsx)</option>
               </select>
               <button class="btn-action" id="btn-download-prod" style="padding: 8px 14px; font-size: 10px;">📥 Download
                 Prod</button>
@@ -1969,9 +1972,9 @@
 
             <button class="btn-action btn-secondary" id="btn-trigger-upload-prod"
               style="text-align: left; padding: 10px 14px; font-size: 11px;">
-              📂 Upload &amp; Restore to Prod (.db/.csv/.json)
+              📂 Upload &amp; Restore to Prod (.db/.csv/.json/.xlsx)
             </button>
-            <input type="file" id="input-upload-prod" accept=".db,.csv,.json" style="display: none;">
+            <input type="file" id="input-upload-prod" accept=".db,.csv,.json,.xlsx,.xls" style="display: none;">
           </div>
 
           <!-- UAT Database Controls -->
@@ -2011,6 +2014,7 @@
                 <option value="db">SQLite (.db)</option>
                 <option value="csv">CSV (.csv)</option>
                 <option value="json">JSON (.json)</option>
+                <option value="xlsx">Excel (.xlsx)</option>
               </select>
               <button class="btn-action" id="btn-download-uat"
                 style="padding: 8px 14px; font-size: 10px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #fff;">📥
@@ -2019,9 +2023,9 @@
 
             <button class="btn-action btn-secondary" id="btn-trigger-upload-uat"
               style="text-align: left; padding: 10px 14px; font-size: 11px; border-color: rgba(130,170,212,0.4);">
-              <span id="txt-upload-uat-btn">📂 Upload &amp; Append to UAT (.db/.csv/.json)</span>
+              <span id="txt-upload-uat-btn">📂 Upload &amp; Append to UAT (.db/.csv/.json/.xlsx)</span>
             </button>
-            <input type="file" id="input-upload-uat" accept=".db,.csv,.json" style="display: none;">
+            <input type="file" id="input-upload-uat" accept=".db,.csv,.json,.xlsx,.xls" style="display: none;">
 
             <button class="btn-action" id="btn-open-add-modal-db"
               style="text-align: left; padding: 10px 14px; font-size: 11px; background: linear-gradient(180deg, #4b7db3 0%, #2f5685 100%); border-color: #82aad4; color: #ffffff;">
@@ -2145,6 +2149,19 @@
             Links (Optional)</label>
           <input type="text" id="add-followup" class="filter-input"
             placeholder="Comma-separated entry numbers (e.g. 12, 45)" />
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label
+              style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Tags (Optional)</label>
+            <input type="text" id="add-tags" class="filter-input" placeholder="e.g. japa, midnight, sadhana" />
+          </div>
+          <div>
+            <label
+              style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Links / References (Optional)</label>
+            <input type="text" id="add-links" class="filter-input" placeholder="e.g. https://... or reference links" />
+          </div>
         </div>
       </div>
 
@@ -2499,31 +2516,66 @@
       loginWall.style.display = 'none';
     }
 
-    function handleLoginSubmit(event) {
+    async function handleLoginSubmit(event) {
       event.preventDefault();
 
       const username = usernameInput.value.trim();
       const password = passwordInput.value;
 
-      if (username === 'admin' && password === 'admin123') {
-        // Successful login
-        sessionStorage.setItem('bhairava_admin_logged_in', 'true');
-        loginWall.classList.add('fade-out');
-        setTimeout(() => {
-          loginWall.style.display = 'none';
-        }, 600);
-      } else {
-        // Failed login - shake card and show error message
-        loginCard.classList.remove('shake');
-        void loginCard.offsetWidth; // Trigger reflow to restart animation
-        loginCard.classList.add('shake');
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Successful login
+          sessionStorage.setItem('bhairava_admin_logged_in', 'true');
+          sessionStorage.setItem('bhairava_admin_token', data.token);
+          
+          loginWall.classList.add('fade-out');
+          setTimeout(() => {
+            loginWall.style.display = 'none';
+          }, 600);
+
+          // Trigger initial data load after login
+          await loadData();
+          if (sessionStorage.getItem('bhairava_active_main_tab') === 'db-panel') {
+            if (typeof loadDbStatus === 'function') loadDbStatus();
+          } else if (sessionStorage.getItem('bhairava_active_main_tab') === 'analytics') {
+            if (typeof loadGuestAnalytics === 'function') loadGuestAnalytics();
+          }
+        } else {
+          // Failed login - show error
+          const errorData = await response.json().catch(() => ({}));
+          loginErrorMsg.textContent = errorData.error || "Invalid username or password";
+          loginErrorMsg.classList.add('show');
+          
+          loginCard.classList.remove('shake');
+          void loginCard.offsetWidth; // Trigger reflow to restart animation
+          loginCard.classList.add('shake');
+
+          // Focus password input and clear it
+          passwordInput.value = '';
+          passwordInput.focus();
+
+          // Remove shake class after animation finishes
+          setTimeout(() => {
+            loginCard.classList.remove('shake');
+          }, 400);
+        }
+      } catch (err) {
+        console.error("Login request failed:", err);
+        loginErrorMsg.textContent = "Unable to connect to server. Please try again.";
         loginErrorMsg.classList.add('show');
-
-        // Focus password input and clear it
-        passwordInput.value = '';
-        passwordInput.focus();
-
-        // Remove shake class after animation finishes
+        
+        loginCard.classList.remove('shake');
+        void loginCard.offsetWidth;
+        loginCard.classList.add('shake');
         setTimeout(() => {
           loginCard.classList.remove('shake');
         }, 400);
@@ -2564,12 +2616,31 @@
 
     function apiFetch(url, options = {}) {
       options.headers = options.headers || {};
+      const token = sessionStorage.getItem('bhairava_admin_token');
+      
       if (options.headers instanceof Headers) {
         options.headers.set('x-active-db', getActiveDb());
+        if (token) {
+          options.headers.set('Authorization', 'Bearer ' + token);
+        }
       } else {
         options.headers['x-active-db'] = getActiveDb();
+        if (token) {
+          options.headers['Authorization'] = 'Bearer ' + token;
+        }
       }
-      return fetch(url, options);
+      
+      return fetch(url, options).then(response => {
+        if (response.status === 401) {
+          sessionStorage.removeItem('bhairava_admin_logged_in');
+          sessionStorage.removeItem('bhairava_admin_token');
+          loginWall.style.display = 'flex';
+          loginWall.classList.remove('fade-out');
+          loginErrorMsg.textContent = "Session expired or invalid. Please log in again.";
+          loginErrorMsg.classList.add('show');
+        }
+        return response;
+      });
     }
 
     function updateUatUIState() {
@@ -2757,7 +2828,7 @@
       modalLoader.classList.add('is-active');
 
       try {
-        const response = await fetch('/api/rephrase', {
+        const response = await apiFetch('/api/rephrase', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -2799,7 +2870,7 @@
       modalLoader.classList.add('is-active');
 
       try {
-        const response = await fetch('/api/save', {
+        const response = await apiFetch('/api/save', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -2851,7 +2922,7 @@
       checkbox.disabled = true;
 
       try {
-        const response = await fetch('/api/save', {
+        const response = await apiFetch('/api/save', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -2903,7 +2974,7 @@
       selectEl.disabled = true;
 
       try {
-        const response = await fetch('/api/save', {
+        const response = await apiFetch('/api/save', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -2955,7 +3026,7 @@
         const payload = { num: num };
         payload[fieldName] = newVal;
 
-        const response = await fetch('/api/save', {
+        const response = await apiFetch('/api/save', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -3090,7 +3161,7 @@
       const followupStr = pendingFollowupNums.join(',');
 
       try {
-        const res = await fetch('/api/save', {
+        const res = await apiFetch('/api/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ num: linkModalNum, followup: followupStr })
@@ -3425,6 +3496,8 @@
       document.getElementById('add-answer').value = '';
       document.getElementById('add-rephrased').value = '';
       document.getElementById('add-followup').value = '';
+      document.getElementById('add-tags').value = '';
+      document.getElementById('add-links').value = '';
       document.getElementById('add-approved').value = 'false';
 
       addCategorySelect.value = 'Mantra & Japa';
@@ -3462,6 +3535,8 @@
         const rephrasedVal = document.getElementById('add-rephrased').value.trim();
         const approvedVal = document.getElementById('add-approved').value;
         const followupVal = document.getElementById('add-followup').value.trim();
+        const tagsVal = document.getElementById('add-tags').value.trim();
+        const linksVal = document.getElementById('add-links').value.trim();
 
         const payload = {
           num: numVal,
@@ -3473,7 +3548,9 @@
           answer: answerVal,
           rephrased: rephrasedVal,
           approved: approvedVal,
-          followup: followupVal
+          followup: followupVal,
+          tags: tagsVal,
+          links: linksVal
         };
 
         addModalLoader.classList.add('is-active');
@@ -3528,7 +3605,7 @@
             badgeSyncUatBtn.textContent = 'PRESERVES UAT';
             badgeSyncUatBtn.style.color = '#82aad4';
           }
-          if (txtUploadUatBtn) txtUploadUatBtn.textContent = '📂 Upload & Append to UAT (.db/.csv/.json)';
+          if (txtUploadUatBtn) txtUploadUatBtn.textContent = '📂 Upload & Append to UAT (.db/.csv/.json/.xlsx)';
         } else {
           if (lblUatModeTitle) lblUatModeTitle.textContent = 'Overwrite Mode';
           if (lblUatModeSub) lblUatModeSub.textContent = '(Wipes existing UAT data)';
@@ -3537,7 +3614,7 @@
             badgeSyncUatBtn.textContent = 'OVERWRITES UAT';
             badgeSyncUatBtn.style.color = 'var(--crimson)';
           }
-          if (txtUploadUatBtn) txtUploadUatBtn.textContent = '📂 Upload & Overwrite UAT (.db/.csv/.json)';
+          if (txtUploadUatBtn) txtUploadUatBtn.textContent = '📂 Upload & Overwrite UAT (.db/.csv/.json/.xlsx)';
         }
       });
     }
@@ -3558,7 +3635,7 @@
       dbModalLoader.classList.add('is-active');
 
       try {
-        const response = await fetch('/api/db/sync', {
+        const response = await apiFetch('/api/db/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ source: sourceDb, target: targetDb, mode: modeVal })
@@ -3586,7 +3663,8 @@
     // Download database operations
     function triggerDbDownload(dbChoice, selectEl) {
       const format = selectEl.value;
-      const downloadUrl = `/api/db/download?db=${dbChoice}&format=${format}`;
+      const token = sessionStorage.getItem('bhairava_admin_token') || '';
+      const downloadUrl = `/api/db/download?db=${dbChoice}&format=${format}&token=${encodeURIComponent(token)}`;
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = '';
@@ -3629,7 +3707,7 @@
 
       reader.onload = async (e) => {
         let content = '';
-        if (ext === 'db') {
+        if (ext === 'db' || ext === 'xlsx' || ext === 'xls') {
           const arrayBuffer = e.target.result;
           const bytes = new Uint8Array(arrayBuffer);
           let binary = '';
@@ -3642,7 +3720,7 @@
         }
 
         try {
-          const response = await fetch('/api/db/upload', {
+          const response = await apiFetch('/api/db/upload', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -3670,7 +3748,7 @@
         }
       };
 
-      if (ext === 'db') {
+      if (ext === 'db' || ext === 'xlsx' || ext === 'xls') {
         reader.readAsArrayBuffer(file);
       } else {
         reader.readAsText(file);
@@ -3731,7 +3809,7 @@
     async function loadGuestAnalytics() {
       analyticsModalLoader.classList.add('is-active');
       try {
-        const response = await fetch('/api/analytics/stats');
+        const response = await apiFetch('/api/analytics/stats');
         if (!response.ok) throw new Error('Failed to fetch analytics telemetry data');
         const data = await response.json();
 

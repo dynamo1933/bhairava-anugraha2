@@ -4,17 +4,64 @@ import json
 import csv
 import os
 import urllib.parse
+import secrets
+
+VALID_TOKENS = set()
 from rephrase_agent import rephrase_question
 from db_helper import (
     get_all_qna, 
-    update_qna_entry,
-    add_qna_entry, 
+    update_qna_entry, 
     get_db_config, 
     save_db_config, 
-    sync_databases, 
-    get_all_qna_from_db, 
-    execute_turso_statements
+    execute_turso_statements, 
+    get_all_qna_from_db,
+    sync_databases,
+    ensure_schema_columns
 )
+
+COLUMN_ALIASES = {
+    "number": "num",
+    "num": "num",
+    "no": "num",
+    "no.": "num",
+    "id": "num",
+    "entry": "num",
+    "s.no": "num",
+    "sr no": "num",
+    "sr. no.": "num",
+    "category": "category",
+    "cat": "category",
+    "folio": "category",
+    "sadhaka (asker)": "asker",
+    "sadhaka": "asker",
+    "asker": "asker",
+    "seeker": "asker",
+    "author": "asker",
+    "date": "date",
+    "time": "time",
+    "tags": "tags",
+    "tag": "tags",
+    "keywords": "tags",
+    "question": "question",
+    "original question": "question",
+    "query": "question",
+    "answer": "answer",
+    "response": "answer",
+    "rephrased question": "rephrased",
+    "rephrased": "rephrased",
+    "rephrase": "rephrased",
+    "approved": "approved",
+    "published": "approved",
+    "follow up number": "followup",
+    "follow up": "followup",
+    "followup number": "followup",
+    "followup": "followup",
+    "follow-up number": "followup",
+    "follow-up": "followup",
+    "links": "links",
+    "link": "links",
+    "references": "links",
+}
 from analytics_db_helper import (
     init_analytics_db,
     record_guest_event,
@@ -28,6 +75,26 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 
+    def is_authenticated(self, query_params=None):
+        auth_header = self.headers.get('Authorization')
+        if auth_header:
+            parts = auth_header.split(' ')
+            if len(parts) == 2 and parts[0].lower() == 'bearer':
+                token = parts[1]
+                if token in VALID_TOKENS:
+                    return True
+        
+        if query_params:
+            parsed_query = urllib.parse.parse_qs(query_params)
+            token = parsed_query.get('token', [None])[0]
+            if token and token in VALID_TOKENS:
+                return True
+                
+        return False
+
+    def send_unauthorized(self):
+        self.send_json_error(401, "Unauthorized: Invalid or missing token")
+
     def end_headers(self):
         self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
         self.send_header('Pragma', 'no-cache')
@@ -36,13 +103,42 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed_url = urllib.parse.urlparse(self.path)
+        
+        # Security blacklist check for files ending with sensitive extensions
+        normalized_path = urllib.parse.unquote(parsed_url.path)
+        path_parts = [p for p in normalized_path.replace('\\', '/').split('/') if p]
+        
+        is_sensitive = False
+        for part in path_parts:
+            if part.startswith('.') or part == '..':
+                is_sensitive = True
+                break
+        
+        if not is_sensitive:
+            _, ext = os.path.splitext(normalized_path.lower())
+            if ext in ('.py', '.env', '.json', '.bak', '.txt', '.md'):
+                is_sensitive = True
+                
+        if is_sensitive:
+            self.send_error(403, "Access Forbidden")
+            return
+
         if parsed_url.path == '/api/qna':
             self.handle_get_qna()
         elif parsed_url.path == '/api/db/status':
+            if not self.is_authenticated():
+                self.send_unauthorized()
+                return
             self.handle_get_db_status()
         elif parsed_url.path == '/api/db/download':
+            if not self.is_authenticated(query_params=parsed_url.query):
+                self.send_unauthorized()
+                return
             self.handle_get_db_download(parsed_url.query)
         elif parsed_url.path == '/api/analytics/stats':
+            if not self.is_authenticated():
+                self.send_unauthorized()
+                return
             self.handle_get_analytics_stats()
         elif parsed_url.path in ('/rephrase', '/rephrase/'):
             self.send_response(301)
@@ -53,6 +149,18 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self):
         parsed_url = urllib.parse.urlparse(self.path)
+        if parsed_url.path == '/api/login':
+            self.handle_post_login()
+            return
+        elif parsed_url.path == '/api/analytics/collect':
+            self.handle_post_analytics_collect()
+            return
+            
+        # All other POST endpoints must be authenticated
+        if not self.is_authenticated():
+            self.send_unauthorized()
+            return
+
         if parsed_url.path == '/api/rephrase':
             self.handle_post_rephrase()
         elif parsed_url.path == '/api/save':
@@ -65,10 +173,30 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_post_db_sync()
         elif parsed_url.path == '/api/db/upload':
             self.handle_post_db_upload()
-        elif parsed_url.path == '/api/analytics/collect':
-            self.handle_post_analytics_collect()
         else:
             self.send_error(404, "API Endpoint Not Found")
+
+    def handle_post_login(self):
+        content_length = int(self.headers.get('Content-Length', 0))
+        post_data = self.rfile.read(content_length)
+        
+        try:
+            data = json.loads(post_data.decode('utf-8'))
+            username = data.get('username', '').strip()
+            password = data.get('password', '')
+        except Exception:
+            self.send_json_error(400, "Invalid JSON body")
+            return
+            
+        expected_username = os.environ.get('ADMIN_USERNAME', 'admin')
+        expected_password = os.environ.get('ADMIN_PASSWORD', 'admin123')
+        
+        if username == expected_username and password == expected_password:
+            token = secrets.token_hex(16)
+            VALID_TOKENS.add(token)
+            self.send_json_response({"success": True, "token": token})
+        else:
+            self.send_json_error(401, "Invalid username or password")
 
     def handle_get_analytics_stats(self):
         try:
@@ -219,8 +347,8 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
         if db_choice not in ("prod", "uat"):
             self.send_json_error(400, "db parameter must be 'prod' or 'uat'")
             return
-        if fmt not in ("csv", "json", "db"):
-            self.send_json_error(400, "format parameter must be 'csv', 'json', or 'db'")
+        if fmt not in ("csv", "json", "db", "xlsx", "excel"):
+            self.send_json_error(400, "format parameter must be 'csv', 'json', 'db', or 'xlsx'")
             return
             
         try:
@@ -247,24 +375,35 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
                 import io
                 output = io.StringIO()
                 writer = csv.writer(output, quoting=csv.QUOTE_ALL)
-                writer.writerow(["num", "category", "asker", "date", "time", "question", "answer", "rephrased", "approved", "followup"])
+                headers = ["num", "category", "asker", "date", "time", "tags", "question", "answer", "rephrased", "approved", "followup", "links"]
+                writer.writerow(headers)
                 for d in entries:
-                    writer.writerow([
-                        d.get("num", ""),
-                        d.get("category", ""),
-                        d.get("asker", ""),
-                        d.get("date", ""),
-                        d.get("time", ""),
-                        d.get("question", ""),
-                        d.get("answer", ""),
-                        d.get("rephrased", ""),
-                        d.get("approved", ""),
-                        d.get("followup", "")
-                    ])
+                    writer.writerow([d.get(col, "") for col in headers])
                 content = output.getvalue().encode('utf-8')
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/csv')
                 self.send_header('Content-Disposition', f'attachment; filename="{filename}_{timestamp}.csv"')
+                self.send_header('Content-Length', str(len(content)))
+                self.end_headers()
+                self.wfile.write(content)
+                
+            elif fmt in ("xlsx", "excel"):
+                import io
+                import openpyxl
+                
+                wb = openpyxl.Workbook()
+                ws = wb.active
+                ws.title = "QnA"
+                headers = ["num", "category", "asker", "date", "time", "tags", "question", "answer", "rephrased", "approved", "followup", "links"]
+                ws.append(headers)
+                for d in entries:
+                    ws.append([d.get(col, "") for col in headers])
+                output = io.BytesIO()
+                wb.save(output)
+                content = output.getvalue()
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                self.send_header('Content-Disposition', f'attachment; filename="{filename}_{timestamp}.xlsx"')
                 self.send_header('Content-Length', str(len(content)))
                 self.end_headers()
                 self.wfile.write(content)
@@ -286,18 +425,20 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
                         asker TEXT,
                         date TEXT,
                         time TEXT,
+                        tags TEXT,
                         question TEXT,
                         answer TEXT,
                         rephrased TEXT,
                         approved TEXT,
-                        followup TEXT
+                        followup TEXT,
+                        links TEXT
                     );
                     """)
                     
                     insert_sql = """
                     INSERT INTO qna (
-                        num, category, asker, date, time, question, answer, rephrased, approved, followup
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                        num, category, asker, date, time, tags, question, answer, rephrased, approved, followup, links
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                     """
                     rows_to_insert = []
                     for d in entries:
@@ -311,11 +452,13 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
                             d.get("asker", ""),
                             d.get("date", ""),
                             d.get("time", ""),
+                            d.get("tags", ""),
                             d.get("question", ""),
                             d.get("answer", ""),
                             d.get("rephrased", ""),
                             d.get("approved", ""),
-                            d.get("followup", "")
+                            d.get("followup", ""),
+                            d.get("links", "")
                         ))
                         
                     cursor.executemany(insert_sql, rows_to_insert)
@@ -361,16 +504,20 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
         try:
             entries = []
             ext = os.path.splitext(filename.lower())[1]
+            ALL_COLS = ("num", "category", "asker", "date", "time", "tags", "question", "answer", "rephrased", "approved", "followup", "links")
             
             if ext == ".json":
-                entries = json.loads(file_content)
-                if not isinstance(entries, list):
+                raw_entries = json.loads(file_content)
+                if not isinstance(raw_entries, list):
                     raise Exception("JSON file must contain a list of objects.")
-                for idx, entry in enumerate(entries):
-                    if "num" not in entry or "question" not in entry:
+                for idx, entry in enumerate(raw_entries):
+                    normalized = {COLUMN_ALIASES.get(str(k).strip().lower(), str(k).strip().lower()): v for k, v in entry.items()}
+                    if "num" not in normalized or "question" not in normalized:
                         raise Exception(f"Item at index {idx} must contain at least 'num' and 'question'.")
-                    for col in ("num", "category", "asker", "date", "time", "question", "answer", "rephrased", "approved", "followup"):
-                        entry[col] = str(entry.get(col, "")).strip()
+                    entry_dict = {}
+                    for col in ALL_COLS:
+                        entry_dict[col] = str(normalized.get(col, "")).strip() if normalized.get(col) is not None else ""
+                    entries.append(entry_dict)
                         
             elif ext == ".csv":
                 import io
@@ -379,7 +526,7 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
                 rows = list(reader)
                 if not rows:
                     raise Exception("CSV file is empty.")
-                header = [h.strip().lower() for h in rows[0]]
+                header = [COLUMN_ALIASES.get(h.strip().lower(), h.strip().lower()) for h in rows[0]]
                 if "num" not in header or "question" not in header:
                     raise Exception("CSV must contain at least 'num' and 'question' columns.")
                 col_map = {col: header.index(col) for col in header}
@@ -388,7 +535,7 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
                     if not row or not any(row):
                         continue
                     entry = {}
-                    for col_name in ("num", "category", "asker", "date", "time", "question", "answer", "rephrased", "approved", "followup"):
+                    for col_name in ALL_COLS:
                         if col_name in col_map and col_map[col_name] < len(row):
                             entry[col_name] = row[col_map[col_name]].strip()
                         else:
@@ -408,21 +555,94 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
                 try:
                     conn = sqlite3.connect(tmp_path)
                     cursor = conn.cursor()
-                    cursor.execute("SELECT num, category, asker, date, time, question, answer, rephrased, approved, followup FROM qna;")
+                    cursor.execute("SELECT * FROM qna;")
                     rows = cursor.fetchall()
-                    cols = [c[0] for c in cursor.description]
+                    cols = [COLUMN_ALIASES.get(c[0].strip().lower(), c[0].strip().lower()) for c in cursor.description]
                     conn.close()
                     
                     for row in rows:
                         entry = {}
-                        for idx, col_name in enumerate(cols):
-                            entry[col_name] = str(row[idx]) if row[idx] is not None else ""
+                        for col_name in ALL_COLS:
+                            if col_name in cols:
+                                idx = cols.index(col_name)
+                                entry[col_name] = str(row[idx]) if row[idx] is not None else ""
+                            else:
+                                entry[col_name] = ""
                         entries.append(entry)
                 finally:
                     if os.path.exists(tmp_path):
                         os.remove(tmp_path)
+            elif ext in (".xlsx", ".xls"):
+                import base64
+                import io
+                import openpyxl
+                import datetime
+                
+                def format_excel_cell(val, col_name):
+                    if val is None:
+                        return ""
+                    if col_name in ("num", "followup"):
+                        if isinstance(val, (int, float)):
+                            try:
+                                f = float(val)
+                                if f.is_integer():
+                                    return str(int(f))
+                            except Exception:
+                                pass
+                        s = str(val).strip()
+                        parts = [p.strip() for p in s.split(",") if p.strip()]
+                        cleaned = []
+                        for p in parts:
+                            try:
+                                f = float(p)
+                                if f.is_integer():
+                                    cleaned.append(str(int(f)))
+                                else:
+                                    cleaned.append(p)
+                            except Exception:
+                                cleaned.append(p)
+                        return ", ".join(cleaned) if cleaned else s
+                    elif col_name == "time":
+                        if isinstance(val, (datetime.time, datetime.datetime)):
+                            return val.strftime("%H:%M")
+                        return str(val).strip()
+                    elif col_name == "date":
+                        if isinstance(val, datetime.datetime):
+                            return val.strftime("%d.%m.%Y")
+                        return str(val).strip()
+                    elif col_name == "approved":
+                        if isinstance(val, bool):
+                            return "true" if val else "false"
+                        s = str(val).strip().lower()
+                        return "true" if s in ("true", "1", "yes") else ("false" if s in ("false", "0", "no") else s)
+                    return str(val).strip()
+                
+                file_bytes = base64.b64decode(file_content)
+                wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
+                ws = wb.active
+                rows = list(ws.iter_rows(values_only=True))
+                if not rows:
+                    raise Exception("Excel file is empty.")
+                header = [COLUMN_ALIASES.get(str(h).strip().lower(), str(h).strip().lower()) if h is not None else "" for h in rows[0]]
+                if "num" not in header or "question" not in header:
+                    raise Exception("Excel file must contain at least 'num' and 'question' columns in header.")
+                col_map = {col: header.index(col) for col in header if col}
+                
+                for row in rows[1:]:
+                    if not row or not any(c is not None and str(c).strip() for c in row):
+                        continue
+                    entry = {}
+                    for col_name in ALL_COLS:
+                        if col_name in col_map and col_map[col_name] < len(row):
+                            val = row[col_map[col_name]]
+                            entry[col_name] = format_excel_cell(val, col_name)
+                        else:
+                            entry[col_name] = ""
+                    if not entry.get("num") and not entry.get("question"):
+                        continue
+                    entries.append(entry)
             else:
-                raise Exception("Unsupported file format. Must be .json, .csv, or .db")
+                raise Exception("Unsupported file format. Must be .json, .csv, .db, or .xlsx")
                 
             cfg = get_db_config()
             db_url = cfg[f"{db_choice}_url"]
@@ -436,19 +656,22 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
                 asker TEXT,
                 date TEXT,
                 time TEXT,
+                tags TEXT,
                 question TEXT,
                 answer TEXT,
                 rephrased TEXT,
                 approved TEXT,
-                followup TEXT
+                followup TEXT,
+                links TEXT
             );
             """
             execute_turso_statements([{"type": "execute", "stmt": {"sql": create_table_sql}}], db_url=db_url, auth_token=db_token)
+            ensure_schema_columns(db_url=db_url, auth_token=db_token)
             
             insert_sql = """
             INSERT OR REPLACE INTO qna (
-                num, category, asker, date, time, question, answer, rephrased, approved, followup
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                num, category, asker, date, time, tags, question, answer, rephrased, approved, followup, links
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
             """
             statements = []
 
@@ -459,8 +682,8 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
 
                 for d in entries:
                     try:
-                        num_val = int(d["num"])
-                    except ValueError:
+                        num_val = int(float(str(d["num"]).strip()))
+                    except (ValueError, TypeError):
                         continue
 
                     if num_val in existing_nums:
@@ -475,11 +698,13 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
                         {"type": "text", "value": d.get("asker", "")},
                         {"type": "text", "value": d.get("date", "")},
                         {"type": "text", "value": d.get("time", "")},
+                        {"type": "text", "value": d.get("tags", "")},
                         {"type": "text", "value": d.get("question", "")},
                         {"type": "text", "value": d.get("answer", "")},
                         {"type": "text", "value": d.get("rephrased", "")},
                         {"type": "text", "value": d.get("approved", "")},
-                        {"type": "text", "value": d.get("followup", "")}
+                        {"type": "text", "value": d.get("followup", "")},
+                        {"type": "text", "value": d.get("links", "")}
                     ]
                     statements.append({
                         "type": "execute",
@@ -493,8 +718,8 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
 
                 for d in entries:
                     try:
-                        num_val = int(d["num"])
-                    except ValueError:
+                        num_val = int(float(str(d["num"]).strip()))
+                    except (ValueError, TypeError):
                         continue
                     args = [
                         {"type": "integer", "value": str(num_val)},
@@ -502,11 +727,13 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
                         {"type": "text", "value": d.get("asker", "")},
                         {"type": "text", "value": d.get("date", "")},
                         {"type": "text", "value": d.get("time", "")},
+                        {"type": "text", "value": d.get("tags", "")},
                         {"type": "text", "value": d.get("question", "")},
                         {"type": "text", "value": d.get("answer", "")},
                         {"type": "text", "value": d.get("rephrased", "")},
                         {"type": "text", "value": d.get("approved", "")},
-                        {"type": "text", "value": d.get("followup", "")}
+                        {"type": "text", "value": d.get("followup", "")},
+                        {"type": "text", "value": d.get("links", "")}
                     ]
                     statements.append({
                         "type": "execute",
@@ -516,6 +743,7 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
                         }
                     })
                 
+            print(f"[DEBUG UPLOAD] ext={ext}, len(entries)={len(entries)}, len(statements)={len(statements)}", flush=True)
             batch_size = 50
             for i in range(0, len(statements), batch_size):
                 batch = statements[i:i + batch_size]
@@ -561,6 +789,8 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             question_val = data.get('question')
             answer_val = data.get('answer')
             followup_val = data.get('followup')
+            tags_val = data.get('tags')
+            links_val = data.get('links')
         except Exception:
             self.send_json_error(400, "Invalid JSON body")
             return
@@ -569,7 +799,9 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_error(400, "num is required")
             return
  
-        if rephrased_text is None and approved_val is None and category_val is None and question_val is None and answer_val is None and followup_val is None:
+        if (rephrased_text is None and approved_val is None and category_val is None and 
+            question_val is None and answer_val is None and followup_val is None and
+            tags_val is None and links_val is None):
             self.send_json_error(400, "At least one parameter to update is required")
             return
  
@@ -580,7 +812,9 @@ class QnAAPIHandler(http.server.SimpleHTTPRequestHandler):
             category_val=category_val,
             question_val=question_val,
             answer_val=answer_val,
-            followup_val=followup_val
+            followup_val=followup_val,
+            tags_val=tags_val,
+            links_val=links_val
         )
  
         if success:
@@ -645,14 +879,24 @@ def migrate_csvs():
 
         # Re-read header_lower after possible append
         header_lower = [h.strip().lower() for h in header]
-        if "followup" not in header_lower:
-            header.append("followup")
+        if "tags" not in header_lower:
+            header.append("tags")
             for r in rows[1:]:
                 while len(r) < len(header) - 1:
                     r.append("")
                 r.append("")
             changed = True
-            print(f"[+] Migrated {name} to include 'followup' column.")
+            print(f"[+] Migrated {name} to include 'tags' column.")
+
+        header_lower = [h.strip().lower() for h in header]
+        if "links" not in header_lower:
+            header.append("links")
+            for r in rows[1:]:
+                while len(r) < len(header) - 1:
+                    r.append("")
+                r.append("")
+            changed = True
+            print(f"[+] Migrated {name} to include 'links' column.")
 
         if changed:
             try:
@@ -664,7 +908,6 @@ def migrate_csvs():
 
 if __name__ == '__main__':
     os.chdir(DIRECTORY)
-    migrate_csvs()
     
     env_path = os.path.join(DIRECTORY, ".env")
     if os.path.exists(env_path):
@@ -675,6 +918,14 @@ if __name__ == '__main__':
                 if line and not line.startswith('#') and '=' in line:
                     k, v = line.split('=', 1)
                     os.environ[k.strip()] = v.strip()
+
+    migrate_csvs()
+
+    try:
+        ensure_schema_columns(active_db="prod")
+        ensure_schema_columns(active_db="uat")
+    except Exception as e:
+        print(f"[-] Schema ensure warning: {e}")
 
     try:
         init_analytics_db()

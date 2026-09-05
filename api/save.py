@@ -32,6 +32,8 @@ class handler(BaseHTTPRequestHandler):
             question_val = data.get('question')
             answer_val = data.get('answer')
             followup_val = data.get('followup')  # comma-separated string of nums or empty
+            tags_val = data.get('tags')
+            links_val = data.get('links')
         except Exception:
             self.send_response(400)
             self.send_header('Content-Type', 'application/json')
@@ -48,7 +50,9 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"error": "num is required"}).encode('utf-8'))
             return
 
-        if rephrased_text is None and approved_val is None and category_val is None and question_val is None and answer_val is None and followup_val is None:
+        if (rephrased_text is None and approved_val is None and category_val is None and 
+            question_val is None and answer_val is None and followup_val is None and
+            tags_val is None and links_val is None):
             self.send_response(400)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -78,6 +82,8 @@ class handler(BaseHTTPRequestHandler):
             question_val=question_val,
             answer_val=answer_val,
             followup_val=followup_val,
+            tags_val=tags_val,
+            links_val=links_val,
             active_db=active_db
         )
 

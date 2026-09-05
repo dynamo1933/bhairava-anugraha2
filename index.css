@@ -658,7 +658,20 @@ footer {
   font-size: 26px; line-height: 1.4; color: var(--paper-2);
   font-style: italic;
 }
-.overlay .original .body em { font-style: normal; color: var(--paper); }
+.overlay .original .body em { font-style: italic; color: var(--gold); }
+.overlay .original .body strong { font-weight: 600; color: var(--paper); }
+.overlay .original .body u,
+.overlay .answer u,
+.feat-text .qbody u,
+.feat-text .answer u,
+u {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.feat-text .qbody strong { font-weight: 600; color: var(--paper); }
+.feat-text .qbody em { font-style: italic; color: var(--gold); }
+.feat-text .answer strong { color: var(--paper); font-weight: 600; }
 .overlay .answer .lead {
   font-family: var(--display); font-style: italic;
   font-size: 24px; line-height: 1.5; color: var(--paper);

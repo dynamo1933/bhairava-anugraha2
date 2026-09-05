@@ -12,7 +12,51 @@ root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 if root_dir not in sys.path:
     sys.path.append(root_dir)
 
-from db_helper import get_db_config, execute_turso_statements
+from db_helper import get_db_config, execute_turso_statements, ensure_schema_columns, get_all_qna_from_db
+
+COLUMN_ALIASES = {
+    "number": "num",
+    "num": "num",
+    "no": "num",
+    "no.": "num",
+    "id": "num",
+    "entry": "num",
+    "s.no": "num",
+    "sr no": "num",
+    "sr. no.": "num",
+    "category": "category",
+    "cat": "category",
+    "folio": "category",
+    "sadhaka (asker)": "asker",
+    "sadhaka": "asker",
+    "asker": "asker",
+    "seeker": "asker",
+    "author": "asker",
+    "date": "date",
+    "time": "time",
+    "tags": "tags",
+    "tag": "tags",
+    "keywords": "tags",
+    "question": "question",
+    "original question": "question",
+    "query": "question",
+    "answer": "answer",
+    "response": "answer",
+    "rephrased question": "rephrased",
+    "rephrased": "rephrased",
+    "rephrase": "rephrased",
+    "approved": "approved",
+    "published": "approved",
+    "follow up number": "followup",
+    "follow up": "followup",
+    "followup number": "followup",
+    "followup": "followup",
+    "follow-up number": "followup",
+    "follow-up": "followup",
+    "links": "links",
+    "link": "links",
+    "references": "links",
+}
 
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -57,16 +101,20 @@ class handler(BaseHTTPRequestHandler):
         try:
             entries = []
             ext = os.path.splitext(filename.lower())[1]
+            ALL_COLS = ("num", "category", "asker", "date", "time", "tags", "question", "answer", "rephrased", "approved", "followup", "links")
             
             if ext == ".json":
-                entries = json.loads(file_content)
-                if not isinstance(entries, list):
+                raw_entries = json.loads(file_content)
+                if not isinstance(raw_entries, list):
                     raise Exception("JSON file must contain a list of objects.")
-                for idx, entry in enumerate(entries):
-                    if "num" not in entry or "question" not in entry:
+                for idx, entry in enumerate(raw_entries):
+                    normalized = {COLUMN_ALIASES.get(str(k).strip().lower(), str(k).strip().lower()): v for k, v in entry.items()}
+                    if "num" not in normalized or "question" not in normalized:
                         raise Exception(f"Item at index {idx} must contain at least 'num' and 'question'.")
-                    for col in ("num", "category", "asker", "date", "time", "question", "answer", "rephrased", "approved", "followup"):
-                        entry[col] = str(entry.get(col, "")).strip()
+                    entry_dict = {}
+                    for col in ALL_COLS:
+                        entry_dict[col] = str(normalized.get(col, "")).strip() if normalized.get(col) is not None else ""
+                    entries.append(entry_dict)
                         
             elif ext == ".csv":
                 f = io.StringIO(file_content)
@@ -74,7 +122,7 @@ class handler(BaseHTTPRequestHandler):
                 rows = list(reader)
                 if not rows:
                     raise Exception("CSV file is empty.")
-                header = [h.strip().lower() for h in rows[0]]
+                header = [COLUMN_ALIASES.get(h.strip().lower(), h.strip().lower()) for h in rows[0]]
                 if "num" not in header or "question" not in header:
                     raise Exception("CSV must contain at least 'num' and 'question' columns.")
                 col_map = {col: header.index(col) for col in header}
@@ -83,7 +131,7 @@ class handler(BaseHTTPRequestHandler):
                     if not row or not any(row):
                         continue
                     entry = {}
-                    for col_name in ("num", "category", "asker", "date", "time", "question", "answer", "rephrased", "approved", "followup"):
+                    for col_name in ALL_COLS:
                         if col_name in col_map and col_map[col_name] < len(row):
                             entry[col_name] = row[col_map[col_name]].strip()
                         else:
@@ -99,15 +147,19 @@ class handler(BaseHTTPRequestHandler):
                 try:
                     conn = sqlite3.connect(tmp_path)
                     cursor = conn.cursor()
-                    cursor.execute("SELECT num, category, asker, date, time, question, answer, rephrased, approved, followup FROM qna;")
+                    cursor.execute("SELECT * FROM qna;")
                     rows = cursor.fetchall()
-                    cols = [c[0] for c in cursor.description]
+                    cols = [COLUMN_ALIASES.get(c[0].strip().lower(), c[0].strip().lower()) for c in cursor.description]
                     conn.close()
                     
                     for row in rows:
                         entry = {}
-                        for idx, col_name in enumerate(cols):
-                            entry[col_name] = str(row[idx]) if row[idx] is not None else ""
+                        for col_name in ALL_COLS:
+                            if col_name in cols:
+                                idx = cols.index(col_name)
+                                entry[col_name] = str(row[idx]) if row[idx] is not None else ""
+                            else:
+                                entry[col_name] = ""
                         entries.append(entry)
                 finally:
                     if os.path.exists(tmp_path):
@@ -115,8 +167,75 @@ class handler(BaseHTTPRequestHandler):
                             os.remove(tmp_path)
                         except Exception:
                             pass
+            elif ext in (".xlsx", ".xls"):
+                import openpyxl
+                import datetime
+                
+                def format_excel_cell(val, col_name):
+                    if val is None:
+                        return ""
+                    if col_name in ("num", "followup"):
+                        if isinstance(val, (int, float)):
+                            try:
+                                f = float(val)
+                                if f.is_integer():
+                                    return str(int(f))
+                            except Exception:
+                                pass
+                        s = str(val).strip()
+                        parts = [p.strip() for p in s.split(",") if p.strip()]
+                        cleaned = []
+                        for p in parts:
+                            try:
+                                f = float(p)
+                                if f.is_integer():
+                                    cleaned.append(str(int(f)))
+                                else:
+                                    cleaned.append(p)
+                            except Exception:
+                                cleaned.append(p)
+                        return ", ".join(cleaned) if cleaned else s
+                    elif col_name == "time":
+                        if isinstance(val, (datetime.time, datetime.datetime)):
+                            return val.strftime("%H:%M")
+                        return str(val).strip()
+                    elif col_name == "date":
+                        if isinstance(val, datetime.datetime):
+                            return val.strftime("%d.%m.%Y")
+                        return str(val).strip()
+                    elif col_name == "approved":
+                        if isinstance(val, bool):
+                            return "true" if val else "false"
+                        s = str(val).strip().lower()
+                        return "true" if s in ("true", "1", "yes") else ("false" if s in ("false", "0", "no") else s)
+                    return str(val).strip()
+                
+                file_bytes = base64.b64decode(file_content)
+                wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
+                ws = wb.active
+                rows = list(ws.iter_rows(values_only=True))
+                if not rows:
+                    raise Exception("Excel file is empty.")
+                header = [COLUMN_ALIASES.get(str(h).strip().lower(), str(h).strip().lower()) if h is not None else "" for h in rows[0]]
+                if "num" not in header or "question" not in header:
+                    raise Exception("Excel file must contain at least 'num' and 'question' columns in header.")
+                col_map = {col: header.index(col) for col in header if col}
+                
+                for row in rows[1:]:
+                    if not row or not any(c is not None and str(c).strip() for c in row):
+                        continue
+                    entry = {}
+                    for col_name in ALL_COLS:
+                        if col_name in col_map and col_map[col_name] < len(row):
+                            val = row[col_map[col_name]]
+                            entry[col_name] = format_excel_cell(val, col_name)
+                        else:
+                            entry[col_name] = ""
+                    if not entry.get("num") and not entry.get("question"):
+                        continue
+                    entries.append(entry)
             else:
-                raise Exception("Unsupported file format. Must be .json, .csv, or .db")
+                raise Exception("Unsupported file format. Must be .json, .csv, .db, or .xlsx")
                 
             cfg = get_db_config()
             db_url = cfg[f"{db_choice}_url"]
@@ -129,19 +248,22 @@ class handler(BaseHTTPRequestHandler):
                 asker TEXT,
                 date TEXT,
                 time TEXT,
+                tags TEXT,
                 question TEXT,
                 answer TEXT,
                 rephrased TEXT,
                 approved TEXT,
-                followup TEXT
+                followup TEXT,
+                links TEXT
             );
             """
             execute_turso_statements([{"type": "execute", "stmt": {"sql": create_table_sql}}], db_url=db_url, auth_token=db_token)
+            ensure_schema_columns(db_url=db_url, auth_token=db_token)
             
             insert_sql = """
             INSERT OR REPLACE INTO qna (
-                num, category, asker, date, time, question, answer, rephrased, approved, followup
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                num, category, asker, date, time, tags, question, answer, rephrased, approved, followup, links
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
             """
             statements = []
 
@@ -154,8 +276,8 @@ class handler(BaseHTTPRequestHandler):
 
                 for d in entries:
                     try:
-                        num_val = int(d["num"])
-                    except ValueError:
+                        num_val = int(float(str(d["num"]).strip()))
+                    except (ValueError, TypeError):
                         continue
 
                     if num_val in existing_nums:
@@ -170,11 +292,13 @@ class handler(BaseHTTPRequestHandler):
                         {"type": "text", "value": d.get("asker", "")},
                         {"type": "text", "value": d.get("date", "")},
                         {"type": "text", "value": d.get("time", "")},
+                        {"type": "text", "value": d.get("tags", "")},
                         {"type": "text", "value": d.get("question", "")},
                         {"type": "text", "value": d.get("answer", "")},
                         {"type": "text", "value": d.get("rephrased", "")},
                         {"type": "text", "value": d.get("approved", "")},
-                        {"type": "text", "value": d.get("followup", "")}
+                        {"type": "text", "value": d.get("followup", "")},
+                        {"type": "text", "value": d.get("links", "")}
                     ]
                     statements.append({
                         "type": "execute",
@@ -189,8 +313,8 @@ class handler(BaseHTTPRequestHandler):
 
                 for d in entries:
                     try:
-                        num_val = int(d["num"])
-                    except ValueError:
+                        num_val = int(float(str(d["num"]).strip()))
+                    except (ValueError, TypeError):
                         continue
                     args = [
                         {"type": "integer", "value": str(num_val)},
@@ -198,11 +322,13 @@ class handler(BaseHTTPRequestHandler):
                         {"type": "text", "value": d.get("asker", "")},
                         {"type": "text", "value": d.get("date", "")},
                         {"type": "text", "value": d.get("time", "")},
+                        {"type": "text", "value": d.get("tags", "")},
                         {"type": "text", "value": d.get("question", "")},
                         {"type": "text", "value": d.get("answer", "")},
                         {"type": "text", "value": d.get("rephrased", "")},
                         {"type": "text", "value": d.get("approved", "")},
-                        {"type": "text", "value": d.get("followup", "")}
+                        {"type": "text", "value": d.get("followup", "")},
+                        {"type": "text", "value": d.get("links", "")}
                     ]
                     statements.append({
                         "type": "execute",

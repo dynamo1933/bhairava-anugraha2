@@ -36,12 +36,12 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"error": "db parameter must be 'prod' or 'uat'"}).encode('utf-8'))
             return
-        if fmt not in ("csv", "json", "db"):
+        if fmt not in ("csv", "json", "db", "xlsx", "excel"):
             self.send_response(400)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            self.wfile.write(json.dumps({"error": "format parameter must be 'csv', 'json', or 'db'"}).encode('utf-8'))
+            self.wfile.write(json.dumps({"error": "format parameter must be 'csv', 'json', 'db', or 'xlsx'"}).encode('utf-8'))
             return
             
         try:
@@ -53,6 +53,7 @@ class handler(BaseHTTPRequestHandler):
             
             filename = f"bhairava_{db_choice}_db"
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            headers = ["num", "category", "asker", "date", "time", "tags", "question", "answer", "rephrased", "approved", "followup", "links"]
             
             if fmt == "json":
                 content = json.dumps(entries, indent=2).encode('utf-8')
@@ -67,24 +68,33 @@ class handler(BaseHTTPRequestHandler):
             elif fmt == "csv":
                 output = io.StringIO()
                 writer = csv.writer(output, quoting=csv.QUOTE_ALL)
-                writer.writerow(["num", "category", "asker", "date", "time", "question", "answer", "rephrased", "approved", "followup"])
+                writer.writerow(headers)
                 for d in entries:
-                    writer.writerow([
-                        d.get("num", ""),
-                        d.get("category", ""),
-                        d.get("asker", ""),
-                        d.get("date", ""),
-                        d.get("time", ""),
-                        d.get("question", ""),
-                        d.get("answer", ""),
-                        d.get("rephrased", ""),
-                        d.get("approved", ""),
-                        d.get("followup", "")
-                    ])
+                    writer.writerow([d.get(col, "") for col in headers])
                 content = output.getvalue().encode('utf-8')
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/csv')
                 self.send_header('Content-Disposition', f'attachment; filename="{filename}_{timestamp}.csv"')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Content-Length', str(len(content)))
+                self.end_headers()
+                self.wfile.write(content)
+                
+            elif fmt in ("xlsx", "excel"):
+                import openpyxl
+                
+                wb = openpyxl.Workbook()
+                ws = wb.active
+                ws.title = "QnA"
+                ws.append(headers)
+                for d in entries:
+                    ws.append([d.get(col, "") for col in headers])
+                output = io.BytesIO()
+                wb.save(output)
+                content = output.getvalue()
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                self.send_header('Content-Disposition', f'attachment; filename="{filename}_{timestamp}.xlsx"')
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.send_header('Content-Length', str(len(content)))
                 self.end_headers()
@@ -104,18 +114,20 @@ class handler(BaseHTTPRequestHandler):
                         asker TEXT,
                         date TEXT,
                         time TEXT,
+                        tags TEXT,
                         question TEXT,
                         answer TEXT,
                         rephrased TEXT,
                         approved TEXT,
-                        followup TEXT
+                        followup TEXT,
+                        links TEXT
                     );
                     """)
                     
                     insert_sql = """
                     INSERT INTO qna (
-                        num, category, asker, date, time, question, answer, rephrased, approved, followup
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                        num, category, asker, date, time, tags, question, answer, rephrased, approved, followup, links
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                     """
                     rows_to_insert = []
                     for d in entries:
@@ -129,11 +141,13 @@ class handler(BaseHTTPRequestHandler):
                             d.get("asker", ""),
                             d.get("date", ""),
                             d.get("time", ""),
+                            d.get("tags", ""),
                             d.get("question", ""),
                             d.get("answer", ""),
                             d.get("rephrased", ""),
                             d.get("approved", "true"),
-                            d.get("followup", "")
+                            d.get("followup", ""),
+                            d.get("links", "")
                         ))
                     cursor.executemany(insert_sql, rows_to_insert)
                     conn.commit()
