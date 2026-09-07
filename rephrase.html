@@ -2682,6 +2682,34 @@
       statsPending.textContent = pending;
     }
 
+    function normalizeCategory(rawCat) {
+      if (!rawCat) return "Mantra & Japa";
+      let s = String(rawCat).trim();
+      s = s.replace(/_x[0-9a-fA-F]{4}_/g, "");
+      s = s.replace(/[\u00ad\u200b\u200c\u200d]/g, "");
+      const norm = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+      if (norm.includes("advanced") || norm.includes("gudha")) {
+        return "Advanced Topics";
+      }
+      if (norm.includes("experience") || norm.includes("anubhava") || norm.includes("anubhav")) {
+        return "Experiences in Sādhanā";
+      }
+      if (norm.includes("women") || norm.includes("stri") || norm.includes("stree")) {
+        return "Women & Sādhanā";
+      }
+      if (norm.includes("mandala") || norm.includes("anusthan") || norm.includes("anushthan") || (norm.includes("m") && norm.includes("ala") && (norm.includes("anu") || norm.includes("na") || norm.includes("ala")))) {
+        return "Maṇḍala & Anuṣṭhāna";
+      }
+      if (norm.includes("puja") || norm.includes("arati") || norm.includes("aarti") || norm.includes("ritual") || norm.includes("puj")) {
+        return "Pūjā, Āratī & Rituals";
+      }
+      if (norm.includes("mantra") || norm.includes("japa")) {
+        return "Mantra & Japa";
+      }
+      return s;
+    }
+
     // Filter and Search
     function applyFilters() {
       const searchVal = searchInput.value.toLowerCase().trim();
@@ -2705,7 +2733,7 @@
           (publishVal === 'unpublished' && !isApproved);
 
         // Category filter
-        const matchesCat = catVal === 'all' || d.category === catVal;
+        const matchesCat = catVal === 'all' || normalizeCategory(d.category) === normalizeCategory(catVal);
 
         // Status filter
         const hasRephrased = d.rephrased && d.rephrased.trim() !== '';

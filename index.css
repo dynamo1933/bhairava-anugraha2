@@ -658,6 +658,29 @@ footer {
   font-size: 26px; line-height: 1.4; color: var(--paper-2);
   font-style: italic;
 }
+.overlay .original .body p {
+  margin: 0 0 16px;
+}
+.overlay .original .body p:last-child {
+  margin-bottom: 0;
+}
+.overlay .original .body ul {
+  list-style: none; padding: 0; margin: 0 0 16px;
+}
+.overlay .original .body ul:last-child {
+  margin-bottom: 0;
+}
+.overlay .original .body li {
+  position: relative;
+  font-size: 24px; line-height: 1.4; color: var(--paper-2);
+  padding-left: 20px;
+  margin: 0 0 8px;
+}
+.overlay .original .body li::before {
+  content: "•";
+  position: absolute; left: 0; top: 0;
+  color: var(--gold);
+}
 .overlay .original .body em { font-style: italic; color: var(--gold); }
 .overlay .original .body strong { font-weight: 600; color: var(--paper); }
 .overlay .original .body u,
@@ -909,36 +932,69 @@ u {
 .folio-page {
   position: relative;
   background: var(--ink);
-  padding: 64px 0 96px;
+  padding: 0 0 96px;
   min-height: 100vh;
 }
 .folio-page[hidden] { display: none; }
 .folio-page .chrome {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(7,6,10,0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(212,166,74,0.2);
+}
+.folio-page .chrome-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 18px 56px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.folio-page .back-link {
   background: transparent;
-  border-bottom: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  border: none;
+  color: var(--ink-mute);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+.folio-page .back-link:hover {
+  color: var(--gold);
+}
+.folio-page .back-link .arr {
+  font-family: var(--display);
+  color: var(--gold);
+  font-size: 16px;
+}
+.folio-page .folio-meta-wrap {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  color: var(--gold-2);
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.folio-page .folio-meta-wrap .om {
+  font-family: var(--display);
+  font-size: 18px;
+  color: var(--gold);
 }
 .folio-page-inner {
   max-width: 1100px; margin: 0 auto;
-  padding: 0 96px;
+  padding: 40px 96px 0;
   position: relative; z-index: 2;
-}
-.folio-back {
-  margin-bottom: 32px;
-  display: flex; align-items: center; gap: 14px;
-}
-.folio-back a {
-  font-family: var(--mono); font-size: 10px; letter-spacing: 0.24em;
-  color: var(--ink-mute); text-transform: uppercase;
-  border-bottom: 1px solid transparent; padding-bottom: 4px;
-  cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
-}
-.folio-back a:hover { color: var(--gold); border-color: var(--gold); }
-.folio-back .arr {
-  font-family: var(--display); color: var(--gold); font-size: 16px;
 }
 .folio-header {
   text-align: center;
@@ -974,13 +1030,15 @@ u {
   grid-template-columns: 80px 80px 1fr 220px 60px;
 }
 
-/* When a folio page is active, hide all homepage sections. */
+/* When a folio page is active, hide all homepage sections and the main header. */
+body.is-folio-view > header.chrome,
+body.is-folio-view #site-chrome,
 body.is-folio-view .hero,
 body.is-folio-view .categories,
 body.is-folio-view .featured,
 body.is-folio-view .recent,
 body.is-folio-view .about,
-body.is-folio-view > footer { display: none; }
+body.is-folio-view > footer { display: none !important; }
 body:not(.is-folio-view) .folio-page { display: none; }
 
 @media (max-width: 1100px) {
@@ -1093,7 +1151,7 @@ body:not(.is-folio-view) .folio-page { display: none; }
   .foot-mantra .rom { font-size: 14px; letter-spacing: 0.12em; }
 
   /* --- Folio page --- */
-  .folio-page { padding: 32px 0 56px; }
+  .folio-page { padding: 0 0 56px; }
   .folio-page-inner { padding: 0 20px; }
   .folio-back { margin-bottom: 24px; }
   .folio-header { padding: 8px 0 28px; margin-bottom: 28px; }

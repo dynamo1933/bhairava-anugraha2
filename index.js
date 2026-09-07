@@ -16,6 +16,37 @@ const CATEGORY_META = {
 };
 const CAT_ORDER = ["mantra-japa", "puja-aarti", "mandala", "experiences", "advanced", "women"];
 
+function normalizeCategory(rawCat) {
+  if (!rawCat) return "Mantra & Japa";
+  let s = String(rawCat).trim();
+  // Remove XML hex escapes like _x0081_, _x008d_, etc.
+  s = s.replace(/_x[0-9a-fA-F]{4}_/g, "");
+  // Remove soft hyphens and invisible chars
+  s = s.replace(/[\u00ad\u200b\u200c\u200d]/g, "");
+  const norm = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  if (norm.includes("advanced") || norm.includes("gudha")) {
+    return "Advanced Topics";
+  }
+  if (norm.includes("experience") || norm.includes("anubhava") || norm.includes("anubhav")) {
+    return "Experiences in Sādhanā";
+  }
+  if (norm.includes("women") || norm.includes("stri") || norm.includes("stree")) {
+    return "Women & Sādhanā";
+  }
+  if (norm.includes("mandala") || norm.includes("anusthan") || norm.includes("anushthan") || (norm.includes("m") && norm.includes("ala") && (norm.includes("anu") || norm.includes("na") || norm.includes("ala")))) {
+    return "Maṇḍala & Anuṣṭhāna";
+  }
+  if (norm.includes("puja") || norm.includes("arati") || norm.includes("aarti") || norm.includes("ritual") || norm.includes("puj")) {
+    return "Pūjā, Āratī & Rituals";
+  }
+  if (norm.includes("mantra") || norm.includes("japa")) {
+    return "Mantra & Japa";
+  }
+  if (CATEGORY_META[s]) return s;
+  return s;
+}
+
 // Minimal RFC-4180 CSV parser: quoted fields, embedded newlines, "" escapes.
 function parseCSV(text) {
   if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);  // strip BOM
@@ -181,6 +212,40 @@ function formatRichText(s) {
   return out;
 }
 
+function stripOuterQuotes(s) {
+  if (!s) return "";
+  let str = String(s).trim();
+  while (
+    (str.startsWith('"') && str.endsWith('"') && str.length >= 2) ||
+    (str.startsWith('“') && str.endsWith('”') && str.length >= 2) ||
+    (str.startsWith('‘') && str.endsWith('’') && str.length >= 2) ||
+    (str.startsWith("'") && str.endsWith("'") && str.length >= 2)
+  ) {
+    str = str.slice(1, -1).trim();
+  }
+  return str;
+}
+
+function formatQuestionHtml(s) {
+  if (!s) return "";
+  const cleaned = stripOuterQuotes(s);
+  const escape = t => t.replace(/&(?!#?\w+;)/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  
+  const paras = cleaned.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+  if (paras.length === 0) return "";
+  
+  return paras.map(para => {
+    const lines = para.split("\n").map(l => l.trim()).filter(Boolean);
+    const isList = lines.length > 0 && lines.every(l => /^-\s+/.test(l));
+    if (isList) {
+      const items = lines.map(l => formatRichText(escape(l.replace(/^-\s+/, "")))).map(i => "<li>" + i + "</li>").join("");
+      return "<ul>" + items + "</ul>";
+    }
+    const content = lines.map(l => formatRichText(escape(l))).join("<br />");
+    return "<p>" + content + "</p>";
+  }).join("");
+}
+
 function paragraphsToHtml(s) {
   if (!s) return "";
   const escape = t => t.replace(/&(?!#?\w+;)/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -191,7 +256,8 @@ function paragraphsToHtml(s) {
       const items = lines.map(l => formatRichText(escape(l.replace(/^-\s+/, "")))).map(i => "<li>" + i + "</li>").join("");
       return "<ul>" + items + "</ul>";
     }
-    return "<p>" + formatRichText(escape(para)) + "</p>";
+    const content = lines.map(l => formatRichText(escape(l))).join("<br />");
+    return "<p>" + content + "</p>";
   }).join("");
 }
 
@@ -203,8 +269,9 @@ function buildData(csvText) {
   const entries = [];
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
-    const cat = (r[col("category")] || "").trim();
-    if (!cat) continue;
+    const rawCat = (r[col("category")] || "").trim();
+    if (!rawCat) continue;
+    const cat = normalizeCategory(rawCat);
     let meta = CATEGORY_META[cat];
     if (!meta) {
       const key = cat.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -247,10 +314,10 @@ function buildData(csvText) {
       time: time,
       iso: toIso(date, time),
       category_key: meta.key,
-      title: firstSentence(displayedQuestion),
-      question: displayedQuestion.replace(/\n+/g, " "),
-      original: question.replace(/\n+/g, " "),
-      rephrased: rephrased.replace(/\n+/g, " "),
+      title: firstSentence(displayedQuestion.replace(/\n+/g, " ")),
+      question: displayedQuestion,
+      original: question,
+      rephrased: rephrased,
       answer: paragraphsToHtml(answer),
       followupNums,          // array of followup entry nums
       tags,
@@ -296,8 +363,9 @@ function buildDataFromJson(jsonList) {
   const entries = [];
   for (let i = 0; i < jsonList.length; i++) {
     const item = jsonList[i];
-    const cat = (item.category || "").trim();
-    if (!cat) continue;
+    const rawCat = (item.category || "").trim();
+    if (!rawCat) continue;
+    const cat = normalizeCategory(rawCat);
     let meta = CATEGORY_META[cat];
     if (!meta) {
       const key = cat.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -335,10 +403,10 @@ function buildDataFromJson(jsonList) {
       time: time,
       iso: toIso(date, time),
       category_key: meta.key,
-      title: firstSentence(displayedQuestion),
-      question: displayedQuestion.replace(/\n+/g, " "),
-      original: question.replace(/\n+/g, " "),
-      rephrased: rephrased.replace(/\n+/g, " "),
+      title: firstSentence(displayedQuestion.replace(/\n+/g, " ")),
+      question: displayedQuestion,
+      original: question,
+      rephrased: rephrased,
       answer: paragraphsToHtml(answer),
       followupNums,
       tags,
@@ -529,7 +597,7 @@ function renderFeatured() {
     <div class="feat-text" style="grid-column: 1 / -1;">
       <div class="lab mono">${escapeHtml(labelBits)}</div>
       <h2>${formatRichText(escapeHtml(asciiTitle(e.title)))}</h2>
-      <p class="qbody">"${formatRichText(escapeHtml(e.question))}"</p>
+      <p class="qbody">"${formatRichText(escapeHtml(e.question.replace(/\n+/g, " ")))}"</p>
       <div class="answer">${previewHtml}</div>
       <div class="meta-row">
         <div class="item"><div class="k">ASKED BY</div><div class="v">${escapeHtml(e.asker)}</div></div>
@@ -600,7 +668,7 @@ function _buildSingleEntryHtml(e) {
         <div class="head">
           <span>QUESTION</span>
         </div>
-        <div class="body"><p>"${formatRichText(escapeHtml(e.question))}"</p></div>
+        <div class="body">${formatQuestionHtml(e.question)}</div>
       </aside>
       <div class="answer">
         ${answerHtml}
@@ -651,7 +719,7 @@ function _buildThreadHtml(chain, activeNum) {
         <div class="layout">
           <aside class="original">
             <div class="head"><span>${isFollowup ? "FOLLOW-UP QUESTION" : "QUESTION"}</span></div>
-            <div class="body"><p>"${formatRichText(escapeHtml(e.question))}"</p></div>
+            <div class="body">${formatQuestionHtml(e.question)}</div>
           </aside>
           <div class="answer">
             ${answerHtml}

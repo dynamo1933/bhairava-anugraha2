@@ -932,8 +932,8 @@ if __name__ == '__main__':
     except Exception as e:
         print(f"[-] Analytics DB Init Warning: {e}")
 
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("", PORT), QnAAPIHandler) as httpd:
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
+    with socketserver.ThreadingTCPServer(("", PORT), QnAAPIHandler) as httpd:
         print(f"[+] Server started at http://localhost:{PORT}")
         print(f"[+] Serving admin dashboard at http://localhost:{PORT}/rephrase.html")
         print("[*] Press Ctrl+C to stop.")
