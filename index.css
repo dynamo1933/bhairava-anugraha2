@@ -654,32 +654,34 @@ footer {
 }
 .overlay .original .head .gold { color: var(--gold); }
 .overlay .original .body {
-  font-family: var(--display);
-  font-size: 26px; line-height: 1.4; color: var(--paper-2);
-  font-style: italic;
+  font-family: var(--serif);
+  font-size: 17px; line-height: 1.75; color: var(--ink-mute);
+  font-style: normal;
 }
 .overlay .original .body p {
-  margin: 0 0 16px;
+  font-size: 17px; line-height: 1.75; color: var(--ink-mute);
+  margin: 0 0 18px;
 }
 .overlay .original .body p:last-child {
   margin-bottom: 0;
 }
 .overlay .original .body ul {
-  list-style: none; padding: 0; margin: 0 0 16px;
+  list-style: none; padding: 0; margin: 0 0 18px;
 }
 .overlay .original .body ul:last-child {
   margin-bottom: 0;
 }
 .overlay .original .body li {
   position: relative;
-  font-size: 24px; line-height: 1.4; color: var(--paper-2);
-  padding-left: 20px;
-  margin: 0 0 8px;
+  font-size: 17px; line-height: 1.75; color: var(--ink-mute);
+  padding-left: 22px;
+  margin: 0 0 10px;
 }
 .overlay .original .body li::before {
-  content: "•";
+  content: "◇";
   position: absolute; left: 0; top: 0;
-  color: var(--gold);
+  color: var(--gold-2); font-family: var(--display);
+  font-size: 16px; line-height: 1.6;
 }
 .overlay .original .body em { font-style: italic; color: var(--gold); }
 .overlay .original .body strong { font-weight: 600; color: var(--paper); }
@@ -695,9 +697,13 @@ u {
 .feat-text .qbody strong { font-weight: 600; color: var(--paper); }
 .feat-text .qbody em { font-style: italic; color: var(--gold); }
 .feat-text .answer strong { color: var(--paper); font-weight: 600; }
+.overlay .answer {
+  font-family: var(--display);
+  font-style: normal;
+}
 .overlay .answer .lead {
-  font-family: var(--display); font-style: italic;
-  font-size: 24px; line-height: 1.5; color: var(--paper);
+  font-family: var(--display); font-style: normal;
+  font-size: 26px; line-height: 1.45; color: var(--paper);
   margin: 0 0 24px;
 }
 .overlay .answer ul {
@@ -705,42 +711,43 @@ u {
 }
 .overlay .answer li {
   position: relative;
-  font-size: 17px; line-height: 1.75; color: var(--ink-mute);
+  font-family: var(--display); font-style: normal;
+  font-size: 24px; line-height: 1.45; color: var(--paper-2);
   padding-left: 22px;
   margin: 0 0 10px;
 }
 .overlay .answer li::before {
-  content: "◇";
+  content: "•";
   position: absolute; left: 0; top: 0;
-  color: var(--gold-2); font-family: var(--display);
-  font-size: 16px; line-height: 1.6;
+  color: var(--gold); font-size: 20px; line-height: 1.4;
 }
 .overlay .answer li strong { color: var(--paper); font-weight: 600; }
 .overlay .answer li em { color: var(--gold); font-style: italic; }
 .overlay .answer strong { color: var(--paper); font-weight: 600; }
 .overlay .answer em { color: var(--gold); font-style: italic; }
 .overlay .answer p {
-  font-size: 17px; line-height: 1.75; color: var(--ink-mute);
+  font-family: var(--display); font-style: normal;
+  font-size: 24px; line-height: 1.45; color: var(--paper-2);
   margin: 0 0 18px;
 }
-.overlay .answer p em { color: var(--paper); font-style: italic; }
+.overlay .answer p em { color: var(--gold); font-style: italic; }
 .overlay .answer .skt-inline {
-  font-family: var(--skt); color: var(--gold); font-size: 17px;
+  font-family: var(--skt); color: var(--gold); font-size: 24px; font-style: normal;
 }
 .overlay .answer .pull {
   margin: 28px 0;
   padding: 22px 28px;
   border-left: 2px solid var(--gold-2);
-  font-family: var(--display); font-style: italic;
-  font-size: 22px; line-height: 1.45; color: var(--paper);
+  font-family: var(--display); font-style: normal;
+  font-size: 24px; line-height: 1.45; color: var(--paper);
 }
 .overlay .answer .signoff {
   margin-top: 36px;
   padding-top: 22px;
   border-top: 1px solid rgba(212,166,74,0.2);
   display: flex; justify-content: space-between; align-items: center;
-  font-family: var(--display); font-style: italic; color: var(--gold);
-  font-size: 18px;
+  font-family: var(--display); font-style: normal; color: var(--gold);
+  font-size: 20px;
 }
 .overlay .answer .signoff .om-mark { font-size: 28px; }
 
@@ -1176,12 +1183,15 @@ body:not(.is-folio-view) .folio-page { display: none; }
   .overlay .layout { grid-template-columns: 1fr; gap: 28px; }
   .overlay .original { padding: 18px; }
   .overlay .original .head { font-size: 8px; }
-  .overlay .original .body { font-size: 18px; }
-  .overlay .answer .lead { font-size: 19px; line-height: 1.45; margin: 0 0 18px; }
-  .overlay .answer p { font-size: 16px; line-height: 1.65; }
-  .overlay .answer .skt-inline { font-size: 16px; }
-  .overlay .answer .pull { padding: 16px 18px; font-size: 18px; margin: 22px 0; }
-  .overlay .answer .signoff { margin-top: 24px; font-size: 16px; }
+  .overlay .original .body { font-size: 16px; line-height: 1.65; }
+  .overlay .original .body p { font-size: 16px; line-height: 1.65; }
+  .overlay .original .body li { font-size: 16px; line-height: 1.65; }
+  .overlay .answer .lead { font-size: 20px; line-height: 1.4; margin: 0 0 18px; }
+  .overlay .answer p { font-size: 19px; line-height: 1.45; }
+  .overlay .answer li { font-size: 19px; line-height: 1.45; }
+  .overlay .answer .skt-inline { font-size: 19px; }
+  .overlay .answer .pull { padding: 16px 18px; font-size: 19px; margin: 22px 0; }
+  .overlay .answer .signoff { margin-top: 24px; font-size: 18px; }
 
   /* --- Search palette --- */
   .palette { padding: 36px 12px 24px; }
@@ -1223,9 +1233,11 @@ body:not(.is-folio-view) .folio-page { display: none; }
   .overlay { padding: 12px 8px; }
   .overlay-card { padding: 24px 16px 28px; }
   .overlay h1 { font-size: 24px; }
-  .overlay .answer .lead { font-size: 17px; }
-  .overlay .answer p { font-size: 15px; }
-  .overlay .original .body { font-size: 16px; }
+  .overlay .answer .lead { font-size: 18px; }
+  .overlay .answer p { font-size: 17px; }
+  .overlay .answer li { font-size: 17px; }
+  .overlay .original .body { font-size: 15px; }
+  .overlay .original .body p { font-size: 15px; }
 }
 
 /* --- Falling gold-leaf micro-animations --- */
