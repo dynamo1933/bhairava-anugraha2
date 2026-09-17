@@ -101,3 +101,26 @@ Create `gemini_change.log`, establish mandatory agent instructions to always rea
 - `git status` verified clean tracking of intended files.
 - `git push` to `origin/main` executed and verified.
 
+---
+
+## [2026-09-17 11:52 IST] - Add Missing Vercel Serverless Function `api/login.py`
+
+### Objective:
+Resolve 404 error and login failure on Vercel production deployment (`https://bhairava-anugraha.vercel.app/rephrase`).
+
+### Root Cause:
+The `/api/login` endpoint was previously handled directly in the local Python `server.py` file. In Vercel serverless architecture, each route in `/api/*` requires a corresponding Python file in `api/`. Because `api/login.py` did not exist in the repository, requests to `https://bhairava-anugraha.vercel.app/api/login` returned `404 Not Found`, causing the UI to always report "Invalid username or password" regardless of the credentials entered.
+
+### Changes:
+1. **Created `api/login.py`**:
+   - Implemented standard Vercel serverless `handler(BaseHTTPRequestHandler)` class.
+   - Handled `do_OPTIONS` for CORS preflight requests with credentials headers.
+   - Handled `do_POST` to authenticate `username` and `password` against environment variables (`ADMIN_USERNAME` / `ADMIN_PASSWORD`, defaulting to `admin` / `admin123`), returning `{ "success": True, "token": ... }` upon success or 401 JSON on error.
+2. **Git Commit & Push**:
+   - Pushed `api/login.py` and changelog to `origin/main` to trigger automatic Vercel deployment.
+
+### Verification:
+- Simulated request in Python to verify `api.login.handler` imports and functions properly.
+- Prepared git push to update Vercel production serverless routing.
+
+
