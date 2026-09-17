@@ -125,6 +125,56 @@ function firstSentence(s, maxLen) {
   out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)(?!.*(?:&lt;|<)\/u(?:&gt;|>))/gi, "");
   return out;
 }
+// Clean corrupted UTF-8 sequences that were previously decoded as Windows-1252 / CP1252
+// or contain Excel escapes like _x009d_, _x0081_, etc.
+function cleanMojibake(s) {
+  if (!s) return "";
+  let t = String(s);
+  // Expand Excel escapes like _x009d_ -> chr(0x9d)
+  t = t.replace(/_x([0-9a-fA-F]{4})_/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+  // Fix known damaged fragments before decoding
+  t = t.replace(/â(?=["'])/g, "");
+  t = t.replace(/â(?=\s*the child-form)/g, " —");
+  t = t.replace(/â(?='s\b)/g, "");
+  t = t.replace(/â(?=\*\*)/g, "");
+  t = t.replace(/ä\x81/g, "ā");
+
+  // If no mojibake indicators or control chars, return directly
+  if (!/[âÃÄÅáéàè\u0080-\u009f]/.test(t)) {
+    return t;
+  }
+
+  const cp1252Map = {
+    0x20ac: 0x80, 0x201a: 0x82, 0x0192: 0x83, 0x201e: 0x84, 0x2026: 0x85, 0x2020: 0x86, 0x2021: 0x87,
+    0x02c6: 0x88, 0x2030: 0x89, 0x0160: 0x8a, 0x2039: 0x8b, 0x0152: 0x8c, 0x017d: 0x8e, 0x2018: 0x91,
+    0x2019: 0x92, 0x201c: 0x93, 0x201d: 0x94, 0x2022: 0x95, 0x2013: 0x96, 0x2014: 0x97, 0x02dc: 0x98,
+    0x2122: 0x99, 0x0161: 0x9a, 0x203a: 0x9b, 0x0153: 0x9c, 0x017e: 0x9e, 0x0178: 0x9f
+  };
+
+  try {
+    const encoder = new TextEncoder();
+    const bytes = [];
+    for (let i = 0; i < t.length; i++) {
+      const code = t.charCodeAt(i);
+      if (cp1252Map[code] !== undefined) {
+        bytes.push(cp1252Map[code]);
+      } else if (code <= 0xff) {
+        bytes.push(code);
+      } else {
+        const u = encoder.encode(t[i]);
+        for (let j = 0; j < u.length; j++) bytes.push(u[j]);
+      }
+    }
+    let dec = new TextDecoder("utf-8", { fatal: false }).decode(new Uint8Array(bytes));
+    dec = dec.replace(/\bÄchamanam\b/g, "Āchamanam");
+    dec = dec.replace(/\bÄhuti\b/g, "Āhuti");
+    dec = dec.replace(/\bÄsana\b/g, "Āsana");
+    return dec;
+  } catch (_) {
+    return t;
+  }
+}
+
 // ---------- Rich Text Formatter (Frontend formatting rules) ----------
 // 1. Bold: **text** -> <strong>text</strong>
 // 2. Italics: ##text## -> <em>text</em>
@@ -143,33 +193,33 @@ function formatRichText(s) {
   if (!s) return "";
   let out = String(s);
 
+  // Helper patterns for <u> and closing </u> or <u> (with or without HTML entity escaping)
+  const U_OPEN = '(?:&lt;|<)u\\b[^>]*?(?:&gt;|>)';
+  const U_CLOSE = '(?:&lt;|<)\\/?u\\b[^>]*?(?:&gt;|>)';
+
   // 1. Bold + Italic + Underline
-  // ***<u>text</u>***, **##<u>text</u>##**, ##**<u>text</u>##**, <u>***text***</u>, <u>**##text##**</u>
-  out = out.replace(/\*\*\*(?:&lt;|<)u\b[^>]*?(?:&gt;|>)([\s\S]+?)(?:&lt;|<)\/u(?:&gt;|>)\*\*\*/gi, "<strong><em><u>$1</u></em></strong>");
-  out = out.replace(/\*\*##(?:&lt;|<)u\b[^>]*?(?:&gt;|>)([\s\S]+?)(?:&lt;|<)\/u(?:&gt;|>)(?:##\*\*|\*\*)*/gi, "<strong><em><u>$1</u></em></strong>");
-  out = out.replace(/##\*\*(?:&lt;|<)u\b[^>]*?(?:&gt;|>)([\s\S]+?)(?:&lt;|<)\/u(?:&gt;|>)(?:\*\*##|##)*/gi, "<strong><em><u>$1</u></em></strong>");
-  out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)\*\*\*([\s\S]+?)\*\*\*(?:&lt;|<)\/u(?:&gt;|>)/gi, "<strong><em><u>$1</u></em></strong>");
-  out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)\*\*##([\s\S]+?)##\*\*(?:&lt;|<)\/u(?:&gt;|>)/gi, "<strong><em><u>$1</u></em></strong>");
-  out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)##\*\*([\s\S]+?)\*\*##(?:&lt;|<)\/u(?:&gt;|>)/gi, "<strong><em><u>$1</u></em></strong>");
+  out = out.replace(new RegExp('\\*\\*\\*' + U_OPEN + '([\\s\\S]+?)' + U_CLOSE + '\\s*\\*\\*\\*', 'gi'), "<strong><em><u>$1</u></em></strong>");
+  out = out.replace(new RegExp('\\*\\*##' + U_OPEN + '([\\s\\S]+?)' + U_CLOSE + '\\s*(?:##\\*\\*|\\*\\*)', 'gi'), "<strong><em><u>$1</u></em></strong>");
+  out = out.replace(new RegExp('##\\*\\*' + U_OPEN + '([\\s\\S]+?)' + U_CLOSE + '\\s*(?:\\*\\*##|##)', 'gi'), "<strong><em><u>$1</u></em></strong>");
+  out = out.replace(new RegExp(U_OPEN + '\\*\\*\\*([\\s\\S]+?)\\*\\*\\*' + U_CLOSE, 'gi'), "<strong><em><u>$1</u></em></strong>");
+  out = out.replace(new RegExp(U_OPEN + '\\*\\*##([\\s\\S]+?)##\\*\\*' + U_CLOSE, 'gi'), "<strong><em><u>$1</u></em></strong>");
+  out = out.replace(new RegExp(U_OPEN + '##\\*\\*([\\s\\S]+?)\\*\\*##' + U_CLOSE, 'gi'), "<strong><em><u>$1</u></em></strong>");
 
   // 2. Bold + Underline
-  // **<u>text</u>**, <u>**text**</u>
-  out = out.replace(/\*\*(?:&lt;|<)u\b[^>]*?(?:&gt;|>)([\s\S]+?)(?:&lt;|<)\/u(?:&gt;|>)\*\*/gi, "<strong><u>$1</u></strong>");
-  out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)\*\*([\s\S]+?)\*\*(?:&lt;|<)\/u(?:&gt;|>)/gi, "<strong><u>$1</u></strong>");
+  // Handles **<u>text</u>**, **<u>text<u>**, **<u>text<u> **, <u>**text**</u>, <u>**text**<u>
+  out = out.replace(new RegExp('\\*\\*' + U_OPEN + '([\\s\\S]+?)' + U_CLOSE + '\\s*\\*\\*', 'gi'), "<strong><u>$1</u></strong>");
+  out = out.replace(new RegExp(U_OPEN + '\\*\\*([\\s\\S]+?)\\*\\*' + U_CLOSE, 'gi'), "<strong><u>$1</u></strong>");
 
   // 3. Italic + Underline
-  // *<u>text</u>*, ##<u>text</u>##, <u>*text*</u>, <u>##text##</u>
-  out = out.replace(/\*(?:&lt;|<)u\b[^>]*?(?:&gt;|>)([\s\S]+?)(?:&lt;|<)\/u(?:&gt;|>)\*/gi, "<em><u>$1</u></em>");
-  out = out.replace(/##(?:&lt;|<)u\b[^>]*?(?:&gt;|>)([\s\S]+?)(?:&lt;|<)\/u(?:&gt;|>)(?:##)*/gi, "<em><u>$1</u></em>");
-  out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)\*([\s\S]+?)\*(?:&lt;|<)\/u(?:&gt;|>)/gi, "<em><u>$1</u></em>");
-  out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)##([\s\S]+?)##(?:&lt;|<)\/u(?:&gt;|>)/gi, "<em><u>$1</u></em>");
+  out = out.replace(new RegExp('\\*' + U_OPEN + '([\\s\\S]+?)' + U_CLOSE + '\\s*\\*', 'gi'), "<em><u>$1</u></em>");
+  out = out.replace(new RegExp('##' + U_OPEN + '([\\s\\S]+?)' + U_CLOSE + '\\s*##?', 'gi'), "<em><u>$1</u></em>");
+  out = out.replace(new RegExp(U_OPEN + '\\*([\\s\\S]+?)\\*' + U_CLOSE, 'gi'), "<em><u>$1</u></em>");
+  out = out.replace(new RegExp(U_OPEN + '##([\\s\\S]+?)##' + U_CLOSE, 'gi'), "<em><u>$1</u></em>");
 
-  // 4. Plain Underline
-  // <u>text</u>
-  out = out.replace(/(?:&lt;|<)u\b[^>]*?(?:&gt;|>)([\s\S]+?)(?:&lt;|<)\/u(?:&gt;|>)/gi, "<u>$1</u>");
+  // 4. Plain Underline: <u>text</u> or <u>text<u>
+  out = out.replace(new RegExp(U_OPEN + '([\\s\\S]+?)' + U_CLOSE, 'gi'), "<u>$1</u>");
 
   // 5. Bold + Italics + Double Inverted Commas
-  // ##“text”##, ##"text"##, **##“text”##**, “##text##”, "##text##"
   out = out.replace(/(?:\*\*##|##\*\*)“([^”\n]+)”(?:##\*\*|\*\*)*/g, "<strong><em>“$1”</em></strong>");
   out = out.replace(/(?:\*\*##|##\*\*)(?:"|&quot;)([^"\n]+)(?:"|&quot;)(?:##\*\*|\*\*)*/g, "<strong><em>\"$1\"</em></strong>");
   out = out.replace(/##“([^”\n]+)”##/g, "<strong><em>“$1”</em></strong>");
@@ -178,7 +228,6 @@ function formatRichText(s) {
   out = out.replace(/(?:"|&quot;)##([^#\n]+)##(?:"|&quot;)/g, "<strong><em>\"$1\"</em></strong>");
 
   // 6. Bold + Italics + Single Inverted Commas
-  // ##'text'##, ##‘text’##, '##text##', ‘##text##’
   out = out.replace(/(?:\*\*##|##\*\*)(?:'|&#39;|&#x27;)([^'\n]+)(?:'|&#39;|&#x27;)(?:##\*\*|\*\*)*/g, "<strong><em>'$1'</em></strong>");
   out = out.replace(/(?:\*\*##|##\*\*)‘((?:[a-zA-Z]’[a-zA-Z]|[^’\n])+)’(?:##\*\*|\*\*)*/g, "<strong><em>‘$1’</em></strong>");
   out = out.replace(/##(?:'|&#39;|&#x27;)([^'\n]+)(?:'|&#39;|&#x27;)##/g, "<strong><em>'$1'</em></strong>");
@@ -187,17 +236,15 @@ function formatRichText(s) {
   out = out.replace(/‘##([^#\n]+)##’/g, "<strong><em>‘$1’</em></strong>");
 
   // 7. Bold + Italics general
-  // **##text##**, ##**text**##, ***text***
   out = out.replace(/\*\*##([^#\n]+?)##\*\*/g, "<strong><em>$1</em></strong>");
   out = out.replace(/##\*\*([^*\n]+?)\*\*##/g, "<strong><em>$1</em></strong>");
+  out = out.replace(/\*\*##([^#\n]+?)##/g, "<strong><em>$1</em></strong>");
   out = out.replace(/\*\*\*([^*\n]+?)\*\*\*/g, "<strong><em>$1</em></strong>");
 
   // 8. Bold + Double Inverted Commas
-  // “text”
   out = out.replace(/(?<!<strong>(?:<em>)?)“([^”\n]+)”(?!(?:<\/em>)?<\/strong>)/g, "<strong>“$1”</strong>");
 
   // 9. Bold + Single Inverted Commas
-  // ‘text’ (curly quotes, not contractions like it’s)
   out = out.replace(/(?<!<strong>(?:<em>)?)‘((?:[a-zA-Z]’[a-zA-Z]|[^’\n])+)’(?!(?:<\/em>)?<\/strong>)/g, "<strong>‘$1’</strong>");
 
   // 10. Bold: **text**
@@ -226,39 +273,68 @@ function stripOuterQuotes(s) {
   return str;
 }
 
-function formatQuestionHtml(s) {
-  if (!s) return "";
-  const cleaned = stripOuterQuotes(s);
+function formatLinesToHtml(rawText, isQuestion) {
+  if (!rawText) return "";
+  const cleaned = isQuestion ? stripOuterQuotes(rawText) : rawText;
   const escape = t => t.replace(/&(?!#?\w+;)/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   
   const paras = cleaned.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
-  if (paras.length === 0) return "";
-  
   return paras.map(para => {
     const lines = para.split("\n").map(l => l.trim()).filter(Boolean);
-    const isList = lines.length > 0 && lines.every(l => /^-\s+/.test(l));
-    if (isList) {
-      const items = lines.map(l => formatRichText(escape(l.replace(/^-\s+/, "")))).map(i => "<li>" + i + "</li>").join("");
-      return "<ul>" + items + "</ul>";
+    const chunks = [];
+    let currentType = null; // 'p', 'ul', 'ol'
+    let currentItems = [];
+
+    const flush = () => {
+      if (!currentType || currentItems.length === 0) return;
+      if (currentType === "ul") {
+        chunks.push("<ul>" + currentItems.map(i => "<li>" + formatRichText(escape(i)) + "</li>").join("") + "</ul>");
+      } else if (currentType === "ol") {
+        chunks.push("<ol>" + currentItems.map(i => "<li>" + formatRichText(escape(i)) + "</li>").join("") + "</ol>");
+      } else {
+        chunks.push("<p>" + currentItems.map(i => formatRichText(escape(i))).join("<br />") + "</p>");
+      }
+      currentItems = [];
+      currentType = null;
+    };
+
+    for (const line of lines) {
+      // Bullet list items starting with •, -, *, –, —
+      const bulletMatch = line.match(/^([•\u2022\u2013\u2014\-]|â€¢|\*(?!\*))\s*(.*)$/);
+      // Numbered list items starting with 1., 2), etc.
+      const numMatch = line.match(/^(\d+[.)])\s+(.*)$/);
+
+      if (bulletMatch) {
+        if (currentType !== "ul") {
+          flush();
+          currentType = "ul";
+        }
+        currentItems.push(bulletMatch[2]);
+      } else if (numMatch) {
+        if (currentType !== "ol") {
+          flush();
+          currentType = "ol";
+        }
+        currentItems.push(numMatch[2]);
+      } else {
+        if (currentType !== "p") {
+          flush();
+          currentType = "p";
+        }
+        currentItems.push(line);
+      }
     }
-    const content = lines.map(l => formatRichText(escape(l))).join("<br />");
-    return "<p>" + content + "</p>";
+    flush();
+    return chunks.join("");
   }).join("");
 }
 
+function formatQuestionHtml(s) {
+  return formatLinesToHtml(s, true);
+}
+
 function paragraphsToHtml(s) {
-  if (!s) return "";
-  const escape = t => t.replace(/&(?!#?\w+;)/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  return s.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).map(para => {
-    const lines = para.split("\n").map(l => l.trim()).filter(Boolean);
-    const isList = lines.length > 0 && lines.every(l => /^-\s+/.test(l));
-    if (isList) {
-      const items = lines.map(l => formatRichText(escape(l.replace(/^-\s+/, "")))).map(i => "<li>" + i + "</li>").join("");
-      return "<ul>" + items + "</ul>";
-    }
-    const content = lines.map(l => formatRichText(escape(l))).join("<br />");
-    return "<p>" + content + "</p>";
-  }).join("");
+  return formatLinesToHtml(s, false);
 }
 
 function buildData(csvText) {
@@ -269,7 +345,7 @@ function buildData(csvText) {
   const entries = [];
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
-    const rawCat = (r[col("category")] || "").trim();
+    const rawCat = cleanMojibake((r[col("category")] || "").trim());
     if (!rawCat) continue;
     const cat = normalizeCategory(rawCat);
     let meta = CATEGORY_META[cat];
@@ -281,12 +357,12 @@ function buildData(csvText) {
         CAT_ORDER.push(key);
       }
     }
-    const question = capitalizeFirstLetter(stripEmojis((r[col("question")] || "").trim()));
-    const answer = capitalizeFirstLetter(stripEmojis((r[col("answer")] || "").trim()));
+    const question = capitalizeFirstLetter(cleanMojibake(stripEmojis((r[col("question")] || "").trim())));
+    const answer = capitalizeFirstLetter(cleanMojibake(stripEmojis((r[col("answer")] || "").trim())));
     if (!question || !answer) continue;
 
     const rephrasedCol = col("rephrased");
-    const rephrased = rephrasedCol !== -1 ? capitalizeFirstLetter(stripEmojis((r[col("rephrased")] || "").trim())) : "";
+    const rephrased = rephrasedCol !== -1 ? capitalizeFirstLetter(cleanMojibake(stripEmojis((r[col("rephrased")] || "").trim()))) : "";
     const displayedQuestion = rephrased !== "" ? rephrased : question;
 
     // Filter out unapproved entries
@@ -304,12 +380,12 @@ function buildData(csvText) {
     const date = (r[col("date")] || "").trim();
     const time = (r[col("time")] || "").trim();
     const tagsCol = col("tags");
-    const tags = tagsCol !== -1 ? (r[tagsCol] || "").trim() : "";
+    const tags = tagsCol !== -1 ? cleanMojibake((r[tagsCol] || "").trim()) : "";
     const linksCol = col("links");
-    const links = linksCol !== -1 ? (r[linksCol] || "").trim() : "";
+    const links = linksCol !== -1 ? cleanMojibake((r[linksCol] || "").trim()) : "";
     entries.push({
       num: parseInt(r[col("num")], 10) || 0,
-      asker: (r[col("asker")] || "Anonymous").trim() || "Anonymous",
+      asker: cleanMojibake((r[col("asker")] || "Anonymous").trim()) || "Anonymous",
       date: formatDate(date),
       time: time,
       iso: toIso(date, time),
@@ -363,7 +439,7 @@ function buildDataFromJson(jsonList) {
   const entries = [];
   for (let i = 0; i < jsonList.length; i++) {
     const item = jsonList[i];
-    const rawCat = (item.category || "").trim();
+    const rawCat = cleanMojibake((item.category || "").trim());
     if (!rawCat) continue;
     const cat = normalizeCategory(rawCat);
     let meta = CATEGORY_META[cat];
@@ -375,11 +451,11 @@ function buildDataFromJson(jsonList) {
         CAT_ORDER.push(key);
       }
     }
-    const question = capitalizeFirstLetter(stripEmojis((item.question || "").trim()));
-    const answer = capitalizeFirstLetter(stripEmojis((item.answer || "").trim()));
+    const question = capitalizeFirstLetter(cleanMojibake(stripEmojis((item.question || "").trim())));
+    const answer = capitalizeFirstLetter(cleanMojibake(stripEmojis((item.answer || "").trim())));
     if (!question || !answer) continue;
 
-    const rephrased = capitalizeFirstLetter(stripEmojis((item.rephrased || "").trim()));
+    const rephrased = capitalizeFirstLetter(cleanMojibake(stripEmojis((item.rephrased || "").trim())));
     const displayedQuestion = rephrased !== "" ? rephrased : question;
 
     // Filter out unapproved entries
@@ -394,11 +470,11 @@ function buildDataFromJson(jsonList) {
 
     const date = (item.date || "").trim();
     const time = (item.time || "").trim();
-    const tags = (item.tags || "").trim();
-    const links = (item.links || "").trim();
+    const tags = cleanMojibake((item.tags || "").trim());
+    const links = cleanMojibake((item.links || "").trim());
     entries.push({
       num: parseInt(item.num, 10) || 0,
-      asker: (item.asker || "Anonymous").trim() || "Anonymous",
+      asker: cleanMojibake((item.asker || "Anonymous").trim()) || "Anonymous",
       date: formatDate(date),
       time: time,
       iso: toIso(date, time),

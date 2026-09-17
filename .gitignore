@@ -28,5 +28,5 @@ Revised-Questions.docx
 .env
 .db_config.json
 out.txt
-*.bak
+*.bak*
 __pycache__/

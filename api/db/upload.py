@@ -12,7 +12,7 @@ root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 if root_dir not in sys.path:
     sys.path.append(root_dir)
 
-from db_helper import get_db_config, execute_turso_statements, ensure_schema_columns, get_all_qna_from_db
+from db_helper import get_db_config, execute_turso_statements, ensure_schema_columns, get_all_qna_from_db, clean_mojibake_text
 
 COLUMN_ALIASES = {
     "number": "num",
@@ -237,6 +237,12 @@ class handler(BaseHTTPRequestHandler):
             else:
                 raise Exception("Unsupported file format. Must be .json, .csv, .db, or .xlsx")
                 
+            # Clean mojibake and control characters from all fields
+            for entry in entries:
+                for col_name in ALL_COLS:
+                    if col_name in entry and isinstance(entry[col_name], str):
+                        entry[col_name] = clean_mojibake_text(entry[col_name])
+
             cfg = get_db_config()
             db_url = cfg[f"{db_choice}_url"]
             db_token = cfg[f"{db_choice}_token"]

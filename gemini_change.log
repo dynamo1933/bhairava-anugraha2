@@ -1,0 +1,103 @@
+# Gemini Change Log (gemini_change.log)
+
+================================================================================
+CRITICAL INSTRUCTIONS FOR AI AGENT / GEMINI:
+1. ALWAYS READ THIS FILE AT THE START of any new task/session to obtain the summary 
+   and context of previous changes and active system state.
+2. ALWAYS APPEND A DETAILED ENTRY AT THE BOTTOM of this file before concluding any
+   work session. Include:
+   - Date & Time (ISO / Local)
+   - Objective / User Request
+   - Files Modified / Created / Deleted
+   - Summary of Changes & Technical Details
+   - Verification & Testing Performed
+================================================================================
+
+## [2026-09-17 10:35 IST] - Fix Raw Formatting Tags & Complete Mojibake Character Restoration
+
+### Objective:
+Resolve issues where formatting tags were displayed as literal raw markup (e.g. `<u>At a higher level:<u>`) and characters were rendering as unreadable corrupted sequences (mojibake like `â€¢`, `â†’`, `â€œ...â€_x009d_`, `Maá¹‡á¸_x008d_ala`, etc.) on entry detail pages (e.g., `#entry/256`).
+
+### Root Cause Analysis:
+1. **Formatting**:
+   - Source data used symmetric `<u>Header:<u>` (opening tag at both ends without a closing slash `/`) or trailing spaces like `**<u>text<u> **`.
+   - The regex in `formatRichText()` strictly looked for closing `</u...>`, failing to match and leaving escaped `&lt;u&gt;` that rendered literally as text.
+   - `paragraphsToHtml()` required all lines in a block to start with `- `, ignoring bullet characters (`•`, `*`, `–`, `—`) and mixed paragraphs with lead-in sentences.
+2. **Mojibake / Corrupted Encoding**:
+   - 1,875 occurrences across 159 database entries were corrupted by an earlier import where UTF-8 multibyte characters were decoded through Windows-1252 / CP1252 and control characters were exported by Excel as `_x009d_`, `_x0081_`, `_x008d_`, etc.
+
+### Changes Made:
+
+1. **`index.js`**:
+   - Added `cleanMojibake(s)` client-side decoder using `TextDecoder` and reverse CP1252 byte mapping to transparently clean corrupted characters in real time upon loading from API or CSV.
+   - Enhanced `formatRichText()` to support both `</u>` and `<u>` closing tags, trailing spaces in `**<u>...<u> **`, and nested markdown/HTML tags.
+   - Upgraded `paragraphsToHtml()` and `formatQuestionHtml()` to divide paragraphs into text chunks, unordered lists (`•`, `-`, `*`, `–`, `—`), and ordered numbered lists (`1.`, `2)`), stripping the raw bullet character so CSS golden bullets (`content: "•"`) render cleanly without duplicate bullet characters.
+   - Applied `cleanMojibake()` across `buildData()` and `buildDataFromJson()` for category, asker, title, question, original, rephrased, answer, tags, and links.
+
+2. **`index.css`**:
+   - Added styles for ordered numbered lists: `.overlay .answer ol`, `.overlay .answer ol li`, `.overlay .original .body ol`, and `.overlay .original .body ol li` with styled golden mono counters (`1.`, `2.`, etc.).
+
+3. **`db_helper.py`**:
+   - Added `clean_mojibake_text(text)` helper function that expands Excel XML escapes (`_x00XX_`), fixes damaged fragments (`â"`, `â'`), decodes CP1252 bytes back to clean UTF-8, restores Sanskrit IAST diacritics, and normalizes single-line `<u>...<u>` to `<u>...</u>`.
+
+4. **`api/db/upload.py`**:
+   - Integrated `clean_mojibake_text()` into the upload pipeline (`.xlsx`, `.csv`, `.json`, `.db`) to sanitize all fields before inserting into the database, preventing future uploads from introducing encoding corruption.
+
+5. **`rephrase.html`**:
+   - Added `cleanMojibake()` helper and invoked it in `loadData()` to ensure the admin dashboard table cells and edit views display pristine text.
+
+6. **`scripts/clean_mojibake_data.py`** (New Migration Script):
+   - Created automated migration script that backed up `qna.csv` to `qna.csv.bak_mojibake`.
+   - Cleaned all 257 rows and synchronized `qna.csv`, Turso Prod database, and Turso UAT database in batches via `execute_turso_statements`.
+
+### Verification:
+- Automated pattern scan confirmed 0 remaining corrupted patterns in `qna.csv`, Turso `prod`, and Turso `uat`.
+- Live API (`http://localhost:8080/api/qna`) tested and returned clean strings for entry 256.
+- Browser subagent visually inspected `http://localhost:8080/#entry/256`:
+  - Verified `At a higher level:` and `In simple words:` are underlined with no raw tags.
+  - Verified `• Narasimha = Protective Ugra Vishnu Tattva`, `• Bhairava = Ugra Shiva Tattva`, and `• Kali = Ugra Shakti Tattva` appear as styled golden bullet list items.
+  - Verified clean arrow `→` in `When Shakti becomes intense → you need stable consciousness.`
+- Screenshot captured: `entry_256_verification_1789621289543.png`.
+
+---
+
+## [2026-09-14] - Architecture and Flow Documentation
+- Added `flow.md` documenting end-to-end application architecture, components, data flows, serverless routing, and Turso DB integration (`commit 92f71e5`).
+
+---
+
+## [2026-09-11] - Typography & Modal Layout Adjustments
+- Swapped typography and formatting between question and answer in entry modal and removed italics from answer (`commit 8874c78`).
+
+---
+
+## [2026-09-07] - Popup Quotes & Folio Header Alignment
+- Removed outer quotation marks around popup questions, preserved multiline paragraphs, and resolved folio header scroll overlap (`commit 5f87946`).
+
+---
+
+## [2026-09-05] - Excel Upload/Download & 12-Column Schema
+- Added Excel upload/download, 12-column schema with `tags` & `links`, custom column aliases, and frontend rich text formatting (`commit 045d3bc`).
+
+---
+
+## [2026-09-17 10:45 IST] - Establish Change Log Workflow, Git Ignore Update, & Git Push
+
+### Objective:
+Create `gemini_change.log`, establish mandatory agent instructions to always read and update it, update `.gitignore` for backup files, and push all recent fixes to Git.
+
+### Changes:
+1. **Created `gemini_change.log`**:
+   - Initialized comprehensive chronological changelog with guidelines at top.
+   - Documented recent sessions and current state.
+2. **Created `GEMINI.md` and `.agents/rules/gemini_change_log.md`**:
+   - Established system instructions for future AI sessions to always read `gemini_change.log` before starting and append all changes before concluding.
+3. **Updated `.gitignore`**:
+   - Changed `*.bak` to `*.bak*` to ignore backup artifacts like `qna.csv.bak_mojibake`.
+4. **Git Staging & Push**:
+   - Staged all modified code, styling, database scripts, and configuration files to push cleanly to `origin/main`.
+
+### Verification:
+- `git status` verified clean tracking of intended files.
+- `git push` to `origin/main` executed and verified.
+

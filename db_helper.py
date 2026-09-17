@@ -27,6 +27,58 @@ DB_CONFIG_PATH = os.path.join(ROOT_DIR, ".db_config.json")
 TMP_DB_CONFIG_PATH = os.path.join(tempfile.gettempdir(), ".db_config.json")
 CSV_PATH = os.path.join(ROOT_DIR, "qna.csv")
 
+# CP1252 reverse byte mapping for decoding mojibake
+_CP1252_TO_BYTE = {}
+for _b in range(256):
+    try:
+        _ch = bytes([_b]).decode('cp1252')
+        _CP1252_TO_BYTE[_ch] = _b
+    except UnicodeDecodeError:
+        pass
+for _b in range(256):
+    if chr(_b) not in _CP1252_TO_BYTE:
+        _CP1252_TO_BYTE[chr(_b)] = _b
+
+def clean_mojibake_text(text):
+    if not text:
+        return ""
+    import re
+    # 1. Expand Excel XML hex control escapes (_x009d_, _x0081_, etc.)
+    t = re.sub(r'_x([0-9a-fA-F]{4})_', lambda m: chr(int(m.group(1), 16)), str(text))
+    
+    # 2. Fix known damaged fragments before decoding
+    t = re.sub(r'â(?=["\'])', '', t)
+    t = re.sub(r'â(?=\s*the child-form)', ' —', t)
+    t = re.sub(r'â(?=\'s\b)', '', t)
+    t = re.sub(r'â(?=\*\*)', '', t)
+    t = re.sub(r'ä\x81', 'ā', t)
+    
+    # Normalize u tags on single lines: <u>text<u>, </u>text</u>, <u>text</u> -> <u>text</u>
+    t = re.sub(r'</?u>\s*([^<\n]+?)\s*</?u>', r'<u>\1</u>', t)
+    
+    # Quick check if any mojibake characters exist
+    if not any(c in t for c in ['â', 'Ã', 'Ä', 'Å', 'á', 'é', 'à', 'è']) and not any(0x80 <= ord(c) <= 0x9F for c in t):
+        return t
+        
+    b = bytearray()
+    for c in t:
+        if c in _CP1252_TO_BYTE:
+            b.append(_CP1252_TO_BYTE[c])
+        else:
+            b.extend(c.encode('utf-8'))
+            
+    try:
+        decoded = b.decode('utf-8')
+    except UnicodeDecodeError:
+        decoded = b.decode('utf-8', errors='ignore')
+        
+    decoded = re.sub(r'\bÄchamanam\b', 'Āchamanam', decoded)
+    decoded = re.sub(r'\bÄhuti\b', 'Āhuti', decoded)
+    decoded = re.sub(r'\bÄsana\b', 'Āsana', decoded)
+    decoded = re.sub(r'</?u>\s*([^<\n]+?)\s*</?u>', r'<u>\1</u>', decoded)
+    return decoded
+
+
 def get_db_config(active_db_override=None):
     load_env()
     prod_url = os.environ.get("TURSO_DB_URL") or ""

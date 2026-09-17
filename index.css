@@ -668,7 +668,8 @@ footer {
 .overlay .original .body ul {
   list-style: none; padding: 0; margin: 0 0 18px;
 }
-.overlay .original .body ul:last-child {
+.overlay .original .body ul:last-child,
+.overlay .original .body ol:last-child {
   margin-bottom: 0;
 }
 .overlay .original .body li {
@@ -677,11 +678,25 @@ footer {
   padding-left: 22px;
   margin: 0 0 10px;
 }
-.overlay .original .body li::before {
+.overlay .original .body ul li::before {
   content: "◇";
   position: absolute; left: 0; top: 0;
   color: var(--gold-2); font-family: var(--display);
   font-size: 16px; line-height: 1.6;
+}
+.overlay .original .body ol {
+  list-style: none; counter-reset: q-item; padding: 0; margin: 0 0 14px;
+}
+.overlay .original .body ol li {
+  position: relative; counter-increment: q-item;
+  font-size: 17px; line-height: 1.75; color: var(--ink-mute);
+  padding-left: 26px; margin: 0 0 10px;
+}
+.overlay .original .body ol li::before {
+  content: counter(q-item) ".";
+  position: absolute; left: 0; top: 0;
+  color: var(--gold-2); font-family: var(--mono);
+  font-size: 13px; line-height: 2.1;
 }
 .overlay .original .body em { font-style: italic; color: var(--gold); }
 .overlay .original .body strong { font-weight: 600; color: var(--paper); }
@@ -709,17 +724,33 @@ u {
 .overlay .answer ul {
   list-style: none; padding: 0; margin: 0 0 18px;
 }
-.overlay .answer li {
+.overlay .answer ul li {
   position: relative;
   font-family: var(--display); font-style: normal;
   font-size: 24px; line-height: 1.45; color: var(--paper-2);
   padding-left: 22px;
   margin: 0 0 10px;
 }
-.overlay .answer li::before {
+.overlay .answer ul li::before {
   content: "•";
   position: absolute; left: 0; top: 0;
   color: var(--gold); font-size: 20px; line-height: 1.4;
+}
+.overlay .answer ol {
+  list-style: none; counter-reset: ans-item; padding: 0; margin: 0 0 18px;
+}
+.overlay .answer ol li {
+  position: relative; counter-increment: ans-item;
+  font-family: var(--display); font-style: normal;
+  font-size: 24px; line-height: 1.45; color: var(--paper-2);
+  padding-left: 32px;
+  margin: 0 0 10px;
+}
+.overlay .answer ol li::before {
+  content: counter(ans-item) ".";
+  position: absolute; left: 0; top: 0;
+  color: var(--gold); font-family: var(--mono);
+  font-size: 16px; line-height: 2;
 }
 .overlay .answer li strong { color: var(--paper); font-weight: 600; }
 .overlay .answer li em { color: var(--gold); font-style: italic; }
