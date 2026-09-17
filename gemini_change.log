@@ -121,6 +121,14 @@ The `/api/login` endpoint was previously handled directly in the local Python `s
 
 ### Verification:
 - Simulated request in Python to verify `api.login.handler` imports and functions properly.
-- Prepared git push to update Vercel production serverless routing.
+- Deployed commit `f89fe1a` to Vercel production.
+- Tested live `POST https://bhairava-anugraha.vercel.app/api/login`:
+  - Valid credentials (`admin` / `admin123`) returned HTTP 200 OK with session token.
+  - Invalid credentials returned HTTP 401 Unauthorized.
+- Performed end-to-end browser test with subagent on live site:
+  - Navigated to `https://bhairava-anugraha.vercel.app/rephrase`.
+  - Entered `admin` / `admin123` and clicked "Enter Portal".
+  - Verified login wall unlocked and rendered the full Rephrase dashboard with 257 Q&A entries.
+
 
 
