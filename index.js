@@ -8,8 +8,8 @@
 // Categories the site knows about, with their Sanskrit marks and roman numerals.
 const CATEGORY_META = {
   "Mantra & Japa": { key: "mantra-japa", skt: "मन्त्र · जप", roman: "I" },
-  "Pūjā, Āratī & Rituals": { key: "puja-aarti", skt: "पूजा · आरती", roman: "II" },
-  "Maṇḍala & Anuṣṭhāna": { key: "mandala", skt: "मण्डल · अनुष्ठान", roman: "III" },
+  "Puja, Aarti & Rituals": { key: "puja-aarti", skt: "पूजा · आरती", roman: "II" },
+  "Mandala & Anushthana": { key: "mandala", skt: "मण्डल · अनुष्ठान", roman: "III" },
   "Experiences in Sādhanā": { key: "experiences", skt: "अनुभव", roman: "IV" },
   "Advanced Topics": { key: "advanced", skt: "गूढ विद्या", roman: "V" },
   "Women & Sādhanā": { key: "women", skt: "स्त्री · साधना", roman: "VI" },
@@ -35,10 +35,10 @@ function normalizeCategory(rawCat) {
     return "Women & Sādhanā";
   }
   if (norm.includes("mandala") || norm.includes("anusthan") || norm.includes("anushthan") || (norm.includes("m") && norm.includes("ala") && (norm.includes("anu") || norm.includes("na") || norm.includes("ala")))) {
-    return "Maṇḍala & Anuṣṭhāna";
+    return "Mandala & Anushthana";
   }
   if (norm.includes("puja") || norm.includes("arati") || norm.includes("aarti") || norm.includes("ritual") || norm.includes("puj")) {
-    return "Pūjā, Āratī & Rituals";
+    return "Puja, Aarti & Rituals";
   }
   if (norm.includes("mantra") || norm.includes("japa")) {
     return "Mantra & Japa";
@@ -290,7 +290,10 @@ function formatLinesToHtml(rawText, isQuestion) {
       if (currentType === "ul") {
         chunks.push("<ul>" + currentItems.map(i => "<li>" + formatRichText(escape(i)) + "</li>").join("") + "</ul>");
       } else if (currentType === "ol") {
-        chunks.push("<ol>" + currentItems.map(i => "<li>" + formatRichText(escape(i)) + "</li>").join("") + "</ol>");
+        chunks.push("<ol>" + currentItems.map((item, idx) => {
+          const numText = item.num || ((idx + 1) + ".");
+          return `<li><span class="item-num">${escape(numText)}</span>` + formatRichText(escape(item.text)) + "</li>";
+        }).join("") + "</ol>");
       } else {
         chunks.push("<p>" + currentItems.map(i => formatRichText(escape(i))).join("<br />") + "</p>");
       }
@@ -301,8 +304,8 @@ function formatLinesToHtml(rawText, isQuestion) {
     for (const line of lines) {
       // Bullet list items starting with •, -, *, –, —
       const bulletMatch = line.match(/^([•\u2022\u2013\u2014\-]|â€¢|\*(?!\*))\s*(.*)$/);
-      // Numbered list items starting with 1., 2), etc.
-      const numMatch = line.match(/^(\d+[.)])\s+(.*)$/);
+      // Numbered list items starting with 1., 2), 1:, (1), 1 -, etc. (allowing optional markdown bold around number)
+      const numMatch = line.match(/^(\*{0,2}\d+[.):]\*{0,2}|\(\d+\)|\d+\s*[-–—])\s+(.*)$/);
 
       if (bulletMatch) {
         if (currentType !== "ul") {
@@ -315,7 +318,8 @@ function formatLinesToHtml(rawText, isQuestion) {
           flush();
           currentType = "ol";
         }
-        currentItems.push(numMatch[2]);
+        const cleanNum = numMatch[1].replace(/\*/g, "").trim();
+        currentItems.push({ text: numMatch[2], num: cleanNum });
       } else {
         if (currentType !== "p") {
           flush();
@@ -381,7 +385,7 @@ function buildData(csvText) {
     const time = (r[col("time")] || "").trim();
     const tagsCol = col("tags");
     const tags = tagsCol !== -1 ? cleanMojibake((r[tagsCol] || "").trim()) : "";
-    const linksCol = col("links");
+    const linksCol = col("links") !== -1 ? col("links") : col("link");
     const links = linksCol !== -1 ? cleanMojibake((r[linksCol] || "").trim()) : "";
     entries.push({
       num: parseInt(r[col("num")], 10) || 0,
@@ -471,7 +475,7 @@ function buildDataFromJson(jsonList) {
     const date = (item.date || "").trim();
     const time = (item.time || "").trim();
     const tags = cleanMojibake((item.tags || "").trim());
-    const links = cleanMojibake((item.links || "").trim());
+    const links = cleanMojibake((item.links || item.link || "").trim());
     entries.push({
       num: parseInt(item.num, 10) || 0,
       asker: cleanMojibake((item.asker || "Anonymous").trim()) || "Anonymous",
@@ -692,6 +696,192 @@ function toRoman(n) {
   return s;
 }
 
+// ---------- link parsing & rendering helpers ----------
+function normalizeUrl(u) {
+  u = String(u || "").trim();
+  if (!u) return "";
+  if (/^https?:\/\//i.test(u)) return u;
+  if (/^https?:/i.test(u)) {
+    return u.replace(/^https?:[\/]*\/*/i, (m) => m.toLowerCase().startsWith("http:") ? "http://" : "https://");
+  }
+  return "https://" + u;
+}
+
+function friendlyUrlLabel(u) {
+  try {
+    const parsed = new URL(normalizeUrl(u));
+    let host = parsed.hostname.replace(/^www\./i, "");
+    if (host.includes("youtube.com") || host.includes("youtu.be")) return "YouTube";
+    if (host.includes("t.me") || host.includes("telegram")) return "Telegram";
+    if (host.includes("bhairavaanugraha.com")) return "Bhairava Anugraha";
+    return host;
+  } catch (err) {
+    return u;
+  }
+}
+
+function parseEntryLinks(rawLinks) {
+  if (!rawLinks) return [];
+  const text = String(rawLinks).trim();
+  if (!text) return [];
+
+  // Split by newlines or semicolons
+  const rawItems = text.split(/\r?\n|;/).map(s => s.trim()).filter(Boolean);
+  const results = [];
+
+  for (const item of rawItems) {
+    let label = "";
+    let rawUrl = "";
+
+    if (/^https?:\/\//i.test(item)) {
+      rawUrl = item;
+      label = friendlyUrlLabel(item);
+    } else {
+      // Check for dash separator e.g. "Daiva Anugraha - https://..."
+      const dashMatch = item.match(/^(.*?)\s+-\s+(https?:\/\/.*)$/i);
+      // Check for colon separator e.g. "abc:https:abc.com" or "Website: https://..."
+      const colonIdx = item.indexOf(":");
+
+      if (dashMatch) {
+        label = dashMatch[1].trim();
+        rawUrl = dashMatch[2].trim();
+      } else if (colonIdx !== -1) {
+        label = item.slice(0, colonIdx).trim();
+        rawUrl = item.slice(colonIdx + 1).trim();
+      } else {
+        rawUrl = item;
+        label = friendlyUrlLabel(item);
+      }
+    }
+
+    if (!rawUrl) continue;
+    const url = normalizeUrl(rawUrl);
+    if (!label) label = friendlyUrlLabel(url);
+
+    // Strip wrapping quotes from label if any
+    label = label.replace(/^["'‘“]+|["'’”]+$/g, "").trim();
+
+    results.push({ label, url, rawUrl });
+  }
+  return results;
+}
+
+function linkifyMentions(htmlStr, links) {
+  if (!htmlStr || !links || !links.length) return htmlStr;
+
+  const targets = [];
+  const seenLabels = new Set();
+
+  links.forEach(l => {
+    if (!l.label || !l.url) return;
+    const cleanLabel = l.label.trim();
+    if (cleanLabel.length < 2) return;
+    if (!seenLabels.has(cleanLabel.toLowerCase())) {
+      seenLabels.add(cleanLabel.toLowerCase());
+      targets.push({ phrase: cleanLabel, url: l.url });
+    }
+    // If label has trailing descriptors like "Website", "YouTube Channel", "Video", "Channel", "Group"
+    const stripped = cleanLabel.replace(/\s+(website|youtube(\s+channel)?|video|channel|group|portal|link)$/i, "").trim();
+    if (stripped.length >= 3 && !seenLabels.has(stripped.toLowerCase())) {
+      seenLabels.add(stripped.toLowerCase());
+      targets.push({ phrase: stripped, url: l.url });
+    }
+  });
+
+  targets.sort((a, b) => b.phrase.length - a.phrase.length);
+  if (!targets.length) return htmlStr;
+
+  let result = "";
+  const tagRegex = /<[^>]+>/g;
+  let lastIndex = 0;
+  let match;
+  let inAnchor = 0;
+
+  while ((match = tagRegex.exec(htmlStr)) !== null) {
+    const textChunk = htmlStr.slice(lastIndex, match.index);
+    if (textChunk && inAnchor === 0) {
+      result += _linkifyTextChunk(textChunk, targets);
+    } else {
+      result += textChunk;
+    }
+
+    const tag = match[0];
+    if (/^<a\b/i.test(tag)) {
+      inAnchor++;
+    } else if (/^<\/a>/i.test(tag)) {
+      inAnchor = Math.max(0, inAnchor - 1);
+    }
+
+    result += tag;
+    lastIndex = tagRegex.lastIndex;
+  }
+
+  const remainingText = htmlStr.slice(lastIndex);
+  if (remainingText && inAnchor === 0) {
+    result += _linkifyTextChunk(remainingText, targets);
+  } else {
+    result += remainingText;
+  }
+
+  return result;
+}
+
+function _linkifyTextChunk(text, targets) {
+  let res = text;
+  for (const t of targets) {
+    const escaped = t.phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const startsWord = /^\w/.test(t.phrase);
+    const endsWord = /\w$/.test(t.phrase);
+    const pattern = (startsWord ? "\\b" : "") + escaped + (endsWord ? "\\b" : "");
+    const re = new RegExp(pattern, "gi");
+    res = res.replace(re, (matched) => {
+      return `<a href="${escapeHtml(t.url)}" class="entry-inline-link" target="_blank" rel="noopener noreferrer" title="${escapeHtml(t.url)}">${matched}</a>`;
+    });
+  }
+  return res;
+}
+
+function _buildLinksSectionHtml(parsedLinks) {
+  if (!parsedLinks || !parsedLinks.length) return "";
+
+  const seenUrls = new Set();
+  const uniqueLinks = parsedLinks.filter(l => {
+    if (seenUrls.has(l.url)) return false;
+    seenUrls.add(l.url);
+    return true;
+  });
+
+  const chipsHtml = uniqueLinks.map(l => {
+    let icon = "🔗";
+    const uLow = l.url.toLowerCase();
+    if (uLow.includes("youtube.com") || uLow.includes("youtu.be")) {
+      icon = "▶";
+    } else if (uLow.includes("t.me") || uLow.includes("telegram")) {
+      icon = "✈";
+    } else if (uLow.includes("bhairavaanugraha.com")) {
+      icon = "◈";
+    }
+
+    return `
+      <a class="entry-link-chip" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(l.url)}">
+        <span class="chip-icon">${icon}</span>
+        <span class="chip-label">${escapeHtml(l.label)}</span>
+        <span class="chip-arrow">↗</span>
+      </a>`;
+  }).join("");
+
+  return `
+    <div class="entry-links-section">
+      <div class="entry-links-heading">
+        <span class="entry-links-icon">◈</span>
+        <span class="entry-links-title">REFERENCES &amp; SOURCES</span>
+      </div>
+      <div class="entry-links-grid">
+        ${chipsHtml}
+      </div>
+    </div>`;
+}
+
 // ---------- detail overlay ----------
 const overlay = document.getElementById("overlay");
 const overlayCard = overlay.querySelector(".overlay-card");
@@ -718,11 +908,23 @@ function _buildSingleEntryHtml(e) {
   const folioName = cat ? cat.name.toUpperCase() : "";
   const inFolioRoman = toRoman(e.in_folio);
 
+  const parsedLinks = parseEntryLinks(e.links);
+
   let answerHtml = e.answer || "";
+  if (parsedLinks.length > 0) {
+    answerHtml = linkifyMentions(answerHtml, parsedLinks);
+  }
   const leadMatch = answerHtml.match(/^<p>(.*?)<\/p>/);
   if (leadMatch) {
     answerHtml = `<p class="lead">${leadMatch[1]}</p>` + answerHtml.slice(leadMatch[0].length);
   }
+
+  let questionHtml = formatQuestionHtml(e.question);
+  if (parsedLinks.length > 0) {
+    questionHtml = linkifyMentions(questionHtml, parsedLinks);
+  }
+
+  const linksHtml = _buildLinksSectionHtml(parsedLinks);
 
   return `
     <button class="overlay-close" aria-label="Close">×</button>
@@ -744,10 +946,11 @@ function _buildSingleEntryHtml(e) {
         <div class="head">
           <span>QUESTION</span>
         </div>
-        <div class="body">${formatQuestionHtml(e.question)}</div>
+        <div class="body">${questionHtml}</div>
       </aside>
       <div class="answer">
         ${answerHtml}
+        ${linksHtml}
         <div class="signoff">
           <span>— Guruji</span>
           <span class="om-mark">ॐ</span>
@@ -764,12 +967,23 @@ function _buildThreadHtml(chain, activeNum) {
 
   const sections = chain.map((e, idx) => {
     const isActive = e.num === activeNum;
+    const parsedLinks = parseEntryLinks(e.links);
+
     let answerHtml = e.answer || "";
+    if (parsedLinks.length > 0) {
+      answerHtml = linkifyMentions(answerHtml, parsedLinks);
+    }
     const leadMatch = answerHtml.match(/^<p>(.*?)<\/p>/);
     if (leadMatch) {
       answerHtml = `<p class="lead">${leadMatch[1]}</p>` + answerHtml.slice(leadMatch[0].length);
     }
 
+    let questionHtml = formatQuestionHtml(e.question);
+    if (parsedLinks.length > 0) {
+      questionHtml = linkifyMentions(questionHtml, parsedLinks);
+    }
+
+    const linksHtml = _buildLinksSectionHtml(parsedLinks);
     const isFollowup = idx > 0;
     const inFolioRoman = toRoman(e.in_folio);
     const divider = isFollowup
@@ -795,10 +1009,11 @@ function _buildThreadHtml(chain, activeNum) {
         <div class="layout">
           <aside class="original">
             <div class="head"><span>${isFollowup ? "FOLLOW-UP QUESTION" : "QUESTION"}</span></div>
-            <div class="body">${formatQuestionHtml(e.question)}</div>
+            <div class="body">${questionHtml}</div>
           </aside>
           <div class="answer">
             ${answerHtml}
+            ${linksHtml}
             <div class="signoff">
               <span>— Guruji</span>
               <span class="om-mark">ॐ</span>
@@ -827,6 +1042,7 @@ function _buildThreadHtml(chain, activeNum) {
 // Track whether the user opened an entry from a folio page
 // so we can return them there on close.
 let folioBeforeEntry = null;
+let currentFolioKey = null;
 
 function openOverlay(id, opts) {
   opts = opts || {};
@@ -834,7 +1050,9 @@ function openOverlay(id, opts) {
   overlay.classList.add("is-open");
   document.body.style.overflow = "hidden";
   overlay.scrollTop = 0;
-  if (!opts.skipHash) history.replaceState(null, "", "#entry/" + id);
+  if (!opts.skipHash) {
+    history.pushState({ view: "entry", id: String(id) }, "", "#entry/" + id);
+  }
   const closer = overlayCard.querySelector(".overlay-close");
   if (closer) closer.focus();
 }
@@ -845,11 +1063,22 @@ function closeOverlay(opts) {
   overlay.classList.remove("is-open");
   document.body.style.overflow = "";
   if (!opts.skipHash) {
-    if (folioBeforeEntry) {
+    if (location.hash.startsWith("#entry/")) {
+      const m = location.hash.match(/^#entry\/(\d+)/);
+      const eObj = m ? BY_NUM[m[1]] : null;
+      const targetFolio = folioBeforeEntry || (eObj ? eObj.category_key : null);
+      folioBeforeEntry = null;
+
+      if (window.history.length > 1) {
+        history.back();
+      } else if (targetFolio) {
+        location.hash = "#folio/" + targetFolio;
+      } else {
+        history.replaceState(null, "", location.pathname + location.search);
+      }
+    } else if (folioBeforeEntry) {
       location.hash = "#folio/" + folioBeforeEntry;
       folioBeforeEntry = null;
-    } else if (location.hash.startsWith("#entry/")) {
-      history.replaceState(null, "", location.pathname + location.search);
     }
   }
 }
@@ -875,10 +1104,21 @@ document.addEventListener("click", e => {
   const id = trig.getAttribute("data-id");
   if (BY_NUM[String(id)]) {
     e.preventDefault();
-    // If we're currently in a folio view, remember it so we can return
-    const m = location.hash.match(/^#folio\/([\w-]+)/);
-    folioBeforeEntry = m ? m[1] : null;
-    openOverlay(id);
+    const eObj = BY_NUM[String(id)];
+    const catKey = eObj ? eObj.category_key : null;
+    const mFolio = location.hash.match(/^#folio\/([\w-]+)/);
+    const mEntry = location.hash.match(/^#entry\/(\d+)/);
+
+    folioBeforeEntry = mFolio ? mFolio[1] : catKey;
+    window.__entryNavigatedInternally = true;
+    window.__currentHistoryEntry = String(id);
+
+    if ((!mFolio || (mFolio[1] !== catKey && mFolio[1] !== "ALL")) && !mEntry && catKey) {
+      showFolioPage(catKey);
+      history.pushState({ view: "folio", catKey }, "", "#folio/" + catKey);
+    }
+    history.pushState({ view: "entry", id: String(id) }, "", "#entry/" + id);
+    openOverlay(id, { skipHash: true });
   }
 });
 
@@ -895,14 +1135,48 @@ function applyHash() {
 
   // Decide which view should be active.
   if (mEntry && BY_NUM[mEntry[1]]) {
-    // Entry overlay; folio view stays as it was (or hides if not relevant)
-    openOverlay(mEntry[1], { skipHash: true });
+    const id = mEntry[1];
+    const eObj = BY_NUM[id];
+    const catKey = eObj ? eObj.category_key : null;
+    folioBeforeEntry = catKey;
+
+    // Ensure the entry's parent folio page is rendered and active under the overlay
+    if (catKey && (!document.body.classList.contains("is-folio-view") || currentFolioKey !== catKey)) {
+      showFolioPage(catKey);
+    }
+
+    // Direct landing or external URL change: seed history stack so browser back goes to parent folio
+    if (catKey && window.__currentHistoryEntry !== id) {
+      window.__currentHistoryEntry = id;
+      if (!window.__entryNavigatedInternally) {
+        if (!window.__historySeeded) {
+          window.__historySeeded = true;
+          history.replaceState({ view: "home" }, "", location.pathname + location.search);
+          history.pushState({ view: "folio", catKey }, "", "#folio/" + catKey);
+          history.pushState({ view: "entry", id }, "", "#entry/" + id);
+        } else {
+          history.replaceState({ view: "folio", catKey }, "", "#folio/" + catKey);
+          history.pushState({ view: "entry", id }, "", "#entry/" + id);
+        }
+      }
+    }
+    window.__entryNavigatedInternally = false;
+
+    openOverlay(id, { skipHash: true });
   } else if (mFolio) {
     const key = mFolio[1];
     if (overlay.classList.contains("is-open")) closeOverlay({ skipHash: true });
-    if (key === "ALL") renderAllPage();
-    else if (categoryByKey(key)) showFolioPage(key);
-    else hideFolioPage();
+    if (key === "ALL") {
+      if (!document.body.classList.contains("is-folio-view") || currentFolioKey !== "ALL") {
+        renderAllPage();
+      }
+    } else if (categoryByKey(key)) {
+      if (!document.body.classList.contains("is-folio-view") || currentFolioKey !== key) {
+        showFolioPage(key);
+      }
+    } else {
+      hideFolioPage();
+    }
   } else {
     // No hash: clear both views
     if (overlay.classList.contains("is-open")) closeOverlay({ skipHash: true });
@@ -913,7 +1187,7 @@ function applyHash() {
 // ---------- folio page renderer ----------
 const FOLIO_DESCRIPTIONS = {
   "mantra-japa": "On the form of mantra, the count, the breath; on the inward mechanics of repetition and the moment a sound becomes a doorway.",
-  "puja-aarti": "Ācamana, offerings, the lamp, the prasādam. What may be substituted, what must not, and why the small details matter most.",
+  "puja-aarti": "Āchamana, offerings, the lamp, the Prasādam. What may be substituted, what must not, and why the small details matter most.",
   "mandala": "The forty-eight-day cycle of transformation — vows undertaken, vows broken, what to do when the count slips, and how to begin again without despair.",
   "experiences": "Peace and sleep, the night sweats, yoga-nidrā, the unprovoked tears, the signs of progress — and whether to make anything of them at all.",
   "advanced": "Yantra, nyāsa, homa, the worship of one's kuladevatā — the practices that wait until the foundation is steady.",
@@ -923,6 +1197,7 @@ const FOLIO_DESCRIPTIONS = {
 function renderFolioPage(catKey) {
   const cat = categoryByKey(catKey);
   if (!cat) return false;
+  currentFolioKey = catKey;
   const entries = DATA.entries
     .filter(e => e.category_key === catKey)
     .sort((a, b) => b.num - a.num);
@@ -966,6 +1241,7 @@ function showFolioPage(catKey) {
   return true;
 }
 function hideFolioPage() {
+  currentFolioKey = null;
   document.body.classList.remove("is-folio-view");
   const page = document.getElementById("folio-page");
   if (page) page.setAttribute("hidden", "");
@@ -973,6 +1249,7 @@ function hideFolioPage() {
 
 // Build a special "ALL" view: every entry, newest first.
 function renderAllPage() {
+  currentFolioKey = "ALL";
   const entries = DATA.entries.slice().sort((a, b) => b.num - a.num);
   document.getElementById("folio-meta").textContent =
     `THE FULL CODEX · ${entries.length} ENTRIES`;
@@ -1031,7 +1308,7 @@ function buildSearchIndex() {
       kind: `№ ${e.num}`,
       skt: cat ? cat.skt.split(" ")[0] : "",
       titleHTML: e.title,
-      titleText: e.title + " " + (e.question || "") + " " + (e.original || "") + (e.tags ? " " + e.tags : ""),
+      titleText: e.title + " " + (e.question || "") + " " + (e.original || "") + (e.tags ? " " + e.tags : "") + (e.links ? " " + e.links : ""),
       desc: (cat ? cat.name : "") + (e.asker ? " — " + e.asker : ""),
       type: "entry",
       entryId: String(e.num),
@@ -1061,6 +1338,7 @@ function buildSearchIndex() {
   renderFeatured();
   applyHash();
   window.addEventListener("hashchange", applyHash);
+  window.addEventListener("popstate", applyHash);
 
   if (location.search.includes("search=true")) {
     setTimeout(() => {
@@ -1189,10 +1467,22 @@ document.getElementById("folio-back-link").addEventListener("click", e => {
     closePalette();
     setTimeout(() => {
       if (item.type === "entry" && item.entryId) {
-        // Capture folio context if any, then open
-        const m = location.hash.match(/^#folio\/([\w-]+)/);
-        folioBeforeEntry = m ? m[1] : null;
-        openOverlay(item.entryId);
+        const id = String(item.entryId);
+        const eObj = BY_NUM[id];
+        const catKey = eObj ? eObj.category_key : null;
+        const mFolio = location.hash.match(/^#folio\/([\w-]+)/);
+        const mEntry = location.hash.match(/^#entry\/(\d+)/);
+
+        folioBeforeEntry = mFolio ? mFolio[1] : catKey;
+        window.__entryNavigatedInternally = true;
+        window.__currentHistoryEntry = id;
+
+        if ((!mFolio || (mFolio[1] !== catKey && mFolio[1] !== "ALL")) && !mEntry && catKey) {
+          showFolioPage(catKey);
+          history.pushState({ view: "folio", catKey }, "", "#folio/" + catKey);
+        }
+        history.pushState({ view: "entry", id }, "", "#entry/" + id);
+        openOverlay(id, { skipHash: true });
       } else if (item.type === "category" && item.catKey) {
         location.hash = "#folio/" + item.catKey;
       }

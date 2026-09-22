@@ -1352,8 +1352,8 @@
           <select id="category-filter" class="filter-select">
             <option value="all">All Folios</option>
             <option value="Mantra &amp; Japa">Folio I · Mantra &amp; Japa</option>
-            <option value="Pūjā, Āratī &amp; Rituals">Folio II · Pūjā &amp; Rituals</option>
-            <option value="Maṇḍala &amp; Anuṣṭhāna">Folio III · Maṇḍala &amp; Anuṣṭhāna</option>
+            <option value="Puja, Aarti &amp; Rituals">Folio II · Puja &amp; Rituals</option>
+            <option value="Mandala &amp; Anushthana">Folio III · Mandala &amp; Anushthana</option>
             <option value="Experiences in Sādhanā">Folio IV · Experiences</option>
             <option value="Advanced Topics">Folio V · Advanced Topics</option>
             <option value="Women &amp; Sādhanā">Folio VI · Women &amp; Sādhanā</option>
@@ -2080,8 +2080,8 @@
               / Folio *</label>
             <select id="add-category-select" class="filter-select" style="height: 38px;">
               <option value="Mantra & Japa">Folio I · Mantra & Japa</option>
-              <option value="Pūjā, Āratī & Rituals">Folio II · Pūjā & Rituals</option>
-              <option value="Maṇḍala & Anuṣṭhāna">Folio III · Maṇḍala & Anuṣṭhāna</option>
+              <option value="Puja, Aarti & Rituals">Folio II · Puja & Rituals</option>
+              <option value="Mandala & Anushthana">Folio III · Mandala & Anushthana</option>
               <option value="Experiences in Sādhanā">Folio IV · Experiences</option>
               <option value="Advanced Topics">Folio V · Advanced Topics</option>
               <option value="Women & Sādhanā">Folio VI · Women & Sādhanā</option>
@@ -2160,7 +2160,7 @@
           <div>
             <label
               style="font-size: 11px; font-family: var(--mono); color: var(--gold-3); display: block; margin-bottom: 4px;">Links / References (Optional)</label>
-            <input type="text" id="add-links" class="filter-input" placeholder="e.g. https://... or reference links" />
+            <input type="text" id="add-links" class="filter-input" placeholder="e.g. Bhairava Website: https://... or abc:https:abc.com" />
           </div>
         </div>
       </div>
@@ -2704,6 +2704,7 @@
 
         // Sanitize all text fields in loaded entries
         qnaData.forEach(item => {
+          if (!item.links && item.link) item.links = item.link;
           ['category', 'asker', 'question', 'answer', 'rephrased', 'tags', 'links'].forEach(k => {
             if (item[k]) item[k] = cleanMojibake(item[k]);
           });
@@ -2749,10 +2750,10 @@
         return "Women & Sādhanā";
       }
       if (norm.includes("mandala") || norm.includes("anusthan") || norm.includes("anushthan") || (norm.includes("m") && norm.includes("ala") && (norm.includes("anu") || norm.includes("na") || norm.includes("ala")))) {
-        return "Maṇḍala & Anuṣṭhāna";
+        return "Mandala & Anushthana";
       }
       if (norm.includes("puja") || norm.includes("arati") || norm.includes("aarti") || norm.includes("ritual") || norm.includes("puj")) {
-        return "Pūjā, Āratī & Rituals";
+        return "Puja, Aarti & Rituals";
       }
       if (norm.includes("mantra") || norm.includes("japa")) {
         return "Mantra & Japa";

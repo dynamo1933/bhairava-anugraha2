@@ -130,5 +130,138 @@ The `/api/login` endpoint was previously handled directly in the local Python `s
   - Entered `admin` / `admin123` and clicked "Enter Portal".
   - Verified login wall unlocked and rendered the full Rephrase dashboard with 257 Q&A entries.
 
+---
 
+## [2026-09-22 10:25 IST] - Support 'label:url' Format in Link Column & Frontend References
 
+### Objective:
+Support database `link` / `links` column values formatted as `label:url` (e.g. `abc:https:abc.com`, `Bhairava Anugraha Website: https://bhairavaanugraha.com/`), extracting the label before `:` and the link post `:`, hyperlinking in-text mentions, and displaying dedicated interactive reference chips on the frontend.
+
+### Changes Made:
+1. **`index.js`**:
+   - Added column aliasing in `buildData` (CSV) and `buildDataFromJson` (API JSON) to support both `link` and `links`.
+   - Added `normalizeUrl(u)` to clean loose URLs (e.g., `https:abc.com` -> `https://abc.com`, bare domains, `t.me`).
+   - Added `friendlyUrlLabel(u)` to generate intuitive titles for bare URLs.
+   - Added `parseEntryLinks(rawLinks)` supporting multiline/semicolon-separated entries, `label:url`, `label - url`, and bare URLs.
+   - Added `linkifyMentions(htmlStr, links)` that safely scans text outside of HTML tags and anchor tags, turning mentions of the label into clickable gold links (`target="_blank" rel="noopener noreferrer"`).
+   - Added `_buildLinksSectionHtml(parsedLinks)` creating obsidian-and-gold reference chips with contextual icons (`◈`, `▶`, `✈`, `🔗`) and external link arrows (`↗`).
+   - Updated `_buildSingleEntryHtml(e)` and `_buildThreadHtml(chain, activeNum)` to linkify question/answer bodies and embed the references section before Guruji's signoff.
+   - Added `e.links` to the fuzzy search index.
+2. **`index.css`**:
+   - Added `.entry-inline-link` styles with gold underline, offset, and hover glow.
+   - Added `.entry-links-section`, `.entry-links-heading`, `.entry-links-grid`, and `.entry-link-chip` styles matching the "Lacquer & Leaf" theme with hover lift and smooth micro-animations.
+   - Added mobile responsive overrides.
+3. **`rephrase.html`**:
+   - Normalized `item.link || item.links` during dataset load.
+   - Updated `#add-links` placeholder to guide editors on `Label: https://...` or `abc:https:abc.com`.
+
+### Verification:
+- Unit tested parsing and in-text linking against `abc:https:abc.com`, entry 48, and entry 280 with Node.
+- Verified live rendering using browser subagent on `http://localhost:8080`:
+  - Entry 48: Verified in-text gold link for `'Bhairava Anugraha'` and `REFERENCES & SOURCES` box with `◈ Bhairava Anugraha Website ↗`.
+  - Entry 280: Verified in-text gold links for `'Daiva Anugraha'` and `'Adi Bhairava and Guru Matsyendranath'`, and `REFERENCES & SOURCES` box with both video chips (`▶ Daiva Anugraha YouTube ↗` and `▶ Adi Bhairava and Guru Matsyendranath Video ↗`).
+- Screenshots captured and documented in `walkthrough.md`.
+---
+
+## [2026-09-22 17:15 IST] - Synchronize Database & Frontend Number Sequence (Entry #5)
+
+### Objective:
+Ensure that any numbered sequence present in the database question and answer (such as `1., 2., 3., 4.` in Entry #5) is preserved with 100% fidelity on the frontend, resolving an issue where numbered list items rendered as `1., 1., 1., 1.` or reset when split across paragraphs.
+
+### Root Cause Analysis:
+1. In `index.js`, `formatLinesToHtml()` splits text blocks by double newlines (`\n\s*\n`) into distinct paragraph chunks. When numbered points occurred across separate paragraphs or mixed text, each numbered item was wrapped in its own separate `<ol>` container.
+2. In `index.css`, `.overlay .answer ol` and `.overlay .original .body ol` declared `counter-reset: ans-item` / `counter-reset: q-item`, and list items used pseudo-elements (`::before`) displaying `counter(ans-item)`.
+3. Because each separate `<ol>` container reset the CSS counter back to 0, each item rendered as `1.`, ignoring the actual item numbers (`1., 2., 3., 4.`) defined in the database source text.
+
+### Changes Made:
+1. **`index.js`**:
+   - In `formatLinesToHtml()`: Updated the list item parser regex to capture the original database sequence number prefix:
+     `^(\*{0,2}\d+[.):]\*{0,2}|\(\d+\)|\d+\s*[-–—])\s*(.*)$`
+   - Stripped enclosing markdown asterisks (e.g. `**1.**` -> `1.`) while preserving the exact sequence text (`1.`, `2.`, `3.`, `4.`).
+   - Injected the captured sequence directly into the DOM as `<span class="item-num">${numText}</span>`, completely bypassing CSS counter resets and guaranteeing identical sequencing to the database.
+2. **`index.css`**:
+   - Removed `counter-reset` and pseudo-element `counter(ans-item)` / `counter(q-item)` dependencies on `<ol>` and `<li>`.
+   - Added styles for `.item-num` within `.overlay .answer ol li` (JetBrains Mono 16px, `var(--gold)`) and `.overlay .original .body ol li` (JetBrains Mono 13px, `var(--gold-2)`), matching existing typography, alignment, and spacing.
+3. **`index.html`**:
+   - Updated cache-busting version query string to `v=20260922c` on `index.css` and `index.js`.
+
+### Verification:
+- Ran automated test scripts against Entry #5 and all 257 database entries to verify regex capturing and DOM generation.
+- Verified live rendering using `browser_subagent` on `http://localhost:8080/?reload=1#entry/5`:
+  - Verified Question list renders sequentially as `1.`, `2.`, `3.`, `4.`.
+  - Verified Answer list renders sequentially as `1.`, `2.`, `3.`, `4.`.
+- Captured verification screenshots:
+  - `entry_5_items_top_1790077182275.png`
+  - `entry_5_items_bottom_1790077207592.png`
+
+---
+
+## [2026-09-22 18:30 IST] - Fix Hierarchical Back Navigation Flow (#entry/400 → #folio/puja-aarti → Homepage)
+
+### Objective:
+Resolve navigation issue where opening an entry directly via URL or popup (such as `http://localhost:8080/#entry/400`) and pressing the browser Back button exited directly to the homepage (`http://localhost:8080/`) instead of returning to the entry's parent category folio (`http://localhost:8080/#folio/puja-aarti`).
+
+### Root Cause Analysis:
+1. `openOverlay()` used `history.replaceState()`, which erased the parent folio and referrer from the browser history stack.
+2. Direct navigation to `#entry/400` did not establish the parent folio in the browser history stack, leaving only the direct entry or homepage before it.
+3. The parent folio page was kept hidden (`hidden` attribute) underneath the overlay, instead of being activated and rendered in the background.
+4. `closeOverlay()` cleared the URL hash completely to root path (`location.pathname + location.search`) whenever `folioBeforeEntry` was not set, jumping directly to the homepage.
+
+### Changes Made:
+1. **`index.js`**:
+   - Updated `applyHash()`: When loading `#entry/<id>` directly, identifies the entry's parent category folio (`catKey = e.category_key`, e.g., `'puja-aarti'`), renders the parent folio page underneath (`showFolioPage(catKey)`), and seeds the history stack (`home` &rarr; `#folio/catKey` &rarr; `#entry/id`).
+   - Updated card click handler `[data-id]` and search palette `activate(item)`: Opening an entry from homepage or external state pushes `#folio/<catKey>` into history before pushing `#entry/<id>`.
+   - Updated `openOverlay()`: Uses `history.pushState()` instead of `history.replaceState()`.
+   - Updated `closeOverlay()`: Calls `history.back()` when closing an entry overlay, cleanly popping the browser history back to the parent folio while preserving scroll positions.
+   - Added `currentFolioKey` tracking in `renderFolioPage()`, `renderAllPage()`, and `hideFolioPage()` to avoid unnecessary re-renders and scroll resets when returning from an entry.
+   - Added `window.addEventListener("popstate", applyHash)` to ensure instant reactive updates on browser Back/Forward toolbar buttons and mobile gestures.
+2. **`index.html`**:
+   - Bumped cache-busting query parameter to `index.js?v=20260922d`.
+
+### Verification:
+- Verified end-to-end flow using `browser_subagent` on live site:
+  - Step 1: Navigated to `http://localhost:8080/#entry/400`. Entry 400 popup opened cleanly on top of Folio II.
+  - Step 2: Back navigation triggered &rarr; URL transitioned to `http://localhost:8080/#folio/puja-aarti`, overlay closed, and FOLIO II (Pūjā, Āratī & Rituals) was displayed.
+  - Step 3: Back navigation triggered &rarr; URL returned to `http://localhost:8080/`, displaying homepage.
+- Captured verification screenshots:
+  - `entry_400_popup_1790081631958.png`
+  - `folio_puja_aarti_1790081802447.png`
+  - `homepage_1790081882603.png`
+
+---
+
+## [2026-09-22 23:30 IST] - Update Category Spellings & Folio II Description
+
+### Objective:
+Standardize category spelling names to English transliteration without Sanskrit IAST diacritics:
+- Category Folio II: `Puja, Aarti & Rituals` (from `Pūjā, Āratī & Rituals`)
+- Category Folio III: `Mandala & Anushthana` (from `Maṇḍala & Anuṣṭhāna`)
+- Folio II Description: Update to `"Āchamana, offerings, the lamp, the Prasādam. What may be substituted, what must not, and why the small details matter most."`
+
+### Changes Made:
+1. **`index.js`**:
+   - Updated `CATEGORY_META` to use `"Puja, Aarti & Rituals"` and `"Mandala & Anushthana"`.
+   - Updated `normalizeCategory()` to normalize matching variants to the new spellings.
+   - Updated `FOLIO_DESCRIPTIONS["puja-aarti"]` to `"Āchamana, offerings, the lamp, the Prasādam. What may be substituted, what must not, and why the small details matter most."`.
+2. **`index.html`**:
+   - Updated Folio II & Folio III cards, Folio II card description, and footer navigation links.
+   - Bumped asset version to `index.js?v=20260922e`.
+3. **`rephrase.html`**:
+   - Updated filter select options and edit category select options.
+   - Updated `normalizeCategory()` return values.
+4. **`qna.csv` & Turso Database**:
+   - Standardized 57 category rows in `qna.csv` and backed up to `qna.csv.bak_spelling`.
+   - Updated single outlier in Turso production & UAT databases (`Mandala & Anusthana` &rarr; `Mandala & Anushthana`).
+5. **`flow.md`**:
+   - Updated canonical category spelling references in architecture documentation.
+
+### Verification:
+- Automated pattern scan verified 0 remaining occurrences of `Pūjā, Āratī & Rituals` or `Maṇḍala & Anuṣṭhāna` in active code.
+- Verified live site using `browser_subagent`:
+  - Homepage `#categories` section: Folio II shows `"Puja, Aarti & Rituals"` with description `"Āchamana, offerings, the lamp, the Prasādam. What may be substituted, what must not, and why the small details matter most."`, and Folio III shows `"Mandala & Anushthana"`.
+  - Folio II page view (`#folio/puja-aarti`): header and description render updated text.
+  - Folio III page view (`#folio/mandala`): header renders `"Mandala & Anushthana"`.
+- Screenshots captured:
+  - `folios_section_1790099821103.png`
+  - `folio_ii_page_1790099876559.png`
+  - `folio_iii_page_1790099918985.png`

@@ -117,7 +117,7 @@ All Q&A entries in both Turso databases (`prod`, `uat`) and the local fallback f
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `num` | `INTEGER PRIMARY KEY` | Canonical serial entry number (stable reference identifier). |
-| `category` | `TEXT` | Canonical spiritual folio (e.g. *Mantra & Japa*, *Pūjā, Āratī & Rituals*, *Maṇḍala & Anuṣṭhāna*, *Experiences in Sādhanā*, *Advanced Topics*, *Women & Sādhanā*). |
+| `category` | `TEXT` | Canonical spiritual folio (e.g. *Mantra & Japa*, *Puja, Aarti & Rituals*, *Mandala & Anushthana*, *Experiences in Sādhanā*, *Advanced Topics*, *Women & Sādhanā*). |
 | `asker` | `TEXT` | Name or alias of the spiritual seeker (defaults to "Anonymous" or "UAT Contributor"). |
 | `date` | `TEXT` | Date formatted as `DD.MM.YYYY` (or ISO string). |
 | `time` | `TEXT` | Time formatted as `HH:MM`. |
